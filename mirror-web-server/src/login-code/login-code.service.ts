@@ -6,6 +6,7 @@ import {
 import { UserService } from '../user/user.service'
 import { UserId } from '../util/mongo-object-id-helpers'
 import { ObjectId } from 'mongodb'
+import { randomInt } from 'crypto'
 import { LoginCode, LoginCodeDocument } from './login-code.schema'
 import { InjectModel } from '@nestjs/mongoose'
 import { User, UserDocument } from '../user/user.schema'
@@ -24,7 +25,8 @@ export class LoginCodeService {
 
   // generate 6 digit login code
   private _generateLoginCode(length = 6): string {
-    return Math.random().toString().substr(2, length)
+    const max = 10 ** length
+    return randomInt(0, max).toString().padStart(length, '0')
   }
 
   public async createLoginCode(
@@ -40,9 +42,9 @@ export class LoginCodeService {
       throw new BadRequestException('User not found')
     }
 
-    const space = await this.spaceService.findOneAdmin(spaceId)
+    const space = await this.spaceService.getSpace(spaceId)
 
-    if (!space) {
+    if (!space || !this.spaceService.canFindWithRolesCheck(userId, space)) {
       throw new BadRequestException('Space not found')
     }
 
@@ -55,7 +57,8 @@ export class LoginCodeService {
       userId: new ObjectId(userId),
       refreshToken: refreshToken,
       spaceId: new ObjectId(spaceId),
-      loginCode: uniqueLoginCode
+      loginCode: uniqueLoginCode,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     })
     return await createdLoginCode.save()
   }
@@ -64,10 +67,18 @@ export class LoginCodeService {
     loginCode: string
   ): Promise<LoginCode> {
     const loginCodeRecord = await this.loginCodeModel
-      .findOne({ loginCode: loginCode })
+      .findOneAndUpdate(
+        {
+          loginCode,
+          usedAt: { $exists: false },
+          expiresAt: { $gt: new Date() }
+        },
+        { $set: { usedAt: new Date() } },
+        { new: false }
+      )
       .exec()
     if (!loginCodeRecord) {
-      throw new NotFoundException('Login code not found')
+      throw new NotFoundException('Login code is invalid, expired, or already used')
     }
     return loginCodeRecord
   }

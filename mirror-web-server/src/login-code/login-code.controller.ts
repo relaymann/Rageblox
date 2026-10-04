@@ -1,4 +1,5 @@
 import { Controller, Post, Query } from '@nestjs/common'
+import { UserToken } from '../auth/get-user.decorator'
 import { FirebaseTokenAuthGuard } from '../auth/auth.guard'
 import { LoginCodeService } from './login-code.service'
 
@@ -9,7 +10,7 @@ export class LoginCodeController {
   @Post('generate-login-code')
   @FirebaseTokenAuthGuard()
   async createLoginCode(
-    @Query('userId') userId: string,
+    @UserToken('user_id') userId: string,
     @Query('spaceId') spaceId: string,
     @Query('refreshToken') refreshToken: string
   ) {
