@@ -28,6 +28,12 @@ export class LoginCode {
   @Prop({ required: true, type: String, unique: true })
   @ApiProperty()
   loginCode: string
+
+  @Prop({ required: true, type: Date })
+  expiresAt: Date
+
+  @Prop({ type: Date })
+  usedAt?: Date
 }
 
 export const LoginCodeSchema = SchemaFactory.createForClass(LoginCode)
