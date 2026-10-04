@@ -1164,7 +1164,8 @@ export class SpaceService implements IRoleConsumer {
           typeof file.size !== 'number' ||
           file.size < 1 ||
           file.size > maxFileSize ||
-          !allowedImageMimes.has(file.mimetype)
+          !allowedImageMimes.has(file.mimetype) ||
+          !this._hasExpectedImageSignature(file)
         ) {
           throw new BadRequestException(
             'Each space image must be a supported raster image no larger than 10 MB'
@@ -1194,6 +1195,47 @@ export class SpaceService implements IRoleConsumer {
         SpaceService.name
       )
       throw new NotFoundException('Not found or insufficient permissions')
+    }
+  }
+
+  private _hasExpectedImageSignature(file: Express.Multer.File): boolean {
+    const buffer = file.buffer
+
+    if (!Buffer.isBuffer(buffer) || buffer.length < 4) {
+      return false
+    }
+
+    switch (file.mimetype) {
+      case 'image/png':
+        return buffer.length >= 8 &&
+          buffer.subarray(0, 8).equals(
+            Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+          )
+      case 'image/jpeg':
+        return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff
+      case 'image/gif':
+        return buffer.subarray(0, 4).toString('ascii') === 'GIF8'
+      case 'image/webp':
+        return (
+          buffer.length >= 12 &&
+          buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+          buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+        )
+      case 'image/bmp':
+        return buffer.subarray(0, 2).toString('ascii') === 'BM'
+      case 'image/tiff':
+        return (
+          (buffer[0] === 0x49 &&
+            buffer[1] === 0x49 &&
+            buffer[2] === 0x2a &&
+            buffer[3] === 0x00) ||
+          (buffer[0] === 0x4d &&
+            buffer[1] === 0x4d &&
+            buffer[2] === 0x00 &&
+            buffer[3] === 0x2a)
+        )
+      default:
+        return false
     }
   }
 
