@@ -4,6 +4,7 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
+  UnauthorizedException,
   ConflictException
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
@@ -835,6 +836,66 @@ export class UserService {
       key: keyName
     })
     return key.save()
+  }
+
+  async redeemUserAccessKey(userId: string, name: string) {
+    const key = await this.userAccessKeyModel
+      .findOneAndUpdate(
+        {
+          key: name,
+          usedBy: {
+            $exists: false
+          }
+        },
+        {
+          $set: {
+            usedBy: userId
+          }
+        },
+        {
+          new: false
+        }
+      )
+      .exec()
+
+    if (!key) {
+      throw new UnauthorizedException(
+        "We're sorry, but that key doesn't exist or it's been used"
+      )
+    }
+
+    try {
+      const updatedUser = await this.userModel
+        .findByIdAndUpdate(
+          userId,
+          {
+            $addToSet: {
+              premiumAccess: key.premiumAccess
+            }
+          },
+          { new: true }
+        )
+        .exec()
+
+      if (!updatedUser) {
+        throw new NotFoundException('User not found')
+      }
+    } catch (error) {
+      await this.userAccessKeyModel
+        .updateOne(
+          {
+            _id: key._id,
+            usedBy: userId
+          },
+          {
+            $unset: {
+              usedBy: 1
+            }
+          }
+        )
+        .exec()
+      throw error
+    }
   }
 
   async checkUserAccessKeyExistence(name: string) {
