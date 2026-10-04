@@ -735,7 +735,9 @@ export class AssetService {
     const cursor = this.assetModel.find(filter).limit(1000).sort(sort)
 
     if (populate) {
-      cursor.populate(this.publicAssetPopulateFields.map((field) => field.localField))
+      cursor
+        .populate({ path: 'creator', select: 'displayName' })
+        .populate({ path: 'owner', select: 'displayName' })
     }
 
     return cursor.exec()
