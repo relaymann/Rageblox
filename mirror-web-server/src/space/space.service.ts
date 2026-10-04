@@ -1172,7 +1172,7 @@ export class SpaceService implements IRoleConsumer {
         if (
           !file ||
           typeof file.fieldname !== 'string' ||
-          !/^\\d{1,3}$/.test(file.fieldname) ||
+          !/^\d{1,3}$/.test(file.fieldname) ||
           seenIndexes.has(file.fieldname) ||
           !allowedImageMimes.has(file.mimetype) ||
           !Buffer.isBuffer(file.buffer) ||
