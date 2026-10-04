@@ -6,7 +6,7 @@ import {
 import { UserService } from '../user/user.service'
 import { UserId } from '../util/mongo-object-id-helpers'
 import { ObjectId } from 'mongodb'
-import crypto from 'crypto'
+import { randomInt } from 'crypto'
 import { LoginCode, LoginCodeDocument } from './login-code.schema'
 import { InjectModel } from '@nestjs/mongoose'
 import { User, UserDocument } from '../user/user.schema'
@@ -26,7 +26,7 @@ export class LoginCodeService {
   // generate 6 digit login code
   private _generateLoginCode(length = 6): string {
     const max = 10 ** length
-    return crypto.randomInt(0, max).toString().padStart(length, '0')
+    return randomInt(0, max).toString().padStart(length, '0')
   }
 
   public async createLoginCode(
