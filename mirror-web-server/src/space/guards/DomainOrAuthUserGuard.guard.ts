@@ -11,7 +11,10 @@ export class DomainOrAuthUserGuard implements CanActivate {
   constructor(private readonly authGuardFirebase: AuthGuardFirebase) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const allowedDomains = process.env.ALLOWED_DOMAINS || []
+    const allowedDomains = (process.env.ALLOWED_DOMAINS || '')
+      .split(',')
+      .map((domain) => domain.trim())
+      .filter(Boolean)
     const request = context.switchToHttp().getRequest()
     // get origin from request header
     const origin = request.headers.origin
@@ -22,7 +25,10 @@ export class DomainOrAuthUserGuard implements CanActivate {
       firebaseQuardResult = false
     }
     // check if domain is allowed or useer is authenticated
-    if (firebaseQuardResult || allowedDomains.includes(origin)) {
+    if (
+      firebaseQuardResult ||
+      (typeof origin === 'string' && allowedDomains.includes(origin))
+    ) {
       return true
     }
     throw new ForbiddenException('Forbidden resource')
