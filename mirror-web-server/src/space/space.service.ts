@@ -264,7 +264,7 @@ export class SpaceService implements IRoleConsumer {
       // Create the role. Never allow client input to grant ownership.
       // Collaborator roles may be supplied, but OWNER is reserved for the
       // authenticated creator at space creation time.
-      const sanitizeRoleMap = (value: unknown) => {
+      const sanitizeRoleMap = (value: unknown, includeOwner = false) => {
         if (!value || typeof value !== 'object' || Array.isArray(value)) {
           return {}
         }
@@ -275,7 +275,9 @@ export class SpaceService implements IRoleConsumer {
           }
           result[targetId] = rawRole as ROLE
         }
-        result[userId] = ROLE.OWNER
+        if (includeOwner) {
+          result[userId] = ROLE.OWNER
+        }
         return result
       }
 
@@ -285,7 +287,7 @@ export class SpaceService implements IRoleConsumer {
             createSpaceDto.publicBuildPermissions
           ),
           creator: createSpaceDto.creator,
-          users: sanitizeRoleMap(createSpaceDto.users),
+          users: sanitizeRoleMap(createSpaceDto.users, true),
           userGroups: sanitizeRoleMap(createSpaceDto.userGroups)
         })
         createdSpace.publicBuildPermissions =
