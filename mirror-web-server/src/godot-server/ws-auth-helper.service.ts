@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { forwardRef, Inject } from '@nestjs/common'
 import { isMongoId } from 'class-validator'
 import { SpaceService } from '../space/space.service'
@@ -58,7 +58,6 @@ export class WsAuthHelperService {
         // Important: if this order is changed, it must be changed in ws-auth-helper.service.ts on the react app too. it expects ordered array
         const result = secWebSocketProtocol.split(',')
         token = result[0]
-        client['token'] = token
         if (result[1]) {
           spaceId = result[1]
         }
@@ -87,7 +86,6 @@ export class WsAuthHelperService {
         if (decodedJwt) {
           isFirebaseToken = true
           client['user'] = decodedJwt
-          console.log('isFirebaseToken', isFirebaseToken)
         }
       } catch (error) {
         this.logger.log(
