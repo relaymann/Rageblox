@@ -116,7 +116,22 @@ export class UserController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({ schema: { type: 'file' } })
   @ApiCreatedResponse({ type: FileUploadPublicApiResponse })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_req, file, callback) => {
+        const allowed = new Set([
+          'image/webp',
+          'image/png',
+          'image/jpeg',
+          'image/gif',
+          'image/bmp',
+          'image/tiff'
+        ])
+        callback(null, allowed.has(file.mimetype))
+      }
+    })
+  )
   public async uploadPublic(
     @UserToken('user_id') userId: string,
     @UploadedFile() file: Express.Multer.File
