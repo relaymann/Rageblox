@@ -837,28 +837,53 @@ export class UserService {
     return key.save()
   }
 
-  async checkUserAccessKeyExistence(name: string) {
-    const check = await this.userAccessKeyModel.findOne({
-      key: name,
-      usedBy: {
-        $exists: false // need to ensure it's not in use
-      }
-    })
-    if (check) {
-      return check
-    } else {
+  async consumeUserAccessKey(name: string, userId: string) {
+    const key = await this.userAccessKeyModel
+      .findOneAndUpdate(
+        {
+          key: name,
+          usedBy: {
+            $exists: false
+          }
+        },
+        {
+          $set: {
+            usedBy: userId
+          }
+        },
+        {
+          new: true
+        }
+      )
+      .exec()
+
+    if (!key) {
       return false
     }
-  }
 
-  async setUserAccessKeyAsUsed(
-    keyId: string,
-    userId: string
-  ): Promise<UpdateResult> {
-    // @ts-ignore. The error was: Type '"ObjectID"' is not assignable to type '"ObjectId"' with importing from Mongo vs Mongoose. Not worth debugging 2023-03-28 01:41:44
-    return await this.userAccessKeyModel
-      .updateOne({ _id: keyId }, { usedBy: userId })
-      .exec()
+    try {
+      await this.addUserPremiumAccess(
+        userId,
+        key.premiumAccess as PREMIUM_ACCESS
+      )
+    } catch (error) {
+      await this.userAccessKeyModel
+        .updateOne(
+          {
+            _id: key._id,
+            usedBy: userId
+          },
+          {
+            $unset: {
+              usedBy: 1
+            }
+          }
+        )
+        .exec()
+      throw error
+    }
+
+    return key
   }
 
   /**
