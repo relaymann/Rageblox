@@ -81,6 +81,11 @@ export class MaterialInstanceService {
     updateMaterialInstanceDto: UpdateMaterialInstanceDto,
     userId: string
   ): Promise<MaterialInstance> {
+    const populatedSpace = await this.spaceService.getSpace(spaceId)
+    if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
+      throw new ForbiddenException()
+    }
+
     const space = await this.findOne(spaceId, materialInstanceId, userId)
 
     if (!space) {
