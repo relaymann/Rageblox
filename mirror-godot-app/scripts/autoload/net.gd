@@ -95,7 +95,7 @@ func login_success(mongo_id: String, _idtoken: String) -> void:
 func _on_token_refreshed(auth: Dictionary) -> void:
 	if user_id != auth.get("localid"):
 		return
-	print("Session Refreshed new JWT: ", Firebase.Auth.get_jwt())
+	print("Firebase session refreshed.")
 
 
 func fully_log_in_user_with_profile(profile: Dictionary, auth_result: Dictionary) -> void:
