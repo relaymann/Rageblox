@@ -133,6 +133,24 @@ export class EnvironmentService {
     return environment.save()
   }
 
+  public async removeWithRolesCheck(id: string, userId: UserId) {
+    const environment = await this.findOneWithRolesCheck(id, userId)
+    const space = await this.spaceModel
+      .findOne({ environment: new ObjectId(id) })
+      .exec()
+
+    if (!space) {
+      throw new NotFoundException()
+    }
+
+    const populatedSpace = await this.spaceService.getSpace(space._id)
+    if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
+      throw new ForbiddenException()
+    }
+
+    return this.remove(id)
+  }
+
   public remove(id: string) {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('ID is not a valid Mongo ObjectID')
