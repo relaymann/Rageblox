@@ -21,6 +21,7 @@ export class LoginCodeService {
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
     private readonly spaceService: SpaceService,
+    private readonly redisPubSubService: RedisPubSubService,
     @InjectModel(LoginCode.name)
     private loginCodeModel: Model<LoginCodeDocument>
   ) {}
