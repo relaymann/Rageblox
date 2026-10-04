@@ -159,10 +159,17 @@ export class AssetService {
   public async createAsset(
     dto: CreateAssetDto & { ownerId: string }
   ): Promise<AssetDocument> {
+    const { ownerId, owner, creator, role, _id, ...safeDto } = dto as CreateAssetDto & {
+      ownerId: string
+      owner?: unknown
+      creator?: unknown
+      role?: unknown
+      _id?: unknown
+    }
     const created = new this.assetModel({
-      owner: dto.ownerId,
-      creator: dto.ownerId, // default to ownerId since that owner is creating it.
-      ...dto
+      ...safeDto,
+      owner: ownerId,
+      creator: ownerId
     })
 
     // check if assetsInPack has valid assets
@@ -210,10 +217,17 @@ export class AssetService {
     file: Express.Multer.File
   ): Promise<AssetDocument> {
     try {
+      const { ownerId, owner, creator, role, _id, ...safeDto } = dto as CreateAssetDto & {
+        ownerId: string
+        owner?: unknown
+        creator?: unknown
+        role?: unknown
+        _id?: unknown
+      }
       const created = new this.assetModel({
-        owner: dto.ownerId,
-        creator: dto.ownerId, // default to ownerId since that owner is creating it.
-        ...dto
+        ...safeDto,
+        owner: ownerId,
+        creator: ownerId
       })
 
       // check if assetsInPack has valid assets
