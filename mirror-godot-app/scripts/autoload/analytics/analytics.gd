@@ -93,7 +93,7 @@ func _send_event(event: AnalyticsEvent) -> void:
 
 
 func _ready() -> void:
-	api_key = ProjectSettings.get_setting("mirror/posthog_api_key")
+	api_key = ProjectSettings.get_setting("rageblox/posthog_api_key", "")
 	_http_capture = HTTPRequest.new()
 	_http_capture.use_threads = true
 	_http_batch = HTTPRequest.new()
