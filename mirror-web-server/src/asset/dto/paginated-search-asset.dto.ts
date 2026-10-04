@@ -1,11 +1,16 @@
 import { SORT_DIRECTION } from './../../util/pagination/pagination.interface'
 import { ApiProperty } from '@nestjs/swagger'
-import { Transform } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
   IsOptional,
   IsString,
   IsEnum,
   IsArray,
+  IsInt,
+  Min,
+  Max,
+  MaxLength,
+  ArrayMaxSize,
   ValidateIf,
   IsNotEmpty,
   IsIn
@@ -19,11 +24,13 @@ import { ApiArrayQuery } from '../../util/decorators/api-array-query.decorator'
 export class PaginatedSearchAssetDto {
   @IsOptional()
   @IsString()
+  @MaxLength(128)
   @ApiProperty()
   field: string
 
   @IsOptional()
   @IsString()
+  @MaxLength(128)
   @ApiProperty()
   search: string
 
@@ -42,22 +49,36 @@ export class PaginatedSearchAssetDto {
   sortDirection: SORT_DIRECTION
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100000)
   @ApiProperty()
   page: number
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   @ApiProperty()
   perPage: number
 
   @IsOptional()
-  @IsString()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(1000000)
   @ApiProperty({
     required: false
   })
   startItem: number
 
   @IsOptional()
-  @IsString()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   @ApiProperty({ required: false })
   numberOfItems: number
 
