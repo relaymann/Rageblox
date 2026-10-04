@@ -788,12 +788,20 @@ export class UserService {
   }
 
   public uploadProfileImage({ file, userId }: UploadProfileFileDto) {
+    const allowedImageMimes = new Set([
+      'image/webp',
+      'image/png',
+      'image/jpeg',
+      'image/gif',
+      'image/bmp',
+      'image/tiff'
+    ])
     if (
       !file ||
       !Buffer.isBuffer(file.buffer) ||
       file.buffer.length === 0 ||
       file.buffer.length > 5 * 1024 * 1024 ||
-      !file.mimetype.startsWith('image/')
+      !allowedImageMimes.has(file.mimetype)
     ) {
       throw new BadRequestException('Invalid profile image upload')
     }
