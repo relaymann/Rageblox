@@ -437,11 +437,15 @@ export class SpaceController {
   @ApiParam({ name: 'spaceId', type: 'string', required: true })
   @FirebaseTokenAuthGuard()
   public async getLatestPublishedSpaceBySpaceId(
-    @Param('spaceId') spaceId: SpaceId
+    @Param('spaceId') spaceId: SpaceId,
+    @UserToken('user_id') userId: UserId
   ) {
     // The admin route is called here because every published space is public currently, hence "published"
     const spaceVersion =
-      await this.spaceService.getLatestSpaceVersionBySpaceIdAdmin(spaceId)
+      await this.spaceService.getLatestSpaceVersionBySpaceIdWithRolesCheck(
+        spaceId,
+        userId
+      )
 
     if (!spaceVersion) {
       this.logger.log(
@@ -633,8 +637,11 @@ export class SpaceController {
   @Get('version/:id')
   @UseGuards(DomainOrAuthUserGuard)
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async getPublishedSpacesBySpaceId(@Param('id') spaceId: SpaceId) {
-    return await this.spaceService.getSpaceVersionsBySpaceId(spaceId)
+  public async getPublishedSpacesBySpaceId(
+    @Param('id') spaceId: SpaceId,
+    @UserToken('user_id') userId: UserId
+  ) {
+    return await this.spaceService.getSpaceVersionsBySpaceId(spaceId, userId)
   }
 
   @Post('/:id/upload/public')
