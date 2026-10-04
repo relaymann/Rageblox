@@ -10,12 +10,14 @@ import {
   UseGuards,
   UseInterceptors,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
+  BadRequestException
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { GodotServerGuard } from '../godot-server/godot-server.guard'
 import { FileUploadService } from '../util/file-upload/file-upload.service'
 import { SpaceService } from './space.service'
+import { IsMongoId } from 'class-validator'
 /**
  * Note that this uses the same /space controller, but is processed AFTER the space controller.
  * /space should be removed once everything is changed to /space-godot-server 2023-04-04 12:05:17
@@ -74,11 +76,21 @@ export class SpaceGodotServerController {
     ****************************/
 
   @Put('voxels/:id')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 100 * 1024 * 1024, files: 1 }
+    })
+  )
   public async updateTerrain(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File
   ) {
+    if (!/^[a-f\d]{24}$/i.test(id)) {
+      throw new BadRequestException('Invalid space id')
+    }
+    if (!file?.buffer && !file?.stream) {
+      throw new BadRequestException('Terrain file is required')
+    }
     try {
       const remoteRelativePath = `space/${id}/terrain/voxels.dat`
 
