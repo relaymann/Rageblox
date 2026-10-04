@@ -14,6 +14,11 @@ import { ApiArrayQuery } from '../../util/decorators/api-array-query.decorator'
 
 export class PaginatedSearchSpaceObjectDto {
   @IsOptional()
+  @IsMongoId()
+  @ApiProperty({ required: false })
+  spaceId?: string
+
+  @IsOptional()
   @IsString()
   @ApiProperty()
   field?: string
