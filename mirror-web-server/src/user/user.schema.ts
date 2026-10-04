@@ -43,11 +43,7 @@ export class UserPublicData {
   @ApiProperty({ type: 'string' })
   discordUserId? = ''
   @ApiProperty({ type: 'string' })
-  isInternalAdmin = ''
-  @ApiProperty({ type: 'string' })
   displayName = ''
-  @ApiProperty({ type: 'string' })
-  email = ''
   @ApiProperty({ type: 'string' })
   publicBio = ''
   // We only need a string to decipher the current avatar.
@@ -81,28 +77,7 @@ export class UserPublicData {
   profileImage? = ''
   @ApiProperty({ type: 'string' })
   coverImage? = ''
-  @ApiProperty({ type: [String] })
-  sidebarTags? = []
 
-  /**
-   * Closed Beta
-   */
-  @ApiProperty({ type: 'boolean' })
-  closedBetaHasClickedInterestedInBeta? = false
-  @ApiProperty({ type: 'boolean' })
-  closedBetaIsInClosedBeta? = false
-
-  /**
-   * Terms
-   */
-  @ApiProperty({ type: 'boolean' })
-  termsAgreedtoClosedAlpha? = false
-
-  @ApiProperty({ type: 'boolean' })
-  termsAgreedtoGeneralTOSandPP? = false
-
-  @ApiProperty({ enum: PREMIUM_ACCESS, isArray: true })
-  premiumAccess: PREMIUM_ACCESS[] = []
 }
 
 @Schema({
