@@ -25,7 +25,7 @@ class MaterialInstanceResponse extends MaterialInstance {
 }
 
 @FirebaseTokenAuthGuard()
-@UsePipes(new ValidationPipe({ whitelist: false })) // temporary until we define the shape of the material-instance
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller('space/material-instance')
 export class MaterialInstanceController {
   constructor(
