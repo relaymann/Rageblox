@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { forwardRef, Inject } from '@nestjs/common'
+import { SpaceService, SpaceServiceType } from '../space.service'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { CreateMaterialInstanceDto } from './dto/create-material-instance.dto'
@@ -13,13 +15,19 @@ import { SpaceId, MaterialInstanceId } from '../../util/mongo-object-id-helpers'
 export class MaterialInstanceService {
   constructor(
     @InjectModel(Space.name)
-    private spaceModel: Model<SpaceDocument>
+    private spaceModel: Model<SpaceDocument>,
+    @Inject(forwardRef(() => SpaceService))
+    private readonly spaceService: SpaceServiceType
   ) {}
 
   async create(
-    createMaterialInstanceDto: CreateMaterialInstanceDto
+    createMaterialInstanceDto: CreateMaterialInstanceDto,
+    userId: string
   ): Promise<MaterialInstance> {
-    // TODO: update with role checks for the Space
+    const space = await this.spaceService.getSpace(createMaterialInstanceDto.spaceId)
+    if (!this.spaceService.canUpdateWithRolesCheck(userId, space)) {
+      throw new ForbiddenException()
+    }
     const newMaterialInstance = {
       ...createMaterialInstanceDto,
       _id: new ObjectId().toString()
@@ -43,8 +51,13 @@ export class MaterialInstanceService {
     return newMaterialInstance
   }
 
-  async findOne(spaceId: string, materialInstanceId: string) {
+  async findOne(spaceId: string, materialInstanceId: string, userId: string) {
     // TODO: update with role checks for the Space
+    const populatedSpace = await this.spaceService.getSpace(spaceId)
+    if (!this.spaceService.canFindWithRolesCheck(userId, populatedSpace)) {
+      throw new ForbiddenException()
+    }
+
     const space = await this.spaceModel.findOne({ _id: spaceId }).select({
       materialInstances: { $elemMatch: { _id: materialInstanceId } }
     })
@@ -68,7 +81,7 @@ export class MaterialInstanceService {
     updateMaterialInstanceDto: UpdateMaterialInstanceDto
   ): Promise<MaterialInstance> {
     // TODO: update with role checks for the Space
-    const space = await this.findOne(spaceId, materialInstanceId)
+    const space = await this.findOne(spaceId, materialInstanceId, userId)
 
     if (!space) {
       throw new NotFoundException(`This space doesn't exist`)
@@ -114,9 +127,14 @@ export class MaterialInstanceService {
 
   async delete(
     spaceId: SpaceId,
-    materialInstanceId: MaterialInstanceId
+    materialInstanceId: MaterialInstanceId,
+    userId: string
   ): Promise<string> {
-    // TODO: update with role checks for the Space
+    const populatedSpace = await this.spaceService.getSpace(spaceId)
+    if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
+      throw new ForbiddenException()
+    }
+
     const space = await this.spaceModel.findByIdAndUpdate(spaceId, {
       $pull: {
         materialInstances: { _id: new ObjectId(materialInstanceId) }
