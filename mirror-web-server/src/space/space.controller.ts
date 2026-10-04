@@ -457,8 +457,14 @@ export class SpaceController {
   @ApiParam({ name: 'spaceId', type: 'string', required: true })
   @FirebaseTokenAuthGuard()
   @ApiOkResponse({ type: SpaceStatsModel })
-  public async refreshStats(@Param('spaceId') spaceId: SpaceId) {
-    return await this.spaceService.refreshSpaceStats(spaceId)
+  public async refreshStats(
+    @Param('spaceId') spaceId: SpaceId,
+    @UserToken('user_id') userId: UserId
+  ) {
+    return await this.spaceService.refreshSpaceStatsWithRolesCheck(
+      spaceId,
+      userId
+    )
   }
 
   @Get(':id')

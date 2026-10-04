@@ -2244,6 +2244,17 @@ export class SpaceService implements IRoleConsumer {
     )
   }
 
+  public async refreshSpaceStatsWithRolesCheck(
+    spaceId: SpaceId,
+    userId: UserId
+  ) {
+    const space = await this.getSpace(spaceId)
+    if (!this.canUpdateWithRolesCheck(userId, space)) {
+      throw new ForbiddenException('Insufficient space permissions')
+    }
+    return this.refreshSpaceStats(spaceId)
+  }
+
   public async refreshSpaceStats(spaceId: SpaceId) {
     const [refreshedStats] = await this.spaceModel
       .aggregate(
