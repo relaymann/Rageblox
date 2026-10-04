@@ -108,31 +108,8 @@ export class StorageController {
     }
   }
 
-  @Get('/:fileName')
-  @ApiParam({ name: 'fileName', type: 'string', required: true })
-  @FirebaseTokenAuthGuard()
-  async downloadFile(
-    @Param('fileName') fileName: string,
-    @Res() res: Response
-  ) {
-    let storageFile: StorageFile
-    try {
-      storageFile = await this.storageService.get(
-        process.env.GCS_BUCKET,
-        fileName
-      )
-    } catch (e) {
-      if (e.message.toString().includes('No such object')) {
-        throw new NotFoundException('File not found')
-      } else {
-        throw new InternalServerErrorException(
-          'Error fetching file: ',
-          e.message
-        )
-      }
-    }
-    res.setHeader('Content-Type', storageFile.contentType)
-    res.setHeader('Cache-Control', 'max-age=60d')
-    res.end(storageFile.buffer)
-  }
+  // Private bucket objects must only be accessed through resource-specific authorization
+  // (for example AssetService.downloadAssetFileWithRoleChecks). There is intentionally no
+  // generic /storage/:fileName endpoint because authentication alone is not sufficient to
+  // authorize access to another user's private asset.
 }
