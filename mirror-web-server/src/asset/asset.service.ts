@@ -876,7 +876,13 @@ export class AssetService {
 
     const filter: FilterQuery<any> = searchDto?.includeSoftDeleted
       ? {
-          $or: [{ mirrorPublicLibrary: true }, { owner: new ObjectId(userId) }]
+          $or: [
+            {
+              mirrorPublicLibrary: true,
+              isSoftDeleted: { $exists: false }
+            },
+            { owner: new ObjectId(userId) }
+          ]
         }
       : {
           $or: [{ mirrorPublicLibrary: true }, { owner: new ObjectId(userId) }],
@@ -954,9 +960,7 @@ export class AssetService {
 
     const filter: FilterQuery<any> = {
       $or: [
-        includeSoftDeleted
-          ? { mirrorPublicLibrary: true }
-          : { mirrorPublicLibrary: true, isSoftDeleted: { $exists: false } },
+        { mirrorPublicLibrary: true, isSoftDeleted: { $exists: false } },
         // note that both are here since objectId vs string inconsistency currently
         { creator: userId }, // TODO this should really be owner, but we need to fix the pipeline order. If role isnt populated, we can't check for role.users[userId]
         { creator: new ObjectId(userId) }, // TODO this should really be owner, but we need to fix the pipeline order. If role isnt populated, we can't check for role.users[userId]
