@@ -1154,6 +1154,34 @@ export class SpaceService implements IRoleConsumer {
     )
 
     if (role >= ROLE.MANAGER) {
+      const maxFileSize = 10 * 1024 * 1024
+      const allowedImageMimes = new Set([
+        'image/webp',
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'image/bmp',
+        'image/tiff'
+      ])
+
+      if (!Array.isArray(files) || files.length === 0 || files.length > 4) {
+        throw new BadRequestException('A maximum of 4 image files may be uploaded')
+      }
+
+      for (const file of files) {
+        if (
+          !file ||
+          typeof file.size !== 'number' ||
+          file.size < 1 ||
+          file.size > maxFileSize ||
+          !allowedImageMimes.has(file.mimetype)
+        ) {
+          throw new BadRequestException(
+            'Each space image must be a supported raster image no larger than 10 MB'
+          )
+        }
+      }
+
       try {
         const images = await Promise.all(
           files.map((file) => {
@@ -1431,8 +1459,19 @@ export class SpaceService implements IRoleConsumer {
    * @returns Array of SpaceVersions.
    */
   public async getSpaceVersionsBySpaceId(
-    spaceId: SpaceId
+    spaceId: SpaceId,
+    userId?: UserId
   ): Promise<SpaceVersionDocument[]> {
+    const space = await this.getSpace(spaceId)
+
+    if (!space) {
+      throw new NotFoundException('Space not found')
+    }
+
+    if (!this.canFindWithRolesCheck(userId, space)) {
+      throw new NotFoundException('Space not found')
+    }
+
     return await this.spaceVersionModel
       .find()
       .where({ spaceId: spaceId })
@@ -1460,6 +1499,21 @@ export class SpaceService implements IRoleConsumer {
    * @param spaceId space mongodb id.
    * @returns SpaceVersion document or 404.
    */
+  public async getLatestSpaceVersionBySpaceIdWithRolesCheck(
+    spaceId: SpaceId,
+    userId?: UserId
+  ): Promise<SpaceVersionDocument> {
+    const space = await this.getSpace(spaceId)
+
+    if (!space || !this.canFindWithRolesCheck(userId, space)) {
+      throw new NotFoundException('No Published Space Available')
+    }
+
+    return await this.spaceVersionModel
+      .findOne({ spaceId: spaceId }, {}, { sort: { createdAt: -1 } })
+      .exec()
+  }
+
   public async getLatestSpaceVersionBySpaceIdAdmin(
     spaceId: SpaceId
   ): Promise<SpaceVersionDocument> {
@@ -2081,9 +2135,26 @@ export class SpaceService implements IRoleConsumer {
   private _getSearchFilter(searchDto: PaginatedSearchSpaceDto): Array<any> {
     const { search, field, tag, tagType } = searchDto
     const andFilter = []
+    const allowedSearchFields = new Set(['name', 'description'])
+
+    if (field && search) {
+      if (!allowedSearchFields.has(field)) {
+        throw new BadRequestException('Unsupported space search field')
+      }
+
+      if (search.length > 128) {
+        throw new BadRequestException('Space search text is too long')
+      }
+
+      andFilter.push({
+        [field]: new RegExp(search.replace(/[.*+?^$\\{}()|[\]\\]/g, '\\  private _getSearchFilter(searchDto: PaginatedSearchSpaceDto): Array<any> {
+    const { search, field, tag, tagType } = searchDto
+    const andFilter = []
 
     if (field && search) {
       andFilter.push({ [field]: new RegExp(search, 'i') })
+    }'), 'i')
+      })
     }
 
     if (tag && tagType) {
