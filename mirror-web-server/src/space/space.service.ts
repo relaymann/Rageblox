@@ -261,21 +261,32 @@ export class SpaceService implements IRoleConsumer {
         throw new HttpException('Error creating spaceVariablesData', 500)
       }
 
-      // Create the role
+      // Create the role. Never allow client input to grant ownership.
+      // Collaborator roles may be supplied, but OWNER is reserved for the
+      // authenticated creator at space creation time.
+      const sanitizeRoleMap = (value: unknown) => {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+          return {}
+        }
+        const result: Record<string, ROLE> = {}
+        for (const [targetId, rawRole] of Object.entries(value)) {
+          if (!isMongoId(targetId) || !isEnum(rawRole, ROLE)) {
+            continue
+          }
+          result[targetId] = rawRole as ROLE
+        }
+        result[userId] = ROLE.OWNER
+        return result
+      }
+
       try {
         const role = await this.roleService.create({
           defaultRole: this._getDefaultRoleByPublicBuildPermissions(
             createSpaceDto.publicBuildPermissions
           ),
           creator: createSpaceDto.creator,
-          users: {
-            ...createSpaceDto.users,
-            // set the creator as an owner
-            [userId]: ROLE.OWNER
-          },
-          userGroups: {
-            ...createSpaceDto.userGroups
-          }
+          users: sanitizeRoleMap(createSpaceDto.users),
+          userGroups: sanitizeRoleMap(createSpaceDto.userGroups)
         })
         createdSpace.publicBuildPermissions =
           createSpaceDto.publicBuildPermissions || BUILD_PERMISSIONS.PRIVATE // default to private
