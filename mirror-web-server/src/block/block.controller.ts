@@ -21,6 +21,7 @@ import { Block } from './block.schema'
 import { BlockService } from './block.service'
 import { CreateBlockDto } from './dto/create-block.dto'
 import { UpdateBlockDto } from './dto/update-block.dto'
+import { UserToken } from '../auth/get-user.decorator'
 
 class CreateBlockResponse extends Block {
   @ApiResponseProperty()
@@ -37,8 +38,11 @@ export class BlockController {
   @ApiCreatedResponse({
     type: CreateBlockResponse
   })
-  public async create(@Body() createBlockDto: CreateBlockDto) {
-    return await this.blockService.create(createBlockDto)
+  public async create(
+    @UserToken('user_id') userId: string,
+    @Body() createBlockDto: CreateBlockDto
+  ) {
+    return await this.blockService.createWithOwner(userId, createBlockDto)
   }
 
   @Get(':id')
@@ -51,14 +55,18 @@ export class BlockController {
   @ApiParam({ name: 'id', type: 'string', required: true })
   public async update(
     @Param('id') id: string,
+    @UserToken('user_id') userId: string,
     @Body() updateAssetDto: UpdateBlockDto
   ) {
-    return await this.blockService.update(id, updateAssetDto)
+    return await this.blockService.updateWithRolesCheck(id, userId, updateAssetDto)
   }
 
   @Delete(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async remove(@Param('id') id: string) {
-    return await this.blockService.remove(id)
+  public async remove(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: string
+  ) {
+    return await this.blockService.removeWithRolesCheck(id, userId)
   }
 }
