@@ -17,7 +17,6 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { GodotServerGuard } from '../godot-server/godot-server.guard'
 import { FileUploadService } from '../util/file-upload/file-upload.service'
 import { SpaceService } from './space.service'
-import { IsMongoId } from 'class-validator'
 /**
  * Note that this uses the same /space controller, but is processed AFTER the space controller.
  * /space should be removed once everything is changed to /space-godot-server 2023-04-04 12:05:17
