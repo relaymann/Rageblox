@@ -33,27 +33,21 @@ export class UserGroupMembershipService {
     return this.userGroupMembershipModel.findOneAndDelete({ _id: id }).exec()
   }
 
-  public findPublicGroupMembershipForUser(
+  public async findPublicGroupMembershipForUser(
     userId: string
   ): Promise<UserGroupMembershipDocument[]> {
-    return (
-      this.userGroupMembershipModel
-        .find()
-        .where({ user: userId, membershipIsPubliclyVisible: true })
-        // TODO add a test such that only name is exposed
-        // TODO add a filter
-        .populate({
-          path: 'group',
-          select: ['name', 'publicDescription', 'public']
-          // TODO fix this. For some reason, the below code isn't working. Groups with public: false are still being returned. The returned doc is for some reason set to "public": "false" as string false, not boolean false. That could be part of the issue.
-          // match: {
-          //   public: {
-          //     $eq: true
-          //   }
-          // }
-        })
-        .exec()
-    )
+    const memberships = await this.userGroupMembershipModel
+      .find({ user: userId, membershipIsPubliclyVisible: true })
+      .populate({
+        path: 'group',
+        select: ['name', 'publicDescription', 'public']
+      })
+      .exec()
+
+    return memberships.filter((membership: any) => {
+      const group = membership.group
+      return group && (group.public === true || group.public === 'true')
+    })
   }
 
   public findAllForUserViaUserMembership(userId: string): Promise<any> {
