@@ -1,83 +1,167 @@
-# Update, Jul 2025: From Godot to the Next Era
+# RageBlox
 
-We've announced more details about our new Mirror Engine, a TypeScript game engine. [Sign up for the alpha here](https://mirrorengine.io/alpha-signup).
+**RageBlox** is an independent, creator-focused game platform and development environment built around the goal of making game creation, publishing, multiplayer, and playing feel familiar, accessible, and deeply integrated.
 
-[![Mirror Engine is a new TypeScript game engine](https://img.youtube.com/vi/knxeNfux4lE/0.jpg)](https://www.youtube.com/watch?v=knxeNfux4lE)
+The long-term goal is a complete platform: an engine, editor, runtime, multiplayer stack, creator tools, player-facing platform, and the services needed to create and play user-made experiences.
 
-# Update, Nov 2024: Transitioning from Godot
+## Vision
 
-We've made the extremely difficult decision to transition from Godot but we have exciting things in store. Check out our "Thank You & Technical Reflections" below.
+> **Give creators a powerful, approachable platform where they can build, publish, share, and play interactive experiences.**
 
-Our V2 announcement will first be on Discord: https://mirrorengine.io/discord
+RageBlox is designed around a highly integrated workflow where the editor and runtime work together instead of forcing creators to assemble dozens of unrelated tools.
 
-After the V2 announcement, this existing code based will be moved to `/mirror-classic` in this repo and "Mirror Classic" will refer to the Godot code. Mirror Classic will remain permissively MIT-licensed and parts of the V2 are planned to be open-core.
+## Planned Platform
 
-[![Video: Transitioning from Godot: Thank You and Technical Reflections](https://img.youtube.com/vi/n_kkiNqAwIU/0.jpg)](https://youtu.be/n_kkiNqAwIU)
+### RageBlox Engine
+- 3D rendering
+- Physics and collision
+- Scene and object systems
+- Transform and hierarchy systems
+- Lighting and materials
+- Audio
+- Particles and visual effects
+- Animation
+- Character controllers
+- Cameras and input
+- Asset loading and management
+- Serialization and persistence
+- Multiplayer networking and replication
+- Client/server architecture
+- Scripting
 
-# Mirror Classic: Get Started
+### RageBlox Studio
+- Scene and world editing
+- Explorer-style object hierarchy
+- Properties and inspectors
+- Building with parts and models
+- Terrain and environment tools
+- Material and appearance editing
+- Lighting tools
+- Animation tools
+- Asset importing
+- Script editing
+- Testing and play modes
+- Multiplayer testing
+- Publishing and project management
 
-The **easiest** way is via our compiled Mirror Official app: [Get Started](https://docs.themirror.space/docs/get-started)
+### RageBlox Runtime
+- Client runtime
+- Dedicated/server runtime
+- Authoritative gameplay systems
+- Replicated objects and state
+- Player and character systems
+- User interfaces
+- Input and controls
+- Audio and visual effects
+- Secure client/server communication
 
-## Docs
+### RageBlox Platform
+- User accounts
+- Profiles
+- Experiences
+- Publishing
+- Public and private servers
+- Experience discovery and search
+- Friends and social features
+- Avatar customization
+- Creator permissions
+- Collaboration
+- Player-created content
+- Moderation and safety systems
+- Developer and creator services
 
-[The docs site](https://docs.themirror.space/docs/open-source-code/get-started) (`/mirror-docs`) is our primary source of truth for documentation, not this README. We intend to keep this README slim since documentation is and will continue to be extensive.
+## Creator Workflow
 
-# Features
+Creators should eventually be able to:
 
-- **[(Real) Real-Time Game Development](https://www.themirror.space/blog/real-real-time-game-development)**: Like Inception, the aim is to build worlds in real-time with friends, colleagues, and players. Read more about our approach on our blog [here](https://www.themirror.space/blog/real-real-time-game-development).
-- **All-in-one game development**: The Mirror is both the editor and the game, providing everything you need out-of-the-box to quickly create and play games, digital experiences, virtual worlds, and more.
-- **Editor**: Built-in and networked: A lightweight, real-time, multiplayer editor to build in real-time.
-- **Physics** via [Jolt](https://github.com/jrouwe/JoltPhysics), a AAA physics engine used by Horizon Zero Dawn.
-- **Advanced networking**: Keep your game in sync and rewind when things get out of sync.
-- **Visual scripting**: Even if you don't know how to code, you can implement game logic quickly and easily.
-- **Traditional coding**: GDScript in-world editor so you can live edit your game code. If you're new to GDScript, it's like Python, super newbie-friendly, and is easy to learn.
-- **Material editor**: No need to exit the editor to make changes to your materials: Everything is in real-time
-- **Shader editing**: Real-time shader editing with text will be available in the future
-- **Asset management**: Assets are automatically stored in the cloud or via local storage (self-hosted) so you can simplify your workflows in real-time without needing to restart the editor. Much less hassle and easy collaboration with team members.
-- **Open asset system**: Built around GLTF, The Mirror supports seats, lights, equipables, and custom physics shapes, all direct from Blender.
-- **Mirror UI elements**, including a table class which can easily map _any_ data to UI elements without duplicating state in a performant way.
-- **Collision shape generation**: Convex and concave supported
-- **Audio**: Easily add audio to your game in real-time without opening a separate editor; no need to recompile
-- **Player controllers**: Out-of-the-box FPS (first-person shooter), TPS (third-person shooter), and VR (virtual reality) supported.
-- **VR-ready**: Just put on the tethered headset when playing! We test with Meta Quest 2 and 3.
-- **Intentional architecture**: (Space)Objects are a simple game object abstraction with the aim of supporting **any** type of Godot node in the future.
-- **Bidirectionality with Godot**: Start in The Mirror and end in Godot, or start in Godt and end in The Mirror. Our aim is to make it easy to transition between the two or develop side-by-side: your choice.
-  ![Bidirectionality with Godot](bidirectionality-with-godot.jpg)
-- **Godot plugin:** Coming soon
+1. Create an experience.
+2. Build a world.
+3. Add and configure objects.
+4. Write gameplay logic.
+5. Test locally or with other players.
+6. Publish the experience.
+7. Host multiplayer sessions.
+8. Update the experience without rebuilding the entire platform.
 
-# Join the Community
+These workflows will be treated as first-class parts of the architecture.
 
-**1. Join our [Discord](https://discord.com/invite/CK6fH3Cynk)**
+## Original Work
 
-**2. Read our docs: [Site](https://docs.themirror.space), [monorepo `/mirror-docs`](https://github.com/the-mirror-gdp/the-mirror/tree/dev/mirror-docs)**
+RageBlox is an independent project.
 
-**3. Check out our [open-source announcement post](https://www.themirror.space/blog/freedom-to-own-open-sourcing-the-mirror)**
+RageBlox-specific code, systems, branding, artwork, models, sounds, animations, UI assets, and other original content will be created independently or used under licenses that explicitly permit their use.
 
-**4. Subscribe on [Youtube](https://www.youtube.com/@JaredDMcCluskey).**
+RageBlox does not rely on proprietary source code or proprietary assets from other platforms.
 
-# What is The Mirror and why?
+## Development Status
 
-The Mirror is a Roblox & UEFN alternative, an all-in-one game engine built on Godot.
+RageBlox is under active development.
 
-The goal is to be both the editor and the game, like Inception: build a world with friends in real-time. This saves you a plethora of work: Enjoy not having to worry about infrastructure, backend HTTP routes, websockets, asset management, authentication, netsync, and various systems from scratch.
+The current repository contains an existing engine/editor foundation that is being evaluated, reworked, and expanded toward the RageBlox vision. Major systems will be audited before large-scale feature development so the architecture can support the long-term platform instead of accumulating disconnected features.
 
-This repo is The Mirror's source code: the Godot app (client/server), the web server, and the docs in one place. We've included everything we can provide to help you build your games as fast as possible.
+Expect substantial changes while the foundation is being developed.
 
-## Build the Open-Source Code
+## Project Structure
 
-1. Git clone the repository (you do **not** need to clone with submodules; they are optional)
-2. Build a precompiled Mirror fork of Godot engine: https://github.com/mirror-engine/godot
-3. Open the Godot editor (The Mirror fork), click import, and choose the `project.godot` from the `/mirror-godot-app` folder.
-   Note that if you see this popup, you can safely ignore it and proceed.
+The repository currently contains the major pieces of the platform foundation:
 
-![image](https://github.com/the-mirror-gdp/the-mirror/assets/11920077/53f84e88-aa31-4245-93af-decdec253168)
+- **Engine / runtime** — rendering, physics, objects, networking, scripting, and gameplay infrastructure
+- **Studio / editor** — creation and development workflows
+- **Web / platform services** — online and creator functionality
+- **Documentation** — technical and creator-facing documentation
+- **Scripts** — development and setup tooling
 
-4. Close the Godot editor and open it again, to ensure that everything loads correctly, now that all files have been imported.
-5. **Hit play in the Godot editor!**
-6. Create a new Space, and you will automatically join it. Or, join an existing Space.
+The architecture will continue to evolve as RageBlox moves toward the complete platform.
 
-## Godot Fork
+## Licensing
 
-The Mirror is built on a custom fork of Godot and required to use The Mirror's code. The fork is open source and can be found [here](https://github.com/the-mirror-gdp/godot).
+See [LICENSE.txt](LICENSE.txt) for the licenses that apply to the existing repository.
 
-_Analytics Disclaimer: We use Posthog and Mixpanel and it automatically collects analytics in the open source repo. You can disable this manually by commenting out the `mirror-godot-app/scripts/autoload/analytics/analytics.gd` file methods. We are transitioning from Posthog to Mixpanel and Posthog will be removed in a future release. We will make this easier in the future to disable. The Mirror Megaverse Inc., a US Delaware C Corp, is the data controller of the Posthog and Mixpanel instances. You are free to disable the analytics and even plug in your own Posthog or Mixpanel API keys to capture the analytics yourself for your games!_
+Code and included assets may have different licensing terms. Do not assume that every asset in the repository has the same license as the source code.
+
+New RageBlox-original assets and code will have their licensing documented appropriately.
+
+## Development Principles
+
+RageBlox is being developed with an emphasis on:
+
+- Strong foundational architecture
+- Multiplayer correctness
+- Security against untrusted clients
+- Creator usability
+- Cross-platform compatibility
+- Reliable serialization and publishing
+- Maintainable systems
+- Original code and content
+- Compatibility between editor, runtime, and platform services
+
+## Roadmap
+
+The long-term roadmap includes:
+
+- [ ] Core engine foundation
+- [ ] Robust object/component hierarchy
+- [ ] Building and modeling tools
+- [ ] Character and humanoid systems
+- [ ] Physics and interaction systems
+- [ ] Scripting environment
+- [ ] Studio editor workflows
+- [ ] Client/server networking
+- [ ] Replication and remote communication
+- [ ] Asset pipeline
+- [ ] Experience serialization and publishing
+- [ ] Accounts and profiles
+- [ ] Multiplayer servers
+- [ ] Experience discovery
+- [ ] Avatar system
+- [ ] Social systems
+- [ ] Creator collaboration
+- [ ] Moderation and safety infrastructure
+- [ ] Creator/developer services
+- [ ] Cross-platform support
+
+This roadmap is intentionally broad. Individual systems will be broken down and implemented after the underlying architecture has been audited.
+
+---
+
+**RageBlox** — build it, publish it, play it.
