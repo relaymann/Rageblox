@@ -1061,7 +1061,13 @@ export class SpaceService implements IRoleConsumer {
   }
 
   /** Saves an empty data array to the voxels file in GCS. */
-  public async clearVoxels(spaceId: string) {
+  public async clearVoxels(userId: UserId, spaceId: string) {
+    const space = await this.getSpace(spaceId)
+    const role = this.roleService.getMaxRoleForUserForEntity(userId, space)
+    if (role < ROLE.MANAGER) {
+      throw new NotFoundException('Not found or insufficient permissions')
+    }
+
     try {
       const remoteRelativePath = `space/${spaceId}/terrain/voxels.dat`
 
