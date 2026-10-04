@@ -30,18 +30,21 @@ export class MirrorDBController {
   @Get('space/:spaceId')
   @ApiParam({ name: 'spaceId', type: String, required: true })
   public async getRecordFromMirrorDBBySpaceId(
-    @Param('spaceId') spaceId: string
+    @Param('spaceId') spaceId: string,
+    @UserToken('user_id') userId: UserId
   ) {
-    return await this.mirrorDBService.getRecordFromMirrorDBBySpaceId(spaceId)
+    return await this.mirrorDBService.getRecordFromMirrorDBBySpaceIdWithRolesCheck(spaceId, userId)
   }
 
   @Get('space-version/:spaceVersionId')
   @ApiParam({ name: 'spaceVersionId', type: String, required: true })
   public async getRecordFromMirrorDBBySpaceVersionId(
-    @Param('spaceVersionId') spaceVersionId: string
+    @Param('spaceVersionId') spaceVersionId: string,
+    @UserToken('user_id') userId: UserId
   ) {
-    return await this.mirrorDBService.getRecordFromMirrorDBBySpaceVersionId(
-      spaceVersionId
+    return await this.mirrorDBService.getRecordFromMirrorDBBySpaceVersionIdWithRolesCheck(
+      spaceVersionId,
+      userId
     )
   }
 
@@ -61,7 +64,10 @@ export class MirrorDBController {
 
   @Delete(':id')
   @ApiParam({ name: 'id', type: String, required: true })
-  public async deleteRecordFromMirrorDBById(@Param('id') id: MirrorDBRecordId) {
-    return await this.mirrorDBService.deleteRecordFromMirrorDBById(id)
+  public async deleteRecordFromMirrorDBById(
+    @Param('id') id: MirrorDBRecordId,
+    @UserToken('user_id') userId: UserId
+  ) {
+    return await this.mirrorDBService.deleteRecordFromMirrorDBByIdWithRolesChecks(id, userId)
   }
 }
