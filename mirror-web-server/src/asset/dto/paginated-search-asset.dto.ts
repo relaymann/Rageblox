@@ -140,6 +140,9 @@ export class PaginatedSearchAssetDto {
   @IsOptional()
   @ApiArrayQuery([String])
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @ArrayMaxSize(50)
+  @IsString({ each: true })
+  @MaxLength(128, { each: true })
   tag?: string[]
 
   @ValidateIf((o) => o.tag)
