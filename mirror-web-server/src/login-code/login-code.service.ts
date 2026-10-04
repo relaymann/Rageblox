@@ -1,7 +1,8 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException
+  NotFoundException,
+  TooManyRequestsException
 } from '@nestjs/common'
 import { UserService } from '../user/user.service'
 import { UserId } from '../util/mongo-object-id-helpers'
@@ -12,6 +13,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { User, UserDocument } from '../user/user.schema'
 import { Model } from 'mongoose'
 import { SpaceService } from '../space/space.service'
+import { RedisPubSubService } from '../redis/redis-pub-sub.service'
 @Injectable()
 export class LoginCodeService {
   constructor(
@@ -19,6 +21,7 @@ export class LoginCodeService {
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
     private readonly spaceService: SpaceService,
+    private readonly redisPubSubService: RedisPubSubService,
     @InjectModel(LoginCode.name)
     private loginCodeModel: Model<LoginCodeDocument>
   ) {}
@@ -64,8 +67,23 @@ export class LoginCodeService {
   }
 
   public async getLoginCodeRecordByLoginCode(
-    loginCode: string
+    loginCode: string,
+    requesterIp?: string
   ): Promise<LoginCode> {
+    if (!requesterIp || requesterIp.length > 128) {
+      throw new BadRequestException('Invalid requester')
+    }
+
+    const rateLimitKey = `login-code:check:${requesterIp}`
+    const rateLimitResult = await this.redisPubSubService.publisher
+      .multi()
+      .incr(rateLimitKey)
+      .expire(rateLimitKey, 60)
+      .exec()
+    const attempts = Number(rateLimitResult?.[0])
+    if (attempts > 30) {
+      throw new TooManyRequestsException('Too many login-code attempts')
+    }
     const loginCodeRecord = await this.loginCodeModel
       .findOneAndUpdate(
         {
