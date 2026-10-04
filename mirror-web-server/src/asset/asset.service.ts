@@ -14,6 +14,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { ObjectId } from 'mongodb'
 import { FilterQuery, Model, PipelineStage, Types } from 'mongoose'
 import {
+  CURRENCY_FOR_PURCHASE_OPTION,
   PURCHASE_OPTION_TYPE,
   PurchaseOption,
   PurchaseOptionDocument
@@ -1397,6 +1398,28 @@ export class AssetService {
     )
 
     if (check === true) {
+      if (
+        !Number.isInteger(data.price) ||
+        data.price < 0 ||
+        data.price > 100000000
+      ) {
+        throw new BadRequestException('Purchase option price is invalid')
+      }
+      if (
+        !Object.values(CURRENCY_FOR_PURCHASE_OPTION).includes(
+          data.currency as CURRENCY_FOR_PURCHASE_OPTION
+        )
+      ) {
+        throw new BadRequestException('Purchase option currency is invalid')
+      }
+      if (
+        !Object.values(PURCHASE_OPTION_TYPE).includes(
+          data.type as PURCHASE_OPTION_TYPE
+        )
+      ) {
+        throw new BadRequestException('Purchase option type is invalid')
+      }
+
       // Check the license type.
       if (data.licenseType === PURCHASE_OPTION_TYPE.MIRROR_REV_SHARE) {
         // Check MIRROR_REV_SHARE already exist or not
