@@ -1,3 +1,7 @@
 [submodule "godot-engine"]
 	path = godot-engine
 	url = git@github.com:the-mirror-gdp/godot.git
+
+[submodule "mirror-godot-app/GodotLuau"]
+	path = mirror-godot-app/GodotLuau
+	url = https://github.com/Pimpoli/GodotLuau.git
