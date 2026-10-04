@@ -544,8 +544,11 @@ export class SpaceController {
   @FirebaseTokenAuthGuard()
   @ApiOkResponse({ type: SpacePublicData })
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async clearVoxels(@Param('id') id: string) {
-    return await this.spaceService.clearVoxels(id)
+  public async clearVoxels(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: UserId
+  ) {
+    return await this.spaceService.clearVoxels(userId, id)
   }
 
   @Post('copy/:id')
