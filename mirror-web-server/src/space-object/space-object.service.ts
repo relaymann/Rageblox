@@ -1082,6 +1082,9 @@ export class SpaceObjectService implements IRoleConsumer {
     const andFilter = []
 
     if (field && search) {
+      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(field)) {
+        throw new BadRequestException('Invalid search field')
+      }
       andFilter.push({ [field]: new RegExp(search, 'i') })
     }
 
