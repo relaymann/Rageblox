@@ -450,12 +450,7 @@ export class SpaceService implements IRoleConsumer {
       matchFilter.$and.push({ [`role.users.${userId}`]: { $ne: ROLE.OWNER } })
     }
 
-    const sort =
-      searchDto.sortKey && searchDto.sortDirection !== undefined
-        ? {
-            [searchDto.sortKey]: searchDto.sortDirection
-          }
-        : undefined
+    const sort = this._getSpaceSort(searchDto)
 
     const paginationStrategy = this.paginationService.getPaginationStrategy(
       startItem,
@@ -523,12 +518,7 @@ export class SpaceService implements IRoleConsumer {
       matchFilter.$and = andFilter
     }
     // sort
-    const sort =
-      searchDto.sortKey && searchDto.sortDirection !== undefined
-        ? {
-            [searchDto.sortKey]: searchDto.sortDirection
-          }
-        : undefined
+    const sort = this._getSpaceSort(searchDto)
 
     const paginationStrategy = this.paginationService.getPaginationStrategy(
       startItem,
@@ -1981,12 +1971,7 @@ export class SpaceService implements IRoleConsumer {
     userId: UserId = undefined
   ) {
     const { page, perPage } = searchDto
-    const sort =
-      searchDto.sortKey && searchDto.sortDirection !== undefined
-        ? {
-            [searchDto.sortKey]: searchDto.sortDirection
-          }
-        : undefined
+    const sort = this._getSpaceSort(searchDto)
 
     const matchFilter: FilterQuery<Space> = {}
 
@@ -2131,6 +2116,30 @@ export class SpaceService implements IRoleConsumer {
   /**
    * START Section: Search  ------------------------------------------------------
    */
+
+  private _getSpaceSort(searchDto: PaginatedSearchSpaceDto) {
+    if (!searchDto.sortKey || searchDto.sortDirection === undefined) {
+      return undefined
+    }
+
+    const allowedSortKeys = new Set([
+      'createdAt',
+      'updatedAt',
+      'name',
+      'AVG_RATING',
+      'COUNT_LIKE',
+      'COUNT_FOLLOW',
+      'COUNT_SAVES',
+      'COUNT_RATING',
+      'usersCount'
+    ])
+
+    if (!allowedSortKeys.has(searchDto.sortKey)) {
+      throw new BadRequestException('Unsupported space sort field')
+    }
+
+    return { [searchDto.sortKey]: searchDto.sortDirection }
+  }
 
   private _getSearchFilter(searchDto: PaginatedSearchSpaceDto): Array<any> {
     const { search, field, tag, tagType } = searchDto
