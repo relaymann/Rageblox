@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 import { CreateUserGroupDto } from './dto/create-group.users.dto'
@@ -28,6 +28,32 @@ export class UserGroupService {
         as: 'creator'
       })
       .unwind({ path: '$creator' })
+      .exec()
+  }
+
+  public async updateWithRolesCheck(
+    id: string,
+    userId: string,
+    updateUserGroupDto: UpdateUserGroupDto
+  ): Promise<any> {
+    const group = await this.userGroupModel.findById(id).exec()
+    if (!group) {
+      throw new NotFoundException('User group not found')
+    }
+
+    const isOwner =
+      group.creator?.toString() === userId ||
+      group.owners?.some((owner) => owner.toString() === userId)
+
+    if (!isOwner) {
+      throw new ForbiddenException('Insufficient group permissions')
+    }
+
+    const { _id, creator, owners, users, moderators, ...safeUpdate } =
+      updateUserGroupDto as any
+
+    return await this.userGroupModel
+      .findByIdAndUpdate(id, safeUpdate, { new: true })
       .exec()
   }
 
