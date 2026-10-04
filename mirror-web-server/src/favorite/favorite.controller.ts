@@ -16,6 +16,7 @@ import { CreateFavoriteDto } from './dto/create-favorite.dto'
 import { UpdateFavoriteDto } from './dto/update-favorite.dto'
 import { Favorite } from './favorite.schema'
 import { FavoriteService } from './favorite.service'
+import { UserToken } from '../auth/get-user.decorator'
 
 class CreateFavoriteResponse extends Favorite {
   @ApiResponseProperty()
@@ -32,33 +33,43 @@ export class FavoriteController {
   @ApiCreatedResponse({
     type: CreateFavoriteResponse
   })
-  public async create(@Body() createFavoriteDto: CreateFavoriteDto) {
-    return await this.favoriteService.create(createFavoriteDto)
+  public async create(
+    @UserToken('user_id') userId: string,
+    @Body() createFavoriteDto: CreateFavoriteDto
+  ) {
+    return await this.favoriteService.createForUser(userId, createFavoriteDto)
   }
 
   @Get()
-  public async findAllForUser(userId: string) {
+  public async findAllForUser(@UserToken('user_id') userId: string) {
     return await this.favoriteService.findAllForUser(userId)
   }
 
   @Get(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async findOne(@Param('id') id: string) {
-    return await this.favoriteService.findOne(id)
+  public async findOne(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: string
+  ) {
+    return await this.favoriteService.findOneForUser(id, userId)
   }
 
   @Patch(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
   public async update(
     @Param('id') id: string,
-    @Body() updateFavoriteDto: UpdateFavoriteDto
+    @Body() updateFavoriteDto: UpdateFavoriteDto,
+    @UserToken('user_id') userId: string
   ) {
-    return await this.favoriteService.update(id, updateFavoriteDto)
+    return await this.favoriteService.updateForUser(id, userId, updateFavoriteDto)
   }
 
   @Delete(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async remove(@Param('id') id: string) {
-    return await this.favoriteService.remove(id)
+  public async remove(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: string
+  ) {
+    return await this.favoriteService.removeForUser(id, userId)
   }
 }

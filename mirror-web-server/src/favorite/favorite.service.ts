@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { CreateFavoriteDto } from './dto/create-favorite.dto'
@@ -10,8 +10,12 @@ export class FavoriteService {
   constructor(
     @InjectModel(Favorite.name) private favoriteModel: Model<FavoriteDocument>
   ) {}
-  create(createFavoriteDto: CreateFavoriteDto): Promise<FavoriteDocument> {
-    const created = new this.favoriteModel(createFavoriteDto)
+  createForUser(userId: string, dto: CreateFavoriteDto): Promise<FavoriteDocument> {
+    const created = new this.favoriteModel({
+      ...dto,
+      user: userId,
+      creator: userId
+    })
     return created.save()
   }
 
@@ -24,22 +28,25 @@ export class FavoriteService {
       .exec()
   }
 
-  findOne(id: string): Promise<FavoriteDocument> {
-    return this.favoriteModel.findById(id).exec()
+  async findOneForUser(id: string, userId: string): Promise<FavoriteDocument> {
+    const favorite = await this.favoriteModel.findById(id).exec()
+    if (!favorite) throw new NotFoundException()
+    if (favorite.user?.toString() !== userId) throw new ForbiddenException()
+    return favorite
   }
 
-  update(
+  async updateForUser(
     id: string,
-    updateFavoriteDto: UpdateFavoriteDto
+    userId: string,
+    dto: UpdateFavoriteDto
   ): Promise<FavoriteDocument> {
-    return this.favoriteModel
-      .findByIdAndUpdate(id, updateFavoriteDto, { new: true })
-      .exec()
+    const favorite = await this.findOneForUser(id, userId)
+    const { _id, user, creator, ...safeUpdate } = dto as any
+    return this.favoriteModel.findByIdAndUpdate(favorite._id, safeUpdate, { new: true }).exec()
   }
 
-  remove(id: string): Promise<FavoriteDocument> {
-    return this.favoriteModel
-      .findOneAndDelete({ _id: id }, { new: true })
-      .exec()
+  async removeForUser(id: string, userId: string): Promise<FavoriteDocument> {
+    await this.findOneForUser(id, userId)
+    return this.favoriteModel.findOneAndDelete({ _id: id }).exec()
   }
 }

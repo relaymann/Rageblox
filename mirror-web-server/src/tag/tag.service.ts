@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { TAG_TYPE } from '../option-sets/tag-type'
@@ -136,15 +136,22 @@ export class TagService {
       .exec()
   }
 
-  update(id: string, updateTagDto: UpdateTagDto): Promise<TagDocument> {
-    return this.tagModel
-      .findByIdAndUpdate(id, updateTagDto, { new: true })
-      .exec()
+  async updateWithRolesCheck(
+    id: string,
+    userId: string,
+    dto: UpdateTagDto
+  ): Promise<TagDocument> {
+    const tag = await this.findOne(id)
+    if (!tag) throw new NotFoundException()
+    if (tag.creator?.toString() !== userId) throw new ForbiddenException()
+    const { _id, creator, ...safeUpdate } = dto as any
+    return this.tagModel.findByIdAndUpdate(id, safeUpdate, { new: true }).exec()
   }
 
-  remove(id: string): Promise<TagDocument> {
-    return this.tagModel
-      .findOneAndDelete({ _id: id })
-      .exec() as any as Promise<TagDocument>
+  async removeWithRolesCheck(id: string, userId: string): Promise<TagDocument> {
+    const tag = await this.findOne(id)
+    if (!tag) throw new NotFoundException()
+    if (tag.creator?.toString() !== userId) throw new ForbiddenException()
+    return this.tagModel.findOneAndDelete({ _id: id }).exec() as any as Promise<TagDocument>
   }
 }
