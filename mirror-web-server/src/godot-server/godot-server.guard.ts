@@ -17,8 +17,13 @@ export class GodotServerGuard implements CanActivate {
     context: ExecutionContext
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest()
+    const secret = process.env.WSS_SECRET
+    const authorization = request.headers?.authorization
     const check =
-      request.headers?.authorization == `Bearer ${process.env.WSS_SECRET}`
+      typeof secret === 'string' &&
+      secret.length > 0 &&
+      typeof authorization === 'string' &&
+      authorization === `Bearer ${secret}`
     if (!check) {
       this.logger.log(
         'Bearer secret Authorization check failed',
