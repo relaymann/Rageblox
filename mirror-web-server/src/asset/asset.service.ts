@@ -14,6 +14,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { ObjectId } from 'mongodb'
 import { FilterQuery, Model, PipelineStage, Types } from 'mongoose'
 import {
+  CURRENCY_FOR_PURCHASE_OPTION,
   PURCHASE_OPTION_TYPE,
   PurchaseOption,
   PurchaseOptionDocument
@@ -1095,29 +1096,40 @@ export class AssetService {
     const softDeletedCheck = await this.isAssetSoftDeleted(assetId)
 
     if (roleCheck && !softDeletedCheck) {
-      // do === check here to avoid accidentally truthy since checkUserRoleForEntity returns a promise
+      // File locations and ownership/identity are controlled by upload/creation flows.
+      // Never allow the generic metadata endpoint to turn into an arbitrary storage proxy.
+      const {
+        currentFile: _currentFile,
+        thumbnail: _thumbnail,
+        owner: _owner,
+        creator: _creator,
+        role: _role,
+        purchasedParentAssetId: _purchasedParentAssetId,
+        mirrorPublicLibrary: _mirrorPublicLibrary,
+        ...safeUpdateAssetDto
+      } = updateAssetDto as any
 
       // Mongoose doesn't know about the discriminator classes and thus won't work with properties of the discriminator if the discriminator model isn't used.
-      switch (updateAssetDto.__t) {
+      switch (safeUpdateAssetDto.__t) {
         case 'MapAsset':
           return this.mapAssetModel
-            .findByIdAndUpdate(assetId, updateAssetDto, { new: true })
+            .findByIdAndUpdate(assetId, safeUpdateAssetDto, { new: true })
             .populate(this._getStandardPopulateFieldsAsArray())
             .exec()
         case 'Material':
           return this.materialModel
-            .findByIdAndUpdate(assetId, updateAssetDto, { new: true })
+            .findByIdAndUpdate(assetId, safeUpdateAssetDto, { new: true })
             .populate(this._getStandardPopulateFieldsAsArray())
             .exec()
         case 'Texture':
           return this.textureModel
-            .findByIdAndUpdate(assetId, updateAssetDto, { new: true })
+            .findByIdAndUpdate(assetId, safeUpdateAssetDto, { new: true })
             .populate(this._getStandardPopulateFieldsAsArray())
             .exec()
 
         default:
           return this.assetModel
-            .findByIdAndUpdate(assetId, updateAssetDto, { new: true })
+            .findByIdAndUpdate(assetId, safeUpdateAssetDto, { new: true })
             .populate(this._getStandardPopulateFieldsAsArray())
             .exec()
       }
@@ -1386,6 +1398,28 @@ export class AssetService {
     )
 
     if (check === true) {
+      if (
+        !Number.isInteger(data.price) ||
+        data.price < 0 ||
+        data.price > 100000000
+      ) {
+        throw new BadRequestException('Purchase option price is invalid')
+      }
+      if (
+        !Object.values(CURRENCY_FOR_PURCHASE_OPTION).includes(
+          data.currency as CURRENCY_FOR_PURCHASE_OPTION
+        )
+      ) {
+        throw new BadRequestException('Purchase option currency is invalid')
+      }
+      if (
+        !Object.values(PURCHASE_OPTION_TYPE).includes(
+          data.type as PURCHASE_OPTION_TYPE
+        )
+      ) {
+        throw new BadRequestException('Purchase option type is invalid')
+      }
+
       // Check the license type.
       if (data.licenseType === PURCHASE_OPTION_TYPE.MIRROR_REV_SHARE) {
         // Check MIRROR_REV_SHARE already exist or not
