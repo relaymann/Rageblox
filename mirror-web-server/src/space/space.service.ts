@@ -1563,7 +1563,10 @@ export class SpaceService implements IRoleConsumer {
     }
     return await this.spaceVersionModel
       .findOne(
-        { _id: new ObjectId(space.activeSpaceVersion as unknown as string) },
+        {
+          _id: new ObjectId(space.activeSpaceVersion as unknown as string),
+          spaceId
+        },
         {},
         { sort: { createdAt: -1 } }
       )
