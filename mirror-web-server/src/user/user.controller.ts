@@ -370,16 +370,11 @@ export class UserController {
     @UserToken('uid') userId: string,
     @Body() submitUserAccessKeyDto: SubmitUserAccessKeyDto
   ) {
-    const key = await this.userService.checkUserAccessKeyExistence(
-      submitUserAccessKeyDto.key
+    const key = await this.userService.consumeUserAccessKey(
+      submitUserAccessKeyDto.key,
+      userId
     )
     if (key) {
-      await this.userService.addUserPremiumAccess(
-        userId,
-        key.premiumAccess as PREMIUM_ACCESS
-      )
-      await this.userService.setUserAccessKeyAsUsed(key.id, userId)
-    } else {
       throw new UnauthorizedException(
         "We're sorry, but that key doesn't exist or it's been used"
       )
