@@ -24,8 +24,8 @@ export class MaterialInstanceService {
     createMaterialInstanceDto: CreateMaterialInstanceDto,
     userId: string
   ): Promise<MaterialInstance> {
-    const space = await this.spaceService.getSpace(createMaterialInstanceDto.spaceId)
-    if (!this.spaceService.canUpdateWithRolesCheck(userId, space)) {
+    const populatedSpace = await this.spaceService.getSpace(createMaterialInstanceDto.spaceId)
+    if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
       throw new ForbiddenException()
     }
     const newMaterialInstance = {
@@ -78,9 +78,9 @@ export class MaterialInstanceService {
   async update(
     spaceId: SpaceId,
     materialInstanceId: MaterialInstanceId,
-    updateMaterialInstanceDto: UpdateMaterialInstanceDto
+    updateMaterialInstanceDto: UpdateMaterialInstanceDto,
+    userId: string
   ): Promise<MaterialInstance> {
-    // TODO: update with role checks for the Space
     const space = await this.findOne(spaceId, materialInstanceId, userId)
 
     if (!space) {
