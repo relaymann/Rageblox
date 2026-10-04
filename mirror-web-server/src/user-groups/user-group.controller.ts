@@ -145,8 +145,11 @@ export class UserGroupController {
   @Get(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
   @ApiOkResponse({ type: UserGroupApiResponse })
-  public async findOne(@Param('id') id: string) {
-    const groupFound = await this.userGroupService.findOne(id)
+  public async findOne(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: string
+  ) {
+    const groupFound = await this.userGroupService.findOneWithAccess(id, userId)
     return groupFound[0]
   }
 
@@ -191,6 +194,7 @@ export class UserGroupController {
     role: GROUP_ROLE
   ) {
     createGroupMembershipDto.user = userId
+    createGroupMembershipDto.creator = userId
     createGroupMembershipDto.status = USER_GROUP_MEMBERSHIP_STATUSES.ACTIVE
     createGroupMembershipDto.role = role
     createGroupMembershipDto.group = groupId
