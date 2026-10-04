@@ -127,15 +127,19 @@ export class TagController {
   @ApiParam({ name: 'id', type: 'string', required: true })
   public async update(
     @Param('id') id: string,
-    @Body() updateAssetDto: UpdateTagDto
+    @Body() updateAssetDto: UpdateTagDto,
+    @UserToken('user_id') userId: string
   ) {
-    return await this.tagService.update(id, updateAssetDto)
+    return await this.tagService.updateWithRolesCheck(id, userId, updateAssetDto)
   }
 
   @Delete(':id')
   @FirebaseTokenAuthGuard()
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async remove(@Param('id') id: string) {
-    return await this.tagService.remove(id)
+  public async remove(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: string
+  ) {
+    return await this.tagService.removeWithRolesCheck(id, userId)
   }
 }
