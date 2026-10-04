@@ -162,11 +162,11 @@ export class FileUploadService implements FileUploadInterface {
     toPath: string
   ) {
     const storage = firebaseStorage()
-    const destination = storage.bucket(bucketName).file(toPath)
+    const destination = storage.bucket(bucketName).file(this._validateRelativeStoragePath(toPath))
     const options = { predefinedAcl: 'publicRead' }
     return storage
       .bucket(bucketName)
-      .file(fromPath)
+      .file(this._validateRelativeStoragePath(fromPath))
       .copy(destination, options) as Promise<any> // conflicting types issue
   }
 
@@ -225,7 +225,7 @@ export class FileUploadService implements FileUploadInterface {
     // 2022-06-10 00:18:50 v low priority issue, but there's a weird type incompatability between firebase-admin consuming @google-cloud storage but the types being slightly out of sync, so force typing this to be the GCS type here
     // the error shows:  Property 'crc32cGenerator' is missing in type 'import("/Users/jared/Documents/GitHub/mirror-server/node_modules/firebase-admin/node_modules/@google-cloud/storage/build/src/file").File' but required in type 'import("/Users/jared/Documents/GitHub/mirror-server/node_modules/@google-cloud/storage/build/src/file").File'.
     return (await theBucket.getFiles({
-      prefix: directoryRelativePath
+      prefix: this._validateRelativeStoragePath(directoryRelativePath)
     })) as unknown as GetFilesResponse
   }
 
