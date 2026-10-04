@@ -1,11 +1,16 @@
 import { SORT_DIRECTION } from './../../util/pagination/pagination.interface'
 import { ApiProperty } from '@nestjs/swagger'
-import { Transform } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
   IsOptional,
   IsString,
   IsEnum,
   IsArray,
+  IsInt,
+  Min,
+  Max,
+  MaxLength,
+  ArrayMaxSize,
   ValidateIf,
   IsNotEmpty,
   IsIn
@@ -19,16 +24,26 @@ import { ApiArrayQuery } from '../../util/decorators/api-array-query.decorator'
 export class PaginatedSearchAssetDto {
   @IsOptional()
   @IsString()
+  @MaxLength(128)
   @ApiProperty()
   field: string
 
   @IsOptional()
   @IsString()
+  @MaxLength(128)
   @ApiProperty()
   search: string
 
   @IsOptional()
   @IsString()
+  @IsIn([
+    'updatedAt',
+    'createdAt',
+    'name',
+    'assetType',
+    'mirrorPublicLibrary',
+    'mirrorAssetManagerUser'
+  ])
   @ApiProperty({
     description: `Default is updatedAt: desc`
   })
@@ -42,22 +57,36 @@ export class PaginatedSearchAssetDto {
   sortDirection: SORT_DIRECTION
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100000)
   @ApiProperty()
   page: number
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   @ApiProperty()
   perPage: number
 
   @IsOptional()
-  @IsString()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(1000000)
   @ApiProperty({
     required: false
   })
   startItem: number
 
   @IsOptional()
-  @IsString()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   @ApiProperty({ required: false })
   numberOfItems: number
 
@@ -127,10 +156,12 @@ export class PaginatedSearchAssetDto {
 export class PaginatedSearchAssetDtoV2 extends PaginatedSearchAssetDto {
   @IsOptional()
   @IsArray()
-  @Transform(({ value }) => value?.toString().split(',').map(String)) // This transforms the comma-separated strings into an array of strings
+  @ArrayMaxSize(2)
+  @Transform(({ value }) => value?.toString().split(',').map(String))
+  @IsIn(['creator', 'owner'], { each: true })
   @ApiProperty({
-    description: 'Comma-separated list of fields to populate',
-    examples: ['creator', 'owner', 'tagsV2', 'creator']
+    description: 'Comma-separated list of safe user fields to populate',
+    examples: ['creator', 'owner']
   })
   populate: string[]
 
@@ -171,12 +202,6 @@ export function getPopulateFieldsFromPaginatedSearchAssetDto(searchAssetDto) {
       project: {
         displayName: 1
       }
-    })
-  searchAssetDto?.populate?.includes('customData') &&
-    populateFields.push({
-      localField: 'customData',
-      from: 'customdatas',
-      unwind: true
     })
   return populateFields
 }

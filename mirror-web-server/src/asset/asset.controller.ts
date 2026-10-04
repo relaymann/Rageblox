@@ -464,7 +464,20 @@ export class AssetController {
     return await this.assetService.findPaginatedMirrorAssetsWithRolesCheck(
       userId,
       searchAssetDto,
-      this.assetService.standardPopulateFields
+      [
+        {
+          localField: 'creator',
+          from: 'users',
+          unwind: true,
+          project: { displayName: 1 }
+        },
+        {
+          localField: 'owner',
+          from: 'users',
+          unwind: true,
+          project: { displayName: 1 }
+        }
+      ]
     )
   }
 
