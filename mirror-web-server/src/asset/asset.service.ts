@@ -1009,12 +1009,23 @@ export class AssetService {
     }
 
     if (field && search) {
-      andFilter.push({
-        $or: [
-          { [field]: new RegExp(search, 'i') },
-          { 'tags.search': new RegExp(search, 'i') }
-        ]
-      })
+      const searchableFields = new Set([
+        'name',
+        'description',
+        'assetType',
+        'gameplayType',
+        'tags.search'
+      ])
+
+      if (searchableFields.has(field)) {
+        const safeSearch = escapeRegExp(search)
+        andFilter.push({
+          $or: [
+            { [field]: new RegExp(safeSearch, 'i') },
+            { 'tags.search': new RegExp(safeSearch, 'i') }
+          ]
+        })
+      }
     }
 
     if (tag && tagType) {
