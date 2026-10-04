@@ -2,6 +2,7 @@ import { SORT_DIRECTION } from '../../util/pagination/pagination.interface'
 import { ApiProperty } from '@nestjs/swagger'
 import {
   IsEnum,
+  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
