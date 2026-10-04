@@ -1,5 +1,6 @@
 require('dotenv').config()
 import { ValidationPipe } from '@nestjs/common'
+import helmet from 'helmet'
 import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { WsAdapter } from '@nestjs/platform-ws'
@@ -70,10 +71,19 @@ async function bootstrapRageBloxWebServer() {
     SwaggerModule.setup('api', app, document)
   }
 
-  // default
+  const allowedOrigins = (process.env.ALLOWED_DOMAINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+
+  if (process.env.NODE_ENV === NODE_ENV.PRODUCTION && allowedOrigins.length === 0) {
+    throw new Error('ALLOWED_DOMAINS must be configured in production')
+  }
+
+  app.use(helmet())
   app.enableCors({
-    // cors has to be here
-    origin: '*' // TODO change to only the frontend
+    origin: allowedOrigins.length > 0 ? allowedOrigins : '*',
+    credentials: allowedOrigins.length > 0
   })
   app.useWebSocketAdapter(new WsAdapter(app))
 
