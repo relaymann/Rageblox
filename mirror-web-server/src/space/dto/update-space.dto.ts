@@ -99,6 +99,7 @@ export class CreateNewSpaceVersionDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   @ApiProperty()
   name: string
 }
