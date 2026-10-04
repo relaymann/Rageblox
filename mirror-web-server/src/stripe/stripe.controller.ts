@@ -10,6 +10,7 @@ import {
   RawBodyRequest,
   Req,
   BadRequestException,
+  Headers,
   Patch
 } from '@nestjs/common'
 import { StripeService } from './stripe.service'
@@ -130,8 +131,10 @@ export class StripeController {
   @Post('/transfers')
   @FirebaseTokenAuthGuard()
   @ApiParam({ name: 'destinationUserId', type: 'string', required: true })
-  public async transfersAmount(@Body() data: TransfersDto) {
-    return await this.stripeService.transfersAmount(data)
+  public async transfersAmount() {
+    throw new BadRequestException(
+      'Direct platform transfers are disabled; use an authorized marketplace payout flow.'
+    )
   }
 
   // Create product for Subscription
@@ -202,8 +205,13 @@ export class StripeController {
     if (!req.rawBody) {
       throw new BadRequestException('Invalid payload')
     }
-    const raw = req.rawBody.toString('utf8')
-    const json = JSON.parse(raw)
-    return await this.stripeService.handleStripeWebhook(json)
+    const signature = req.headers['stripe-signature']
+    if (typeof signature !== 'string') {
+      throw new BadRequestException('Missing Stripe webhook signature')
+    }
+    return await this.stripeService.handleStripeWebhook(
+      req.rawBody.toString('utf8'),
+      signature
+    )
   }
 }
