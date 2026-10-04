@@ -1095,29 +1095,40 @@ export class AssetService {
     const softDeletedCheck = await this.isAssetSoftDeleted(assetId)
 
     if (roleCheck && !softDeletedCheck) {
-      // do === check here to avoid accidentally truthy since checkUserRoleForEntity returns a promise
+      // File locations and ownership/identity are controlled by upload/creation flows.
+      // Never allow the generic metadata endpoint to turn into an arbitrary storage proxy.
+      const {
+        currentFile: _currentFile,
+        thumbnail: _thumbnail,
+        owner: _owner,
+        creator: _creator,
+        role: _role,
+        purchasedParentAssetId: _purchasedParentAssetId,
+        mirrorPublicLibrary: _mirrorPublicLibrary,
+        ...safeUpdateAssetDto
+      } = updateAssetDto as any
 
       // Mongoose doesn't know about the discriminator classes and thus won't work with properties of the discriminator if the discriminator model isn't used.
-      switch (updateAssetDto.__t) {
+      switch (safeUpdateAssetDto.__t) {
         case 'MapAsset':
           return this.mapAssetModel
-            .findByIdAndUpdate(assetId, updateAssetDto, { new: true })
+            .findByIdAndUpdate(assetId, safeUpdateAssetDto, { new: true })
             .populate(this._getStandardPopulateFieldsAsArray())
             .exec()
         case 'Material':
           return this.materialModel
-            .findByIdAndUpdate(assetId, updateAssetDto, { new: true })
+            .findByIdAndUpdate(assetId, safeUpdateAssetDto, { new: true })
             .populate(this._getStandardPopulateFieldsAsArray())
             .exec()
         case 'Texture':
           return this.textureModel
-            .findByIdAndUpdate(assetId, updateAssetDto, { new: true })
+            .findByIdAndUpdate(assetId, safeUpdateAssetDto, { new: true })
             .populate(this._getStandardPopulateFieldsAsArray())
             .exec()
 
         default:
           return this.assetModel
-            .findByIdAndUpdate(assetId, updateAssetDto, { new: true })
+            .findByIdAndUpdate(assetId, safeUpdateAssetDto, { new: true })
             .populate(this._getStandardPopulateFieldsAsArray())
             .exec()
       }
