@@ -46,7 +46,7 @@ export class FileUploadService implements FileUploadInterface {
     'audio/wav': '.wav',
     'script/gdscript': '.gd',
     'script/mirror-visual-script+json': '.vs.json',
-    'application/json': 'json'
+    'application/json': '.json'
   }
 
   public async uploadFilePublic({ file, path }: FileUploadDto) {
@@ -162,11 +162,11 @@ export class FileUploadService implements FileUploadInterface {
     toPath: string
   ) {
     const storage = firebaseStorage()
-    const destination = storage.bucket(bucketName).file(toPath)
+    const destination = storage.bucket(bucketName).file(this._validateRelativeStoragePath(toPath))
     const options = { predefinedAcl: 'publicRead' }
     return storage
       .bucket(bucketName)
-      .file(fromPath)
+      .file(this._validateRelativeStoragePath(fromPath))
       .copy(destination, options) as Promise<any> // conflicting types issue
   }
 
@@ -179,7 +179,7 @@ export class FileUploadService implements FileUploadInterface {
   ): Promise<StreamFinishResponse> {
     return await this.streamData(
       bucketName,
-      relativePath,
+      this._validateRelativeStoragePath(relativePath),
       file.mimetype,
       file.buffer,
       acl
@@ -197,7 +197,7 @@ export class FileUploadService implements FileUploadInterface {
       const storage = firebaseStorage()
       const theRemoteFile = storage
         .bucket(bucketName)
-        .file(relativePath) as unknown as File // conflicting types issue when typed as File (GCS ServiceObject)
+        .file(this._validateRelativeStoragePath(relativePath)) as unknown as File // conflicting types issue when typed as File (GCS ServiceObject)
       const stream = theRemoteFile.createWriteStream({
         metadata: {
           contentType: mimeType
@@ -225,8 +225,28 @@ export class FileUploadService implements FileUploadInterface {
     // 2022-06-10 00:18:50 v low priority issue, but there's a weird type incompatability between firebase-admin consuming @google-cloud storage but the types being slightly out of sync, so force typing this to be the GCS type here
     // the error shows:  Property 'crc32cGenerator' is missing in type 'import("/Users/jared/Documents/GitHub/mirror-server/node_modules/firebase-admin/node_modules/@google-cloud/storage/build/src/file").File' but required in type 'import("/Users/jared/Documents/GitHub/mirror-server/node_modules/@google-cloud/storage/build/src/file").File'.
     return (await theBucket.getFiles({
-      prefix: directoryRelativePath
+      prefix: this._validateRelativeStoragePath(directoryRelativePath)
     })) as unknown as GetFilesResponse
+  }
+
+  private _validateRelativeStoragePath(relativePath: string): string {
+    if (
+      typeof relativePath !== 'string' ||
+      relativePath.length === 0 ||
+      relativePath.length > 1024 ||
+      relativePath.startsWith('/') ||
+      relativePath.includes('\\') ||
+      relativePath.split('/').includes('..')
+    ) {
+      throw new HttpException('Invalid storage path', 400)
+    }
+
+    const normalized = path.posix.normalize(relativePath)
+    if (normalized === '.' || normalized.startsWith('../') || normalized.includes('/../')) {
+      throw new HttpException('Invalid storage path', 400)
+    }
+
+    return normalized
   }
 
   private _getFileTypeEnding(mimeType: string): string {
@@ -374,7 +394,8 @@ export class FileUploadService implements FileUploadInterface {
     pathWithFileType: string
   ): Promise<string> {
     const directoryPath = this.getLocalStoragePath()
-    const filePath = path.join(directoryPath, pathWithFileType)
+    const safeRelativePath = this._validateRelativeStoragePath(pathWithFileType)
+    const filePath = path.join(directoryPath, safeRelativePath)
     console.log('Uploading file to local storage:', this.getLocalStoragePath())
     try {
       await fs.promises.mkdir(path.dirname(filePath), { recursive: true }) // Create directory recursively if it doesn't exist
@@ -392,7 +413,8 @@ export class FileUploadService implements FileUploadInterface {
       throw new Error(`File does not exist at path: ${fromPath}`)
     }
     const directoryPath = this.getLocalStoragePath()
-    const toFilePath = path.join(directoryPath, toPath)
+    const safeToPath = this._validateRelativeStoragePath(toPath)
+    const toFilePath = path.join(directoryPath, safeToPath)
     await fs.promises.mkdir(path.dirname(toFilePath), { recursive: true }) // Create directory recursively if it doesn't exist
     await fs.promises.copyFile(fromPath, toFilePath)
     return toFilePath
