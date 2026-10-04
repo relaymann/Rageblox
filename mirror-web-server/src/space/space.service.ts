@@ -2147,16 +2147,9 @@ export class SpaceService implements IRoleConsumer {
       }
 
       andFilter.push({
-        [field]: new RegExp(search.replace(/[.*+?^$\\{}()|[\]\\]/g, '\\  private _getSearchFilter(searchDto: PaginatedSearchSpaceDto): Array<any> {
-    const { search, field, tag, tagType } = searchDto
-    const andFilter = []
-
-    if (field && search) {
-      andFilter.push({ [field]: new RegExp(search, 'i') })
-    }'), 'i')
+        [field]: new RegExp(search.replace(/[.*+?^$\{}()|[\]\\]/g, '\\$&'), 'i')
       })
     }
-
     if (tag && tagType) {
       const tagSearchKey =
         tagType === TAG_TYPES.THIRD_PARTY
