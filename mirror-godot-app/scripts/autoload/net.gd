@@ -73,7 +73,6 @@ func is_fully_logged_in() -> bool:
 ## Called when a login is successful. Populates the user id and token.
 func login_success(mongo_id: String, _idtoken: String) -> void:
 	user_id = mongo_id
-	# print("JWT token check ", str(Firebase.Auth.get_jwt()))
 	print("Firebase Logged In As %s" % str(user_id))
 	logged_in.emit()
 	Analytics.track_event_client(AnalyticsEvent.TYPE.LOGIN_USER_SUCCESS, {"distinct_id": user_id})
