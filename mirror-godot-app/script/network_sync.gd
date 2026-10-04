@@ -83,6 +83,22 @@ func _can_remote_play_mutation(sender_peer_id: int) -> bool:
 func _valid_remote_dictionary(data: Variant, max_entries: int = 256) -> bool:
 	return data is Dictionary and data.size() <= max_entries
 
+func _valid_remote_node_path(node_path: Variant, max_length: int = 1024) -> bool:
+	if not (node_path is NodePath or node_path is String):
+		return false
+	var path := NodePath(node_path)
+	return not path.is_empty() and str(path).length() <= max_length and path.get_name_count() <= 64
+
+func _valid_remote_name(name_value: Variant, max_length: int = 256) -> bool:
+	return (name_value is String or name_value is StringName) and str(name_value).length() <= max_length
+
+func _valid_remote_tween(data: Variant) -> bool:
+	if not data is Array or data.size() != 4:
+		return false
+	var duration = data[1]
+	return duration is float or duration is int or duration is real_t
+
+
 
 func _process(_delta: float) -> void:
 	# Look through the list of properties and variables and set them on any
@@ -441,7 +457,7 @@ func _set_properties_on_nodes_client_to_server(nodes_properties: Dictionary) -> 
 	if not _valid_remote_dictionary(nodes_properties) or not _valid_remote_sender(sender):
 		return
 	for node_path in nodes_properties:
-		if str(node_path).length() > 1024 or not has_node(node_path) or not _can_remote_edit_node(get_node(node_path), sender):
+		if not _valid_remote_node_path(node_path) or not has_node(node_path) or not _can_remote_edit_node(get_node(node_path), sender):
 			return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_set_properties_on_nodes_network(nodes_properties)
@@ -550,7 +566,7 @@ func _set_variables_on_nodes_client_to_server(nodes_variables: Dictionary) -> vo
 	if not _valid_remote_dictionary(nodes_variables) or not _valid_remote_sender(sender):
 		return
 	for node_path in nodes_variables:
-		if str(node_path).length() > 1024 or not has_node(node_path):
+		if not _valid_remote_node_path(node_path) or not has_node(node_path):
 			return
 		if not (_can_remote_play_mutation(sender) or _can_remote_edit_node(get_node(node_path), sender)):
 			return
@@ -652,7 +668,7 @@ func _tween_variable_on_node(node: Node, variable_name: String, to_value: Varian
 func delete_variable_on_node_at_path(node_path: NodePath, variable_name: String) -> void:
 	_delete_variable_on_node_at_path_network(node_path, variable_name)
 	if Zone.is_host():
-		_delete_variable_on_node_at_path_network.rpc(variable_name)
+		_delete_variable_on_node_at_path_network.rpc(node_path, variable_name)
 	else:
 		_delete_variable_on_node_at_path_client_to_server.rpc_id(Zone.SERVER_PEER_ID, variable_name)
 
@@ -660,7 +676,7 @@ func delete_variable_on_node_at_path(node_path: NodePath, variable_name: String)
 @rpc("call_remote", "any_peer", "reliable")
 func _delete_variable_on_node_at_path_client_to_server(node_path: NodePath, variable_name: String) -> void:
 	var sender := multiplayer.get_remote_sender_id()
-	if variable_name.length() > 256 or not has_node(node_path):
+	if not _valid_remote_name(variable_name) or not _valid_remote_node_path(node_path) or not has_node(node_path):
 		return
 	if not (_can_remote_play_mutation(sender) or _can_remote_edit_node(get_node(node_path), sender)):
 		return
@@ -670,6 +686,10 @@ func _delete_variable_on_node_at_path_client_to_server(node_path: NodePath, vari
 
 @rpc("call_remote", "authority", "reliable")
 func _delete_variable_on_node_at_path_network(node_path: NodePath, variable_name: String) -> void:
+	if not _valid_remote_node_path(node_path) or not _valid_remote_name(variable_name):
+		return
+	if not has_node(node_path):
+		return
 	var node = get_node(node_path)
 	if node and node.has_meta(&"MirrorScriptObjectVariables"):
 		var node_variables = node.get_meta(&"MirrorScriptObjectVariables")
@@ -741,6 +761,8 @@ func _convert_value_for_network_transfer(value: Variant) -> Variant:
 
 func _load_value_from_network_transfer(value: Variant) -> Variant:
 	if value is NodePath:
+		if not _valid_remote_node_path(value) or not has_node(value):
+			return null
 		return get_node(value)
 	return value
 
