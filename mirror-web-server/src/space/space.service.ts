@@ -1378,18 +1378,14 @@ export class SpaceService implements IRoleConsumer {
       throw new NotFoundException('SpaceVersion not found')
     }
 
-    const restoreSpace = Object.fromEntries(spaceVersion.space.toObject())
-
-    /* 
-      if the user is the creator of the space, then we give the role of OWNER, if not, then DISCOVER
-      this is necessary because users roles are not saved in the space version
-    */
-    const role: ROLE =
-      restoreSpace.role.creator.toString() === userId
-        ? ROLE.OWNER
-        : ROLE.DISCOVER
+    const liveSpace = await this.getSpace(spaceVersion.spaceId)
+    const role: ROLE = this.roleService.getMaxRoleForUserForEntity(
+      userId,
+      liveSpace
+    )
 
     if (role >= ROLE.OWNER) {
+      const restoreSpace = Object.fromEntries(spaceVersion.space.toObject())
       const newRestoreSpaceId = new ObjectId()
 
       /** restore Environment  */
