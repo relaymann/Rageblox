@@ -139,25 +139,14 @@ export class UserGroupService {
       typeof searchParams.filterValue === 'string'
         ? searchParams.filterValue.slice(0, 128)
         : ''
-    const escapedFilter = filterValue.replace(/[.*+?^$\\{}()|[\\]\\\\]/g, '\\  public search(searchParams): Promise<any> {
-    return this.userGroupModel
-      .find({
-        [searchParams.filterField]: {
-          $regex: new RegExp(searchParams.filterValue),
-          $options: 'i'
-        }
-      })
-      .sort({ [searchParams.sortField]: searchParams.sortValue })
-      .limit(searchParams.limit)
-      .skip(searchParams.skip)
-      .exec()
-  }')
+    const escapedFilter = filterValue.replace(/[.*+?^$\\{}()|[\\]\\\\]/g, '\\$&')
     const sortValue = Number(searchParams.sortValue) === -1 ? -1 : 1
     const limit = Math.min(Math.max(Number(searchParams.limit) || 25, 1), 100)
     const skip = Math.min(Math.max(Number(searchParams.skip) || 0, 0), 100000)
 
     return this.userGroupModel
       .find({
+        public: true,
         [filterField]: { $regex: new RegExp(escapedFilter, 'i') }
       })
       .sort({ [sortField]: sortValue })
