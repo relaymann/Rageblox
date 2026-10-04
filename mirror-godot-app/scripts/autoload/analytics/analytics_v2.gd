@@ -5,7 +5,7 @@ TRACK_EVENT,
 IDENTIFY
 }
 
-@onready var api_token = ProjectSettings.get_setting("mirror/mixpanel_api_key")
+@onready var api_token = ProjectSettings.get_setting("rageblox/mixpanel_api_key", "")
 
 const _ANALYTICS_URL_TRACK = "https://api.mixpanel.com/track"
 
