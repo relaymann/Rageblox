@@ -720,16 +720,12 @@ export class AssetService {
     sort: ISort = { updatedAt: SORT_DIRECTION.DESC }, // default: sort by updatedAt descending
     populate = false
   ): Promise<AssetDocument[]> {
-    const filter: FilterQuery<any> = searchDto.includeSoftDeleted
-      ? {
-          $and: [{ mirrorPublicLibrary: true }]
-        }
-      : {
-          $and: [
-            { mirrorPublicLibrary: true },
-            { isSoftDeleted: { $exists: false } }
-          ]
-        }
+    const filter: FilterQuery<any> = {
+      $and: [
+        { mirrorPublicLibrary: true },
+        { isSoftDeleted: { $exists: false } }
+      ]
+    }
 
     const andFilter = AssetService.getSearchFilter(searchDto)
     if (andFilter.length > 0) {
@@ -750,14 +746,12 @@ export class AssetService {
     searchDto?: PaginatedSearchAssetDtoV2,
     populate: PopulateField[] = [] // don't abuse, this is slow
   ): Promise<IPaginatedResponse<AssetDocument>> {
-    const { page, perPage, startItem, numberOfItems, includeSoftDeleted } =
-      searchDto
+    const { page, perPage, startItem, numberOfItems } = searchDto
 
-    const filter: FilterQuery<any> = includeSoftDeleted
-      ? {
-          mirrorPublicLibrary: true
-        }
-      : { mirrorPublicLibrary: true, isSoftDeleted: { $exists: false } }
+    const filter: FilterQuery<any> = {
+      mirrorPublicLibrary: true,
+      isSoftDeleted: { $exists: false }
+    }
 
     if (!searchDto?.includeAssetPackAssets) {
       filter.assetPack = { $ne: true }
@@ -882,7 +876,13 @@ export class AssetService {
 
     const filter: FilterQuery<any> = searchDto?.includeSoftDeleted
       ? {
-          $or: [{ mirrorPublicLibrary: true }, { owner: new ObjectId(userId) }]
+          $or: [
+            {
+              mirrorPublicLibrary: true,
+              isSoftDeleted: { $exists: false }
+            },
+            { owner: new ObjectId(userId) }
+          ]
         }
       : {
           $or: [{ mirrorPublicLibrary: true }, { owner: new ObjectId(userId) }],
@@ -960,9 +960,7 @@ export class AssetService {
 
     const filter: FilterQuery<any> = {
       $or: [
-        includeSoftDeleted
-          ? { mirrorPublicLibrary: true }
-          : { mirrorPublicLibrary: true, isSoftDeleted: { $exists: false } },
+        { mirrorPublicLibrary: true, isSoftDeleted: { $exists: false } },
         // note that both are here since objectId vs string inconsistency currently
         { creator: userId }, // TODO this should really be owner, but we need to fix the pipeline order. If role isnt populated, we can't check for role.users[userId]
         { creator: new ObjectId(userId) }, // TODO this should really be owner, but we need to fix the pipeline order. If role isnt populated, we can't check for role.users[userId]
@@ -1497,16 +1495,14 @@ export class AssetService {
     searchDto: PaginatedSearchAssetDtoV2,
     userId: UserId = undefined
   ) {
-    const { page, perPage, includeSoftDeleted } = searchDto
-    const matchFilter: FilterQuery<Asset> = {}
+    const { page, perPage } = searchDto
+    const matchFilter: FilterQuery<Asset> = {
+      $and: [{ isSoftDeleted: { $exists: false } }]
+    }
     const andFilter = AssetService.getSearchFilter(searchDto)
 
-    if (!includeSoftDeleted) {
-      andFilter.push({ isSoftDeleted: { $exists: false } })
-    }
-
     if (andFilter.length > 0) {
-      matchFilter.$and = andFilter
+      matchFilter.$and.push(...andFilter)
     }
 
     if (!searchDto?.includeAssetPackAssets) {
