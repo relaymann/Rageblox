@@ -52,6 +52,8 @@ func track_event_client(event_type: String, properties := {}) -> void:
 
 ## The primary method used to send an event from a client
 func track_event(event_type: String, properties := {}) -> void:
+	if not ProjectSettings.get_setting("rageblox/analytics_enabled", false):
+		return
 	# V2 Analytics call. This v1 class is deprecated
 	AnalyticsV2.track_event(event_type, properties)
 
@@ -93,7 +95,7 @@ func _send_event(event: AnalyticsEvent) -> void:
 
 
 func _ready() -> void:
-	api_key = ProjectSettings.get_setting("mirror/posthog_api_key")
+	api_key = ProjectSettings.get_setting("rageblox/posthog_api_key", "")
 	_http_capture = HTTPRequest.new()
 	_http_capture.use_threads = true
 	_http_batch = HTTPRequest.new()

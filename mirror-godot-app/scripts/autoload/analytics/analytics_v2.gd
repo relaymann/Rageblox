@@ -5,7 +5,7 @@ TRACK_EVENT,
 IDENTIFY
 }
 
-@onready var api_token = ProjectSettings.get_setting("mirror/mixpanel_api_key")
+@onready var api_token = ProjectSettings.get_setting("rageblox/mixpanel_api_key", "")
 
 const _ANALYTICS_URL_TRACK = "https://api.mixpanel.com/track"
 
@@ -23,6 +23,8 @@ func track_event_client(event_type: String, properties:={}) -> void:
 
 ## The primary method used to send an event (warning: doesn't check for server)
 func track_event(event_type: String, properties:={}) -> void:
+	if not ProjectSettings.get_setting("rageblox/analytics_enabled", false):
+		return
 	if _PRINT_ANALYTICS:
 		print("AnalyticsV2 Track: %s, %s" % [event_type, str(properties)])
 	# Create a new AnalyticsEvent

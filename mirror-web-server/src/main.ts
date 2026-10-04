@@ -16,8 +16,8 @@ import AllExceptionsFilter from './error-handling/all-exceptions.filter'
 import metadata from './metadata'
 import { NODE_ENV } from './util/node-env.enum'
 
-async function bootstrapMirrorWebServer() {
-  console.log('Starting mirror-web-server')
+async function bootstrapRageBloxWebServer() {
+  console.log('Starting RageBlox web server')
 
   const version = require('../package.json').version // eslint-disable-line @typescript-eslint/no-var-requires
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -31,7 +31,7 @@ async function bootstrapMirrorWebServer() {
                 format: winston.format.combine(
                   winston.format.timestamp(),
                   winston.format.ms(),
-                  nestWinstonModuleUtilities.format.nestLike('mirror-server', {
+                  nestWinstonModuleUtilities.format.nestLike('rageblox-server', {
                     colors: true,
                     prettyPrint: true
                   })
@@ -50,8 +50,8 @@ async function bootstrapMirrorWebServer() {
    */
   await SwaggerModule.loadPluginMetadata(metadata)
   const config = new DocumentBuilder()
-    .setTitle('Mirror Web Server')
-    .setDescription('Mirror Web Server API')
+    .setTitle('RageBlox Web Server')
+    .setDescription('RageBlox platform API')
     .setVersion(version)
     .build()
   const document = SwaggerModule.createDocument(app, config)
@@ -112,4 +112,4 @@ async function bootstrapMirrorWebServer() {
   await app.listen(port)
 }
 
-bootstrapMirrorWebServer()
+bootstrapRageBloxWebServer()

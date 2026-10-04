@@ -37,6 +37,52 @@ var _net_queue_tweened_node_properties: Dictionary = {}
 var _net_queue_node_variables: Dictionary = {}
 var _net_queue_tweened_node_variables: Dictionary = {}
 
+# Server-side trust boundary for client-originated variable/property RPCs.
+# Clients may request gameplay state changes while playing, but editor/build
+# mutations must pass through the existing RageBlox role/ownership model.
+func _valid_remote_sender(sender_peer_id: int) -> bool:
+	if not Zone.is_host():
+		return false
+	if sender_peer_id <= Zone.SERVER_PEER_ID:
+		return false
+	if not multiplayer.get_peers().has(sender_peer_id):
+		return false
+	return not Zone.get_user_id(sender_peer_id).is_empty()
+
+
+func _remote_user_id(sender_peer_id: int) -> String:
+	return Zone.get_user_id(sender_peer_id)
+
+
+func _can_remote_edit_node(node: Node, sender_peer_id: int) -> bool:
+	if not _valid_remote_sender(sender_peer_id):
+		return false
+	var user_id := _remote_user_id(sender_peer_id)
+	var role := Util.get_role_for_user(Zone.space, user_id)
+	if role >= Enums.ROLE.MANAGER:
+		return true
+	if role < Enums.ROLE.CONTRIBUTOR:
+		return false
+	if node is SpaceObject:
+		var data: Dictionary = node.space_object_data
+		var creator := data.get("creator", data.get("receipt", {}).get("created_by_user", ""))
+		return creator == user_id
+	return false
+
+
+func _can_remote_edit_global(sender_peer_id: int) -> bool:
+	if not _valid_remote_sender(sender_peer_id):
+		return false
+	return Util.get_role_for_user(Zone.space, _remote_user_id(sender_peer_id)) >= Enums.ROLE.MANAGER
+
+
+func _can_remote_play_mutation(sender_peer_id: int) -> bool:
+	return _valid_remote_sender(sender_peer_id) and Zone.is_in_play_mode()
+
+
+func _valid_remote_dictionary(data: Variant, max_entries: int = 256) -> bool:
+	return data is Dictionary and data.size() <= max_entries
+
 
 func _process(_delta: float) -> void:
 	# Look through the list of properties and variables and set them on any
@@ -299,6 +345,9 @@ func set_global_variable(variable_name: String, variable_value: Variant) -> void
 
 @rpc("call_remote", "any_peer", "reliable")
 func _set_global_variables_client_to_server(variables: Dictionary) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not _valid_remote_dictionary(variables) or not (_can_remote_edit_global(sender) or _can_remote_play_mutation(sender)):
+		return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_set_global_variables_network(variables)
 	_set_global_variables_network.rpc(variables)
@@ -320,6 +369,9 @@ func tween_global_variable(variable_name: String, to_value: Variant, duration: f
 
 @rpc("call_remote", "any_peer", "reliable")
 func _tween_global_variables_client_to_server(tweened_variables: Dictionary) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not _valid_remote_dictionary(tweened_variables) or not (_can_remote_edit_global(sender) or _can_remote_play_mutation(sender)):
+		return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_tween_global_variables_network(tweened_variables)
 	_tween_global_variables_network.rpc(tweened_variables)
@@ -364,6 +416,9 @@ func delete_global_variable(variable_name: String) -> void:
 
 @rpc("call_remote", "any_peer", "reliable")
 func _delete_global_variable_client_to_server(variable_name: String) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not (_can_remote_edit_global(sender) or _can_remote_play_mutation(sender)) or variable_name.length() > 256:
+		return
 	_global_variables.erase(variable_name)
 	_delete_global_variable_network.rpc(variable_name)
 
@@ -382,6 +437,12 @@ func set_property_on_node(node: Node, property: StringName, value: Variant) -> v
 
 @rpc("call_remote", "any_peer", "reliable")
 func _set_properties_on_nodes_client_to_server(nodes_properties: Dictionary) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not _valid_remote_dictionary(nodes_properties) or not _valid_remote_sender(sender):
+		return
+	for node_path in nodes_properties:
+		if str(node_path).length() > 1024 or not has_node(node_path) or not _can_remote_edit_node(get_node(node_path), sender):
+			return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_set_properties_on_nodes_network(nodes_properties)
 	_set_properties_on_nodes_network.rpc(nodes_properties)
@@ -422,6 +483,12 @@ func tween_property_on_node(node: Node, property: StringName, to_value: Variant,
 
 @rpc("call_remote", "any_peer", "reliable")
 func _tween_properties_on_nodes_client_to_server(nodes_tweened_properties: Dictionary) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not _valid_remote_dictionary(nodes_tweened_properties) or not _valid_remote_sender(sender):
+		return
+	for node_path in nodes_tweened_properties:
+		if str(node_path).length() > 1024 or not has_node(node_path) or not _can_remote_edit_node(get_node(node_path), sender):
+			return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_tween_properties_on_nodes_network(nodes_tweened_properties)
 	_tween_properties_on_nodes_network.rpc(nodes_tweened_properties)
@@ -479,6 +546,14 @@ func set_variable_on_node(node: Node, variable: String, value: Variant) -> void:
 
 @rpc("call_remote", "any_peer", "reliable")
 func _set_variables_on_nodes_client_to_server(nodes_variables: Dictionary) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not _valid_remote_dictionary(nodes_variables) or not _valid_remote_sender(sender):
+		return
+	for node_path in nodes_variables:
+		if str(node_path).length() > 1024 or not has_node(node_path):
+			return
+		if not (_can_remote_play_mutation(sender) or _can_remote_edit_node(get_node(node_path), sender)):
+			return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_set_variables_on_nodes_network(nodes_variables)
 	_set_variables_on_nodes_network.rpc(nodes_variables)
@@ -532,6 +607,14 @@ func tween_variable_on_node(node: Node, variable: String, to_value: Variant, dur
 
 @rpc("call_remote", "any_peer", "reliable")
 func _tween_variables_on_nodes_client_to_server(nodes_variables: Dictionary) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not _valid_remote_dictionary(nodes_variables) or not _valid_remote_sender(sender):
+		return
+	for node_path in nodes_variables:
+		if str(node_path).length() > 1024 or not has_node(node_path):
+			return
+		if not (_can_remote_play_mutation(sender) or _can_remote_edit_node(get_node(node_path), sender)):
+			return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_tween_variables_on_nodes_network(nodes_variables)
 	_tween_variables_on_nodes_network.rpc(nodes_variables)
@@ -576,6 +659,11 @@ func delete_variable_on_node_at_path(node_path: NodePath, variable_name: String)
 
 @rpc("call_remote", "any_peer", "reliable")
 func _delete_variable_on_node_at_path_client_to_server(node_path: NodePath, variable_name: String) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if variable_name.length() > 256 or not has_node(node_path):
+		return
+	if not (_can_remote_play_mutation(sender) or _can_remote_edit_node(get_node(node_path), sender)):
+		return
 	_delete_variable_on_node_at_path_network(node_path, variable_name)
 	_delete_variable_on_node_at_path_network.rpc(node_path, variable_name)
 
@@ -877,9 +965,14 @@ func client_to_server_player_interact(interaction_target: Node, player: Player) 
 
 
 @rpc("call_remote", "any_peer", "reliable")
-func _client_to_server_player_interact_network(interact_target_path: String, player_id: String) -> void:
+func _client_to_server_player_interact_network(interact_target_path: String, _claimed_player_id: String) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not _valid_remote_sender(sender):
+		return
 	var interaction_target: Node = get_node(interact_target_path)
-	var player: Player = Zone.social_manager.get_player(player_id)
+	# Never trust the client-supplied player identity. Resolve the player from
+	# the authenticated network peer that made this RPC.
+	var player: Player = Zone.social_manager.find_player_by_peer(sender)
 	if interaction_target and player and interaction_target.has_user_signal(&"player_interact"):
 		interaction_target.emit_signal(&"player_interact", player)
 	else:
