@@ -17,6 +17,10 @@ export class ScriptEntity {
   @ApiProperty()
   blocks: any[]
 
+  @Prop({ type: String, maxlength: 65536, required: false })
+  @ApiProperty({ required: false, maxLength: 65536 })
+  code?: string
+
   @Prop({
     required: false,
     type: RoleSchema

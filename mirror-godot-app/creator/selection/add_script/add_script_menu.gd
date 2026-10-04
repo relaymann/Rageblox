@@ -2,6 +2,7 @@ extends VBoxContainer
 
 
 signal request_attach_existing_script(existing_script_id: String)
+signal request_luau_script_creation()
 signal request_gd_script_creation()
 signal request_visual_script_creation()
 signal script_id_selected()
@@ -37,6 +38,10 @@ func hide_add_script_filter_menu() -> void:
 
 func get_desired_script_id() -> String:
 	return _selected_script_id
+
+
+func _on_create_luau_script_pressed() -> void:
+	request_luau_script_creation.emit()
 
 
 func _on_create_gd_script_pressed() -> void:

@@ -29,6 +29,7 @@ volume_db = -10.0
 [connection signal="focus_entered" from="." to="." method="_on_focus_entered"]
 [connection signal="focus_exited" from="." to="." method="_on_focus_exited"]
 [connection signal="visibility_changed" from="." to="." method="_on_visibility_changed"]
+[connection signal="request_luau_script_creation" from="AddScriptMenu" to="." method="_create_new_luau_script"]
 [connection signal="request_attach_existing_script" from="AddScriptMenu" to="." method="_attach_existing_script"]
 [connection signal="request_gd_script_creation" from="AddScriptMenu" to="." method="_create_new_gd_script"]
 [connection signal="request_visual_script_creation" from="AddScriptMenu" to="." method="_create_new_visual_script"]
