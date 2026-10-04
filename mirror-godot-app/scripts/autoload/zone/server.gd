@@ -364,6 +364,58 @@ func _server_receive_data(in_data_array: Array, network_id: int = -1) -> void:
 	_receive_data_server(network_id, in_data_array)
 
 
+func _authenticated_user_id(peer_id: int) -> String:
+	return get_user_id(peer_id) if players.has(peer_id) else ""
+
+func _can_edit_space(peer_id: int) -> bool:
+	var user_id := _authenticated_user_id(peer_id)
+	if user_id.is_empty():
+		return false
+	return Util.get_role_for_user(Zone.space, user_id) >= Enums.ROLE.MANAGER
+
+func _can_create_space_object(peer_id: int) -> bool:
+	var user_id := _authenticated_user_id(peer_id)
+	if user_id.is_empty():
+		return false
+	return Util.get_role_for_user(Zone.space, user_id) >= Enums.ROLE.CONTRIBUTOR
+
+func _space_object_belongs_to_user(space_obj: Dictionary, user_id: String) -> bool:
+	if space_obj.get("creator", "") == user_id:
+		return true
+	var receipt = space_obj.get("receipt", {})
+	return receipt is Dictionary and receipt.get("created_by_user", "") == user_id
+
+func _can_edit_space_object(peer_id: int, space_obj: Dictionary) -> bool:
+	var user_id := _authenticated_user_id(peer_id)
+	if user_id.is_empty():
+		return false
+	var role := Util.get_role_for_user(Zone.space, user_id)
+	if role >= Enums.ROLE.MANAGER:
+		return true
+	return role >= Enums.ROLE.CONTRIBUTOR and _space_object_belongs_to_user(space_obj, user_id)
+
+func _find_space_object(object_id: Variant) -> Dictionary:
+	if not (object_id is String or object_id is StringName):
+		return {}
+	var id := str(object_id)
+	if id.is_empty() or id.length() > 128:
+		return {}
+	for space_obj in Zone.space_objects:
+		if str(space_obj.get("_id", "")) == id:
+			return space_obj
+	return {}
+
+func _valid_object_dictionary(space_obj: Variant) -> bool:
+	return space_obj is Dictionary and space_obj.size() <= 256 and not str(space_obj.get("_id", "")).is_empty()
+
+func _can_update_object_payload(peer_id: int, space_obj: Dictionary) -> bool:
+	if not _valid_object_dictionary(space_obj):
+		return false
+	var existing := _find_space_object(space_obj.get("_id", ""))
+	if existing.is_empty():
+		return false
+	return _can_edit_space_object(peer_id, existing)
+
 func _receive_data_server(id: int, data_array: Array) -> void:
 	var packet_type: int = data_array[0]
 	var is_edit_request = not packet_type in [Packet.TYPE.CLIENT_INIT, Packet.TYPE.ZONE_MODE_CHANGE, Packet.TYPE.PREVIEW_READY_CHECK]
@@ -373,17 +425,33 @@ func _receive_data_server(id: int, data_array: Array) -> void:
 		Packet.TYPE.CLIENT_INIT:
 			_init_player(id, data_array[1], data_array[2])
 		Packet.TYPE.CREATE_SPACE_OBJECT:
-			if data_array.size() == 2:
-				_server_create_space_object(data_array[1], {})
-			else:
-				_server_create_space_object(data_array[1], data_array[2])
+			if not _can_create_space_object(id) or data_array.size() < 2 or data_array.size() > 3:
+				return
+			var receipt: Dictionary = data_array[2] if data_array.size() == 3 and data_array[2] is Dictionary else {}
+			_server_create_space_object(data_array[1], receipt, id)
 		Packet.TYPE.UPDATE_SPACE_OBJECT:
+			if data_array.size() != 2 or not _can_update_object_payload(id, data_array[1]):
+				return
 			_server_update_space_object(data_array[1])
 		Packet.TYPE.DELETE_SPACE_OBJECT:
-			_server_delete_space_object(data_array[1])
+			var object := _find_space_object(data_array[1].get("_id", "") if data_array[1] is Dictionary else data_array[1])
+			if object.is_empty() or not _can_edit_space_object(id, object):
+				return
+			_server_delete_space_object(object)
 		Packet.TYPE.DELETE_SPACE_OBJECTS:
+			if not data_array[1] is Array or data_array[1].size() > 256:
+				return
+			for object_id in data_array[1]:
+				var object := _find_space_object(object_id)
+				if object.is_empty() or not _can_edit_space_object(id, object):
+					return
 			server_delete_space_objects(data_array[1])
 		Packet.TYPE.UPDATE_SPACE_OBJECTS:
+			if not data_array[1] is Array or data_array[1].size() > 256:
+				return
+			for space_obj in data_array[1]:
+				if not _can_update_object_payload(id, space_obj):
+					return
 			server_update_space_objects(data_array[1])
 		Packet.TYPE.PREVIEW_READY_CHECK:
 			_server_receive_ready_check(id)
@@ -395,13 +463,16 @@ func _receive_data_server(id: int, data_array: Array) -> void:
 			Zone.change_mode(data_array[1])
 			send_data_to_all_clients(data_array, -1)
 		Packet.TYPE.TERRAIN_CHANGE:
-			_server_update_terrain(data_array[1])
+			if _can_edit_space(id) and data_array.size() == 2 and data_array[1] is Dictionary and data_array[1].size() <= 256:
+				_server_update_terrain(data_array[1])
 		Packet.TYPE.ENVIRONMENT_CHANGE:
-			server_update_environment(data_array[1])
+			if _can_edit_space(id) and data_array.size() == 2 and data_array[1] is Dictionary and data_array[1].size() <= 128:
+				server_update_environment(data_array[1])
 		Packet.TYPE.GLOBAL_SCRIPTS_CHANGE:
-			var space_template: SpaceTemplate = Zone.Scene.get_space_template()
-			space_template.space_global_scripts.load_global_script_instances(data_array[1])
-			server_update_global_scripts(data_array[1])
+			if _can_edit_space(id) and data_array.size() == 2 and data_array[1] is Array and data_array[1].size() <= 128:
+				var space_template: SpaceTemplate = Zone.Scene.get_space_template()
+				space_template.space_global_scripts.load_global_script_instances(data_array[1])
+				server_update_global_scripts(data_array[1])
 		_:
 			assert(false, "Server Peer: Unrecognized Packet Type.")
 
@@ -492,12 +563,20 @@ func server_delete_space_objects(space_obj_ids: Array) -> void:
 	_server_send_delete_space_objects_to_all(space_obj_ids)
 
 
-func _server_create_space_object(space_obj: Dictionary, receipt: Dictionary) -> void:
+func _server_create_space_object(space_obj: Dictionary, receipt: Dictionary, peer_id: int) -> void:
+	if not _can_create_space_object(peer_id) or not space_obj is Dictionary or space_obj.size() > 256:
+		return
+	var user_id := _authenticated_user_id(peer_id)
+	if user_id.is_empty():
+		return
+	space_obj = space_obj.duplicate(true)
 	space_obj["spaceId"] = space_id
 	space_obj["name"] = _get_unique_name(space_obj.get("name", ""))
-	if receipt.has("created_by_user"):
-		space_obj["creator"] = receipt["created_by_user"]
-	Net.zone_socket.create_space_object(space_obj, receipt)
+	# Creator identity always comes from the authenticated network peer.
+	space_obj["creator"] = user_id
+	var server_receipt := receipt.duplicate(true)
+	server_receipt["created_by_user"] = user_id
+	Net.zone_socket.create_space_object(space_obj, server_receipt)
 
 
 func _get_unique_name(obj_name: String) -> String:
