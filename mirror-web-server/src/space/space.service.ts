@@ -751,6 +751,19 @@ export class SpaceService implements IRoleConsumer {
 
     // update custom data first, if it's there
     if (this.canUpdateWithRolesCheck(userId, space)) {
+      if (updateSpaceDto.activeSpaceVersion) {
+        if (!isValidObjectId(updateSpaceDto.activeSpaceVersion)) {
+          throw new BadRequestException('Invalid active space version')
+        }
+        const version = await this.spaceVersionModel
+          .findById(updateSpaceDto.activeSpaceVersion)
+          .select({ spaceId: 1 })
+          .lean()
+          .exec()
+        if (!version || version.spaceId !== spaceId) {
+          throw new BadRequestException('Active space version does not belong to this space')
+        }
+      }
       if (
         updateSpaceDto.patchCustomData ||
         updateSpaceDto.removeCustomDataKeys
