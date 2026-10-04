@@ -146,6 +146,11 @@ enabled=PackedStringArray("res://addons/compressed_build_exporter/plugin.cfg", "
 product_name="RageBlox"
 product_namespace="rageblox"
 analytics_enabled=false
+creator_primary_language="Luau"
+creator_secondary_languages=PackedStringArray("GDScript", "VisualScript")
+lua_runtime="GodotLuau"
+lua_runtime_version="1.16.12"
+lua_runtime_commit="7044a11c1bcc2eac2a91155e829a5821d92ab66e"
 
 [feature_flags]
 
