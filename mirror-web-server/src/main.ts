@@ -107,7 +107,7 @@ async function bootstrapRageBloxWebServer() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
-      // whitelist: true, // Do NOT remove whitelist: true. This is a big security risk if it's not there since we pass dtos from the controllers directly into Mongo
+      whitelist: true,
       enableDebugMessages:
         process.env.NODE_ENV === NODE_ENV.DEVELOPMENT ? true : false
     })
