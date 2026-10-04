@@ -36,6 +36,14 @@ export class PaginatedSearchAssetDto {
 
   @IsOptional()
   @IsString()
+  @IsIn([
+    'updatedAt',
+    'createdAt',
+    'name',
+    'assetType',
+    'mirrorPublicLibrary',
+    'mirrorAssetManagerUser'
+  ])
   @ApiProperty({
     description: `Default is updatedAt: desc`
   })
