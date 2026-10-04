@@ -14,6 +14,7 @@ import { Roles } from '../roles/roles.decorator'
 import { Terrain } from './terrain.schema'
 import { TerrainService } from './terrain.service'
 import { UserToken } from '../auth/get-user.decorator'
+import { UserId } from '../util/mongo-object-id-helpers'
 import { CreateTerrainDto } from './dto/create-terrain.dto'
 import { UpdateTerrainDto } from './dto/update-terrain.dto'
 import { FirebaseTokenAuthGuard } from '../auth/auth.guard'
@@ -46,8 +47,11 @@ export class TerrainController {
   @Get(':id')
   @ApiOkResponse({ type: TerrainApiResponse })
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async findOne(@Param('id') id: string) {
-    return await this.terrainService.findOne(id)
+  public async findOne(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: UserId
+  ) {
+    return await this.terrainService.findOneWithRolesCheck(id, userId)
   }
 
   @Post()
@@ -69,15 +73,23 @@ export class TerrainController {
   @ApiParam({ name: 'id', type: 'string', required: true })
   public async update(
     @Param('id') id: string,
-    @Body() updateTerrainDto: UpdateTerrainDto
+    @Body() updateTerrainDto: UpdateTerrainDto,
+    @UserToken('user_id') userId: UserId
   ) {
-    return await this.terrainService.update(id, updateTerrainDto)
+    return await this.terrainService.updateWithRolesCheck(
+      id,
+      updateTerrainDto,
+      userId
+    )
   }
 
   @Delete(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
   @ApiOkResponse({ type: TerrainApiResponse })
-  public async remove(@Param('id') id: string) {
-    return await this.terrainService.remove(id)
+  public async remove(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: UserId
+  ) {
+    return await this.terrainService.removeWithRolesCheck(id, userId)
   }
 }

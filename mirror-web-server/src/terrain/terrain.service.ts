@@ -194,6 +194,32 @@ export class TerrainService {
     }
   }
 
+  public async removeWithRolesCheck(
+    id: string,
+    userId: UserId
+  ): Promise<TerrainDocument> {
+    const terrain = await this.findOne(id)
+    if (!terrain) {
+      throw new NotFoundException()
+    }
+
+    if (terrain.owner.toString() === userId) {
+      return this.remove(id)
+    }
+
+    const space = await this.spaceModel.findOne({ terrain: terrain._id }).exec()
+    if (!space) {
+      throw new NotFoundException()
+    }
+
+    const populatedSpace = await this.spaceService.getSpace(space._id.toString())
+    if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
+      throw new ForbiddenException("You don't have permission to delete terrain")
+    }
+
+    return this.remove(id)
+  }
+
   public remove(id: string): Promise<TerrainDocument> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('ID is not a valid Mongo ObjectID')

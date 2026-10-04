@@ -13,10 +13,11 @@ import { CreateMaterialInstanceDto } from './dto/create-material-instance.dto'
 import { UpdateMaterialInstanceDto } from './dto/update-material-instance.dto'
 import { MaterialInstanceService } from './material-instance.service'
 import { FirebaseTokenAuthGuard } from '../../auth/auth.guard'
+import { UserToken } from '../../auth/get-user.decorator'
 import { ApiCreatedResponse, ApiParam } from '@nestjs/swagger'
 import { ApiResponseProperty } from '@nestjs/swagger/dist/decorators/api-property.decorator'
 import { MaterialInstance } from './material-instance.schema'
-import { MaterialInstanceId, SpaceId } from '../../util/mongo-object-id-helpers'
+import { MaterialInstanceId, SpaceId, UserId } from '../../util/mongo-object-id-helpers'
 
 class MaterialInstanceResponse extends MaterialInstance {
   @ApiResponseProperty()
@@ -24,7 +25,7 @@ class MaterialInstanceResponse extends MaterialInstance {
 }
 
 @FirebaseTokenAuthGuard()
-@UsePipes(new ValidationPipe({ whitelist: false })) // temporary until we define the shape of the material-instance
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller('space/material-instance')
 export class MaterialInstanceController {
   constructor(
@@ -36,9 +37,10 @@ export class MaterialInstanceController {
     type: MaterialInstanceResponse
   })
   public async create(
-    @Body() createMaterialInstanceDto: CreateMaterialInstanceDto
+    @Body() createMaterialInstanceDto: CreateMaterialInstanceDto,
+    @UserToken('user_id') userId: UserId
   ) {
-    return await this.materialInstanceService.create(createMaterialInstanceDto)
+    return await this.materialInstanceService.create(createMaterialInstanceDto, userId)
   }
 
   @Get(':spaceId/:materialInstanceId')
@@ -46,11 +48,13 @@ export class MaterialInstanceController {
   @ApiParam({ name: 'materialInstanceId', type: 'string', required: true })
   public async findOne(
     @Param('spaceId') spaceId: SpaceId,
-    @Param('materialInstanceId') materialInstanceId: MaterialInstanceId
+    @Param('materialInstanceId') materialInstanceId: MaterialInstanceId,
+    @UserToken('user_id') userId: UserId
   ) {
     return await this.materialInstanceService.findOne(
       spaceId,
-      materialInstanceId
+      materialInstanceId,
+      userId
     )
   }
 
@@ -60,12 +64,14 @@ export class MaterialInstanceController {
   public async update(
     @Param('spaceId') spaceId: SpaceId,
     @Param('materialInstanceId') materialInstanceId: MaterialInstanceId,
-    @Body() updateMaterialInstanceDto: UpdateMaterialInstanceDto
+    @Body() updateMaterialInstanceDto: UpdateMaterialInstanceDto,
+    @UserToken('user_id') userId: UserId
   ) {
     return await this.materialInstanceService.update(
       spaceId,
       materialInstanceId,
-      updateMaterialInstanceDto
+      updateMaterialInstanceDto,
+      userId
     )
   }
 
@@ -74,11 +80,13 @@ export class MaterialInstanceController {
   @ApiParam({ name: 'materialInstanceId', type: 'string', required: true })
   public async delete(
     @Param('spaceId') spaceId: SpaceId,
-    @Param('materialInstanceId') materialInstanceId: MaterialInstanceId
+    @Param('materialInstanceId') materialInstanceId: MaterialInstanceId,
+    @UserToken('user_id') userId: UserId
   ) {
     return await this.materialInstanceService.delete(
       spaceId,
-      materialInstanceId
+      materialInstanceId,
+      userId
     )
   }
 }
