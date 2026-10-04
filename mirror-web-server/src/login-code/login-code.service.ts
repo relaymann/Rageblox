@@ -67,8 +67,23 @@ export class LoginCodeService {
   }
 
   public async getLoginCodeRecordByLoginCode(
-    loginCode: string
+    loginCode: string,
+    requesterIp?: string
   ): Promise<LoginCode> {
+    if (!requesterIp || requesterIp.length > 128) {
+      throw new BadRequestException('Invalid requester')
+    }
+
+    const rateLimitKey = `login-code:check:${requesterIp}`
+    const rateLimitResult = await this.redisPubSubService.publisher
+      .multi()
+      .incr(rateLimitKey)
+      .expire(rateLimitKey, 60)
+      .exec()
+    const attempts = Number(rateLimitResult?.[0])
+    if (attempts > 30) {
+      throw new TooManyRequestsException('Too many login-code attempts')
+    }
     const loginCodeRecord = await this.loginCodeModel
       .findOneAndUpdate(
         {
