@@ -96,7 +96,10 @@ func _valid_remote_tween(data: Variant) -> bool:
 	if not data is Array or data.size() != 4:
 		return false
 	var duration = data[1]
-	return duration is float or duration is int or duration is real_t
+	if not (duration is float or duration is int):
+		return false
+	var duration_value := float(duration)
+	return is_finite(duration_value) and duration_value >= 0.0 and duration_value <= 3600.0
 
 
 
@@ -670,7 +673,7 @@ func delete_variable_on_node_at_path(node_path: NodePath, variable_name: String)
 	if Zone.is_host():
 		_delete_variable_on_node_at_path_network.rpc(node_path, variable_name)
 	else:
-		_delete_variable_on_node_at_path_client_to_server.rpc_id(Zone.SERVER_PEER_ID, variable_name)
+		_delete_variable_on_node_at_path_client_to_server.rpc_id(Zone.SERVER_PEER_ID, node_path, variable_name)
 
 
 @rpc("call_remote", "any_peer", "reliable")
