@@ -157,9 +157,14 @@ export class UserGroupController {
   @ApiOkResponse({ type: UserGroupApiResponse })
   public async update(
     @Param('id') id: string,
-    @Body() updateUserGroupDto: UpdateUserGroupDto
+    @Body() updateUserGroupDto: UpdateUserGroupDto,
+    @UserToken('user_id') userId: string
   ) {
-    return await this.userGroupService.update(id, updateUserGroupDto)
+    return await this.userGroupService.updateWithRolesCheck(
+      id,
+      userId,
+      updateUserGroupDto
+    )
   }
 
   @Delete(':id')
