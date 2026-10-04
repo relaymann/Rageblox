@@ -64,11 +64,21 @@ static var _SCRIPT_TEXT_DENYLIST: Array[RegEx] = [
 	RegEx.create_from_string("\\bOS\\b"),
 	RegEx.create_from_string("\\bResourceLoader\\b"),
 	RegEx.create_from_string("\\bFileAccess\\b"),
-	RegEx.create_from_string("\\bDirAccess\\b")
+	RegEx.create_from_string("\\bDirAccess\\b"),
+	RegEx.create_from_string("\\bProjectSettings\\b"),
+	RegEx.create_from_string("\\bClassDB\\b"),
+	RegEx.create_from_string("\\bDisplayServer\\b"),
+	RegEx.create_from_string("\\bRenderingServer\\b"),
+	RegEx.create_from_string("\\bPhysicsServer2D\\b"),
+	RegEx.create_from_string("\\bPhysicsServer3D\\b"),
+	RegEx.create_from_string("\\bWorkerThreadPool\\b"),
+	RegEx.create_from_string("\\bThread\\b"),
+	RegEx.create_from_string("\\bMutex\\b"),
+	RegEx.create_from_string("\\bSemaphore\\b"),
+	RegEx.create_from_string("\\bJavaScriptBridge\\b")
 ]
 
 static var _EXPOSE_VAR_REGEX: RegEx = RegEx.create_from_string("@export var ([_a-zA-Z][_a-zA-Z0-9]{0,30})\\b[^=\\n]*(= )?([^=\\n]*)")
-static var _EXPRESSION = Expression.new()
 
 var _entries: Array[GDScriptEntry] = []
 var _exposed_var_names: PackedStringArray = []
@@ -355,11 +365,38 @@ func _update_exposed_variables() -> void:
 		var var_name: String = mat.get_string(1)
 		_exposed_var_names.append(var_name)
 		if mat.get_group_count() >= 3:
-			_EXPRESSION.parse(mat.get_string(3))
-			_exposed_var_default_values[var_name] = _EXPRESSION.execute()
+			var literal := mat.get_string(3).strip_edges()
+			var parsed := _parse_safe_literal(literal)
+			if parsed[0]:
+				_exposed_var_default_values[var_name] = parsed[1]
 
 
 ## This method handles runtime error messages similar to VisualScriptInstance's `_on_block_message` method.
+
+func _parse_safe_literal(literal: String) -> Array:
+	# Never execute creator-provided expressions while extracting inspector defaults.
+	# Defaults are data, not code. Support JSON-compatible literals only.
+	if literal.is_empty() or literal.length() > 4096:
+		return [false, null]
+	if literal in ["null", "true", "false"]:
+		return [true, null if literal == "null" else literal == "true"]
+	if literal.is_valid_int():
+		return [true, int(literal)]
+	if literal.is_valid_float():
+		return [true, float(literal)]
+	if (literal.begins_with("\"") and literal.ends_with("\"")) or (literal.begins_with("'") and literal.ends_with("'")):
+		var quote := literal.substr(0, 1)
+		if literal.ends_with(quote) and literal.length() >= 2:
+			var body := literal.substr(1, literal.length() - 2)
+			if quote == "\"":
+				var decoded = JSON.parse_string("\"" + body + "\"")
+				return [decoded != null, decoded]
+			return [true, body]
+	if literal.begins_with("[") or literal.begins_with("{"):
+		var json_value = JSON.parse_string(literal)
+		return [json_value != null, json_value]
+	return [false, null]
+
 func _on_tmusergdscript_runtime_error(error_str: String, frame_index: int, line_num: int, func_name: String) -> void:
 	line_num -= _SCRIPT_PREPROCESS_LINE_COUNT
 	# Format the error message.
