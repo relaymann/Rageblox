@@ -629,8 +629,8 @@ export class SpaceController {
     return await this.spaceService.publishSpaceByIdWithRolesCheck(
       userId,
       space._id,
-      createNewSpaceVersionDto.updateSpaceWithActiveSpaceVersion,
-      createNewSpaceVersionDto.name
+      createNewSpaceVersionDto?.updateSpaceWithActiveSpaceVersion ?? false,
+      createNewSpaceVersionDto?.name
     )
   }
 
