@@ -109,18 +109,24 @@ export class SpaceObjectController {
    */
   @Get('space/:id')
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async findAllBySpaceId(@Param('id') spaceId: SpaceId) {
+  public async findAllBySpaceId(
+    @Param('id') spaceId: SpaceId,
+    @UserToken('user_id') userId: UserId
+  ) {
     if (!spaceId || spaceId == 'undefined') {
       throw new BadRequestException('Invalid spaceId')
     }
-    return await this.spaceObjectService.findAllBySpaceIdAdmin(spaceId)
+    return await this.spaceObjectService.findAllBySpaceIdWithRolesCheck(
+      spaceId,
+      userId
+    )
   }
 
   @Get('space-v2/:id')
   @ApiParam({ name: 'id', type: 'string', required: true })
   public async findAllBySpaceIdWithRolesCheck(
     @Param('id') spaceId: SpaceId,
-    userId: UserId
+    @UserToken('user_id') userId: UserId
   ) {
     if (!spaceId || spaceId == 'undefined') {
       throw new BadRequestException('Invalid spaceId')
@@ -134,9 +140,13 @@ export class SpaceObjectController {
   @Get('tag')
   @ApiOkResponse({ type: SpaceObject })
   public async getSpaceObjectsByTag(
-    @Query() searchDto: PaginatedSearchSpaceObjectDto
+    @Query() searchDto: PaginatedSearchSpaceObjectDto,
+    @UserToken('user_id') userId: UserId
   ) {
-    return await this.spaceObjectService.getSpaceObjectsByTag(searchDto)
+    return await this.spaceObjectService.getSpaceObjectsByTagWithRolesCheck(
+      userId,
+      searchDto
+    )
   }
 
   @Patch('tag')
@@ -182,9 +192,13 @@ export class SpaceObjectController {
   @Get('search')
   @ApiQuery({ required: false })
   public async searchSpaceObjectsPaginated(
-    @Query() searchDto?: PaginatedSearchSpaceObjectDto
+    @Query() searchDto: PaginatedSearchSpaceObjectDto,
+    @UserToken('user_id') userId: UserId
   ) {
-    return await this.spaceObjectService.searchSpaceObjectsPaginated(searchDto)
+    return await this.spaceObjectService.searchSpaceObjectsPaginatedWithRolesCheck(
+      userId,
+      searchDto
+    )
   }
 
   @Get(':id')

@@ -806,8 +806,18 @@ export class SpaceObjectService implements IRoleConsumer {
     return res
   }
 
-  public async getSpaceObjectsByTag(searchDto: PaginatedSearchSpaceObjectDto) {
-    const matchFilter: FilterQuery<SpaceObject> = {}
+  public async getSpaceObjectsByTagWithRolesCheck(
+    userId: UserId,
+    searchDto: PaginatedSearchSpaceObjectDto
+  ) {
+    if (!searchDto.spaceId) {
+      throw new BadRequestException('spaceId is required')
+    }
+    const space = await this.spaceService.getSpace(searchDto.spaceId)
+    if (!this.spaceService.canFindWithRolesCheck(userId, space)) {
+      throw new NotFoundException('Not found or insufficient permissions')
+    }
+    const matchFilter: FilterQuery<SpaceObject> = { space: searchDto.spaceId }
 
     const andFilter = this._getSearchFilter(searchDto)
     if (andFilter.length > 0) {
@@ -1030,9 +1040,19 @@ export class SpaceObjectService implements IRoleConsumer {
     return newThirdPartyTag
   }
 
-  public searchSpaceObjectsPaginated(searchDto: PaginatedSearchSpaceObjectDto) {
+  public async searchSpaceObjectsPaginatedWithRolesCheck(
+    userId: UserId,
+    searchDto: PaginatedSearchSpaceObjectDto
+  ) {
+    if (!searchDto.spaceId) {
+      throw new BadRequestException('spaceId is required')
+    }
+    const space = await this.spaceService.getSpace(searchDto.spaceId)
+    if (!this.spaceService.canFindWithRolesCheck(userId, space)) {
+      throw new NotFoundException('Not found or insufficient permissions')
+    }
     const { page, perPage } = searchDto
-    const matchFilter: FilterQuery<SpaceObject> = {}
+    const matchFilter: FilterQuery<SpaceObject> = { space: searchDto.spaceId }
 
     const andFilter = this._getSearchFilter(searchDto)
     if (andFilter.length > 0) {
@@ -1062,6 +1082,9 @@ export class SpaceObjectService implements IRoleConsumer {
     const andFilter = []
 
     if (field && search) {
+      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(field)) {
+        throw new BadRequestException('Invalid search field')
+      }
       andFilter.push({ [field]: new RegExp(search, 'i') })
     }
 

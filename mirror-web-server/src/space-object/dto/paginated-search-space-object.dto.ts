@@ -2,6 +2,7 @@ import { SORT_DIRECTION } from '../../util/pagination/pagination.interface'
 import { ApiProperty } from '@nestjs/swagger'
 import {
   IsEnum,
+  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -13,6 +14,11 @@ import { Transform } from 'class-transformer'
 import { ApiArrayQuery } from '../../util/decorators/api-array-query.decorator'
 
 export class PaginatedSearchSpaceObjectDto {
+  @IsOptional()
+  @IsMongoId()
+  @ApiProperty({ required: false })
+  spaceId?: string
+
   @IsOptional()
   @IsString()
   @ApiProperty()
