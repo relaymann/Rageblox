@@ -155,7 +155,7 @@ export class UserService {
     // disallow creation if they didn't agree to TOS/PP
     if (!termsAgreedtoGeneralTOSandPP) {
       throw new BadRequestException(
-        'You must agree to the Terms of Service and Privacy Policy to create an account: https://www.themirror.space/terms, https://www.themirror.space/privacy'
+        'You must agree to the Terms of Service and Privacy Policy to create an account: RageBlox Terms of Service and Privacy Policy'
       )
     }
 

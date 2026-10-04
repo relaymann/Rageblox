@@ -1,4 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { forwardRef, Inject } from '@nestjs/common'
+import { isMongoId } from 'class-validator'
+import { SpaceService } from '../space/space.service'
 import { Server, WebSocket } from 'ws'
 import { FirebaseAuthenticationService } from '../firebase/firebase-authentication.service'
 import { RedisPubSubService } from '../redis/redis-pub-sub.service'
@@ -14,7 +17,9 @@ export class WsAuthHelperService {
   constructor(
     private readonly logger: Logger,
     private readonly redisPubSubService: RedisPubSubService,
-    private readonly firebaseAuthService: FirebaseAuthenticationService
+    private readonly firebaseAuthService: FirebaseAuthenticationService,
+    @Inject(forwardRef(() => SpaceService))
+    private readonly spaceService: SpaceService
   ) {}
   public initializationSuccess: { [key: string]: boolean } = {}
   private initializationMap = new Map<string, Promise<any>>()
@@ -24,6 +29,7 @@ export class WsAuthHelperService {
   private channelSubs: Record<string, WebSocket[]> = {}
 
   handleConnectionHelper(client: WebSocket, args: any) {
+    client['id'] = uuidv4()
     this.initializationMap.set(client['id'], this.initialize(client, args))
   }
 
@@ -41,10 +47,7 @@ export class WsAuthHelperService {
     let spaceId = headers?.space
     let token = headers?.authorization
 
-    // attach the token to the client
-    client['token'] = token
-    // assign the socket a uuid with the uuid library
-    client['id'] = uuidv4()
+    // Never persist the bearer token on the socket after authentication.
 
     let isFirebaseToken = false
 
@@ -55,7 +58,6 @@ export class WsAuthHelperService {
         // Important: if this order is changed, it must be changed in ws-auth-helper.service.ts on the react app too. it expects ordered array
         const result = secWebSocketProtocol.split(',')
         token = result[0]
-        client['token'] = token
         if (result[1]) {
           spaceId = result[1]
         }
@@ -84,7 +86,6 @@ export class WsAuthHelperService {
         if (decodedJwt) {
           isFirebaseToken = true
           client['user'] = decodedJwt
-          console.log('isFirebaseToken', isFirebaseToken)
         }
       } catch (error) {
         this.logger.log(
@@ -113,6 +114,20 @@ export class WsAuthHelperService {
       )}`,
       WsAuthHelperService.name
     )
+    if (!spaceId || !isMongoId(spaceId)) {
+      this.logger.log('Invalid or missing spaceId for authenticated WebSocket connection', WsAuthHelperService.name)
+      return client.close(1008, 'Invalid space')
+    }
+
+    if (token !== process.env.WSS_SECRET) {
+      try {
+        await this.spaceService.findOneWithRolesCheck(client['user'].uid, spaceId)
+      } catch (error) {
+        this.logger.log('Authenticated user is not authorized for requested space', WsAuthHelperService.name)
+        return client.close(1008, 'Not authorized for space')
+      }
+    }
+
     this.setupSubscriber(client, spaceId)
 
     this.initializationMap.delete(client['id'])
@@ -176,14 +191,7 @@ export class WsAuthHelperService {
     const subchannel = client['subscriberChannel']
     if (!subchannel || !this.channelSubs[subchannel]) {
       this.logger.log(
-        `setupSubscriber: attempted but subchannel was falsey: ${JSON.stringify(
-          {
-            client,
-            subchannel
-          },
-          null,
-          2
-        )}`,
+        `setupSubscriber: attempted but subchannel was falsey: ${JSON.stringify({ subchannel })}`,
         WsAuthHelperService.name
       )
       return

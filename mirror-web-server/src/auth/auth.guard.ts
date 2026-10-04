@@ -7,6 +7,7 @@ import {
   Injectable,
   Logger,
   MethodNotAllowedException,
+  UnauthorizedException,
   UseGuards
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
@@ -57,7 +58,7 @@ export class AuthGuardFirebase implements CanActivate {
         'Token is falsey, returning false',
         AuthGuardFirebase.name
       )
-      return false
+      throw new UnauthorizedException('Authentication required')
     }
 
     // not public and token exists, so decode
@@ -80,19 +81,12 @@ export class AuthGuardFirebase implements CanActivate {
             req.url
         )
         // only log it if we're not in prod for security reasons
-        if (process.env.NODE_ENV !== NODE_ENV.PRODUCTION) {
-          let logToken = token
-          if (logToken === process.env.WSS_SECRET) {
-            logToken = '<reacted WSS_SECRET>'
-          }
-          this.logger.error('JWT: ' + logToken)
-        }
         throw new MethodNotAllowedException('Invalid JWT')
       } else {
-        this.logger.error('JWT:', token)
+        this.logger.error('JWT was rejected for request to ' + req.url)
       }
       this.logger.log('AuthGuardFirebase: error decoding jwt, returning false')
-      return false
+      throw new UnauthorizedException('Invalid authentication token')
     }
   }
 

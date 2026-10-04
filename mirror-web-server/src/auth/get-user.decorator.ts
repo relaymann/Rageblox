@@ -17,7 +17,7 @@ export const UserBearerToken = createParamDecorator(
   (data: string, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest()
     const token: string = req.headers?.authorization
-    return token.replace('Bearer ', '')
+    return token?.replace(/^Bearer\s+/i, '') || ''
   }
 )
 

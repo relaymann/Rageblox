@@ -51,7 +51,7 @@ import { GodotModule } from '../godot-server/godot.module'
   imports: [
     LoggerModule,
     ScriptEntityModule,
-    GodotModule,
+    forwardRef(() => GodotModule),
     MongooseModule.forFeature([
       { name: PurchaseOption.name, schema: PurchaseOptionSchema }
     ]),
