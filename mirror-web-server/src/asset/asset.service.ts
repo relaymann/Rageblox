@@ -746,14 +746,12 @@ export class AssetService {
     searchDto?: PaginatedSearchAssetDtoV2,
     populate: PopulateField[] = [] // don't abuse, this is slow
   ): Promise<IPaginatedResponse<AssetDocument>> {
-    const { page, perPage, startItem, numberOfItems, includeSoftDeleted } =
-      searchDto
+    const { page, perPage, startItem, numberOfItems } = searchDto
 
-    const filter: FilterQuery<any> = includeSoftDeleted
-      ? {
-          mirrorPublicLibrary: true
-        }
-      : { mirrorPublicLibrary: true, isSoftDeleted: { $exists: false } }
+    const filter: FilterQuery<any> = {
+      mirrorPublicLibrary: true,
+      isSoftDeleted: { $exists: false }
+    }
 
     if (!searchDto?.includeAssetPackAssets) {
       filter.assetPack = { $ne: true }
@@ -1500,7 +1498,7 @@ export class AssetService {
     const andFilter = AssetService.getSearchFilter(searchDto)
 
     if (andFilter.length > 0) {
-      matchFilter.$and = andFilter
+      matchFilter.$and.push(...andFilter)
     }
 
     if (!searchDto?.includeAssetPackAssets) {
