@@ -6,6 +6,7 @@ import {
   Post,
   UsePipes,
   ValidationPipe,
+  UseGuards,
   NotFoundException,
   Logger
 } from '@nestjs/common'
@@ -16,6 +17,7 @@ import {
   GodotServerOverrideConfigService
 } from './godot-server-override-config.service'
 import { ApiParam } from '@nestjs/swagger'
+import { GodotServerGuard } from '../godot-server/godot-server.guard'
 
 @UsePipes(new ValidationPipe({ whitelist: true }))
 @Controller(godotServerOverrideControllerPath)
@@ -72,6 +74,7 @@ export class GodotServerOverrideConfigController {
   }
 
   @Post()
+  @UseGuards(GodotServerGuard)
   public async create(
     @Body() createServerOverrideConfigDto: CreateGodotServerOverrideConfigDto
   ) {
