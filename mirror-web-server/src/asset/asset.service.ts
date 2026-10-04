@@ -801,7 +801,7 @@ export class AssetService {
         filter,
         ROLE.OBSERVER,
         { startItem, numberOfItems },
-        populate ? this.standardPopulateFields : [],
+        populate ? this.publicAssetPopulateFields : [],
         sort
       )
     return this.paginationService.getPaginatedQueryResponseWithRolesCheck(
@@ -810,7 +810,7 @@ export class AssetService {
       filter,
       ROLE.OBSERVER,
       { page, perPage },
-      populate ? this.standardPopulateFields : [],
+      populate ? this.publicAssetPopulateFields : [],
       sort
     )
   }
@@ -918,7 +918,7 @@ export class AssetService {
         filter,
         ROLE.DISCOVER,
         { startItem, numberOfItems },
-        populate ? this.standardPopulateFields : [],
+        populate ? this.publicAssetPopulateFields : [],
         sort
       )
     return this.paginationService.getPaginatedQueryResponseWithRolesCheck(
@@ -927,7 +927,7 @@ export class AssetService {
       filter,
       ROLE.DISCOVER,
       { page, perPage },
-      populate ? this.standardPopulateFields : [],
+      populate ? this.publicAssetPopulateFields : [],
       sort
     )
   }
