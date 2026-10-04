@@ -462,6 +462,12 @@ func _set_properties_on_nodes_client_to_server(nodes_properties: Dictionary) -> 
 	for node_path in nodes_properties:
 		if not _valid_remote_node_path(node_path) or not has_node(node_path) or not _can_remote_edit_node(get_node(node_path), sender):
 			return
+		var node_properties: Variant = nodes_properties[node_path]
+		if not _valid_remote_dictionary(node_properties, 128):
+			return
+		for property_name in node_properties:
+			if not _valid_remote_name(property_name):
+				return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_set_properties_on_nodes_network(nodes_properties)
 	_set_properties_on_nodes_network.rpc(nodes_properties)
@@ -506,8 +512,14 @@ func _tween_properties_on_nodes_client_to_server(nodes_tweened_properties: Dicti
 	if not _valid_remote_dictionary(nodes_tweened_properties) or not _valid_remote_sender(sender):
 		return
 	for node_path in nodes_tweened_properties:
-		if str(node_path).length() > 1024 or not has_node(node_path) or not _can_remote_edit_node(get_node(node_path), sender):
+		if not _valid_remote_node_path(node_path) or not has_node(node_path) or not _can_remote_edit_node(get_node(node_path), sender):
 			return
+		var node_tweened_properties: Variant = nodes_tweened_properties[node_path]
+		if not _valid_remote_dictionary(node_tweened_properties, 128):
+			return
+		for property_name in node_tweened_properties:
+			if not _valid_remote_name(property_name) or not _valid_remote_tween(node_tweened_properties[property_name]):
+				return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_tween_properties_on_nodes_network(nodes_tweened_properties)
 	_tween_properties_on_nodes_network.rpc(nodes_tweened_properties)
@@ -573,6 +585,12 @@ func _set_variables_on_nodes_client_to_server(nodes_variables: Dictionary) -> vo
 			return
 		if not (_can_remote_play_mutation(sender) or _can_remote_edit_node(get_node(node_path), sender)):
 			return
+		var node_variables: Variant = nodes_variables[node_path]
+		if not _valid_remote_dictionary(node_variables, 128):
+			return
+		for variable_name in node_variables:
+			if not _valid_remote_name(variable_name):
+				return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_set_variables_on_nodes_network(nodes_variables)
 	_set_variables_on_nodes_network.rpc(nodes_variables)
@@ -630,10 +648,16 @@ func _tween_variables_on_nodes_client_to_server(nodes_variables: Dictionary) -> 
 	if not _valid_remote_dictionary(nodes_variables) or not _valid_remote_sender(sender):
 		return
 	for node_path in nodes_variables:
-		if str(node_path).length() > 1024 or not has_node(node_path):
+		if not _valid_remote_node_path(node_path) or not has_node(node_path):
 			return
 		if not (_can_remote_play_mutation(sender) or _can_remote_edit_node(get_node(node_path), sender)):
 			return
+		var node_variables: Variant = nodes_variables[node_path]
+		if not _valid_remote_dictionary(node_variables, 128):
+			return
+		for variable_name in node_variables:
+			if not _valid_remote_name(variable_name):
+				return
 	# When a client tells the server about setting variables, set on the server and send to all clients.
 	_tween_variables_on_nodes_network(nodes_variables)
 	_tween_variables_on_nodes_network.rpc(nodes_variables)
