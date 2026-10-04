@@ -664,7 +664,7 @@ export class AssetService {
         requestingUserId,
         ROLE.DISCOVER
       ),
-      { $match: { isSoftDeleted: { $exists: false } } },
+      { $match: { isSoftDeleted: { $exists: false }, public: true } },
       // get assets where the targetUser is an owner
       ...this.roleService.userIsOwnerAggregationPipeline(targetUserId)
     ]
@@ -1227,8 +1227,8 @@ export class AssetService {
       $and: [
         {
           $or: [
-            { 'purchaseOptions.enabled': true },
-            { mirrorPublicLibrary: true }
+            { 'purchaseOptions.enabled': true, public: true },
+            { mirrorPublicLibrary: true, public: true }
           ]
         },
         { isSoftDeleted: { $exists: false } }
