@@ -484,8 +484,25 @@ export class StripeService {
     return configuration.data[0].id
   }
 
-  public async handleStripeWebhook(rowBody: any) {
-    const metaData: StripeSubscriptionMetadataDto = rowBody.data.object.metadata
+  public async handleStripeWebhook(rawBody: string, signature: string) {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+    if (!webhookSecret) {
+      throw new BadRequestException('Stripe webhook verification is not configured')
+    }
+
+    let rowBody: Stripe.Event
+    try {
+      rowBody = this.stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        webhookSecret
+      )
+    } catch {
+      throw new BadRequestException('Invalid Stripe webhook signature')
+    }
+
+    const metaData: StripeSubscriptionMetadataDto =
+      (rowBody.data.object as any).metadata || {}
     switch (rowBody.type) {
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_CREATED:
         await this.userModel.findByIdAndUpdate(metaData.userId, {
