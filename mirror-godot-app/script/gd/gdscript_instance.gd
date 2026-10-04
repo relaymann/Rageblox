@@ -79,7 +79,6 @@ static var _SCRIPT_TEXT_DENYLIST: Array[RegEx] = [
 ]
 
 static var _EXPOSE_VAR_REGEX: RegEx = RegEx.create_from_string("@export var ([_a-zA-Z][_a-zA-Z0-9]{0,30})\\b[^=\\n]*(= )?([^=\\n]*)")
-static var _EXPRESSION = Expression.new()
 
 var _entries: Array[GDScriptEntry] = []
 var _exposed_var_names: PackedStringArray = []
