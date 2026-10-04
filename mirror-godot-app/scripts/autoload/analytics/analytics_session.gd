@@ -78,4 +78,5 @@ func _ping_session() -> void:
 				properties_try_set_key.call("spaceId", Zone.client.current_zone, "space")
 		properties.userRole = get_current_role_of_user_on_space()
 	# Note: the whole session heartbeat method can be removed with analyticsv2, so this class is deprecated
-	if ProjectSettings.get_setting("rageblox/analytics_enabled", false):\n\t\tAnalytics.track_event(event, properties)
+	if ProjectSettings.get_setting("rageblox/analytics_enabled", false):
+		Analytics.track_event(event, properties)
