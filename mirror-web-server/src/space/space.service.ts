@@ -1154,6 +1154,31 @@ export class SpaceService implements IRoleConsumer {
     )
 
     if (role >= ROLE.MANAGER) {
+      const allowedImageMimes = new Set([
+        'image/webp',
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'image/bmp',
+        'image/tiff',
+        'image/svg+xml'
+      ])
+
+      if (!Array.isArray(files) || files.length === 0 || files.length > 4) {
+        throw new BadRequestException('Invalid number of uploaded files')
+      }
+
+      for (const file of files) {
+        if (
+          !file ||
+          typeof file.fieldname !== 'string' ||
+          !/^\\d{1,3}$/.test(file.fieldname) ||
+          !allowedImageMimes.has(file.mimetype)
+        ) {
+          throw new BadRequestException('Invalid space image upload')
+        }
+      }
+
       try {
         const images = await Promise.all(
           files.map((file) => {
