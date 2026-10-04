@@ -1154,6 +1154,77 @@ export class SpaceService implements IRoleConsumer {
     )
 
     if (role >= ROLE.MANAGER) {
+      const allowedImageMimes = new Set([
+        'image/webp',
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'image/bmp',
+        'image/tiff'
+      ])
+
+      if (!Array.isArray(files) || files.length === 0 || files.length > 4) {
+        throw new BadRequestException('Invalid number of uploaded files')
+      }
+
+      const seenIndexes = new Set<string>()
+      for (const file of files) {
+        if (
+          !file ||
+          typeof file.fieldname !== 'string' ||
+          !/^\d{1,3}$/.test(file.fieldname) ||
+          seenIndexes.has(file.fieldname) ||
+          !allowedImageMimes.has(file.mimetype) ||
+          !Buffer.isBuffer(file.buffer) ||
+          file.buffer.length === 0 ||
+          file.buffer.length > 10 * 1024 * 1024 ||
+          file.size !== file.buffer.length
+        ) {
+          throw new BadRequestException('Invalid space image upload')
+        }
+
+        seenIndexes.add(file.fieldname)
+
+        const header = file.buffer.subarray(0, 12)
+        const validSignature =
+          (file.mimetype === 'image/jpeg' &&
+            header.length >= 3 &&
+            header[0] === 0xff &&
+            header[1] === 0xd8 &&
+            header[2] === 0xff) ||
+          (file.mimetype === 'image/png' &&
+            header.length >= 8 &&
+            header.subarray(0, 8).equals(
+              Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+            )) ||
+          (file.mimetype === 'image/gif' &&
+            header.length >= 6 &&
+            (header.subarray(0, 6).toString('ascii') === 'GIF87a' ||
+              header.subarray(0, 6).toString('ascii') === 'GIF89a')) ||
+          (file.mimetype === 'image/webp' &&
+            header.length >= 12 &&
+            header.subarray(0, 4).toString('ascii') === 'RIFF' &&
+            header.subarray(8, 12).toString('ascii') === 'WEBP') ||
+          (file.mimetype === 'image/bmp' &&
+            header.length >= 2 &&
+            header[0] === 0x42 &&
+            header[1] === 0x4d) ||
+          (file.mimetype === 'image/tiff' &&
+            header.length >= 4 &&
+            ((header[0] === 0x49 &&
+              header[1] === 0x49 &&
+              header[2] === 0x2a &&
+              header[3] === 0x00) ||
+              (header[0] === 0x4d &&
+                header[1] === 0x4d &&
+                header[2] === 0x00 &&
+                header[3] === 0x2a)))
+
+        if (!validSignature) {
+          throw new BadRequestException('Invalid space image content')
+        }
+      }
+
       try {
         const images = await Promise.all(
           files.map((file) => {

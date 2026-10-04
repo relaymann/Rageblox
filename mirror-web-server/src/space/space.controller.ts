@@ -642,7 +642,11 @@ export class SpaceController {
   @ApiBody({ schema: { type: 'file' }, isArray: true })
   @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse({ type: SpacePublicData })
-  @UseInterceptors(AnyFilesInterceptor({ limits: { files: 4 } }))
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      limits: { files: 4, fileSize: 10 * 1024 * 1024 },
+    })
+  )
   @ApiParam({ name: 'id', type: 'string', required: true })
   public async uploadPublic(
     @UserToken('user_id') userId: UserId,
