@@ -788,6 +788,16 @@ export class UserService {
   }
 
   public uploadProfileImage({ file, userId }: UploadProfileFileDto) {
+    if (
+      !file ||
+      !Buffer.isBuffer(file.buffer) ||
+      file.buffer.length === 0 ||
+      file.buffer.length > 5 * 1024 * 1024 ||
+      !file.mimetype.startsWith('image/')
+    ) {
+      throw new BadRequestException('Invalid profile image upload')
+    }
+
     const fileId = new ObjectId()
     const path = `${userId}/profile-images/${fileId.toString()}`
     return this.fileUploadService.uploadFilePublic({ file, path })
