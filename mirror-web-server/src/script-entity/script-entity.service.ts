@@ -29,7 +29,10 @@ export class ScriptEntityService {
     userId: UserId,
     createScriptEntityDto: CreateScriptEntityDto
   ): Promise<ScriptEntityDocument> {
-    const created = new this.scriptEntityModel(createScriptEntityDto)
+    const created = new this.scriptEntityModel({
+      ...createScriptEntityDto,
+      creator: userId
+    })
     const role = await this.roleService.create({
       defaultRole:
         createScriptEntityDto.defaultRole ?? this._getDefaultRoleForScripts,

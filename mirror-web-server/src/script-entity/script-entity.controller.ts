@@ -26,7 +26,7 @@ class ScriptEntityResponse extends ScriptEntity {
 }
 
 @FirebaseTokenAuthGuard()
-@UsePipes(new ValidationPipe({ whitelist: false })) // temporary until we define the shape of the script entity
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true })) // blocks remain flexible, but unknown top-level DTO fields are stripped
 @Controller('script-entity')
 export class ScriptEntityController {
   constructor(private readonly scriptEntityService: ScriptEntityService) {}
@@ -54,22 +54,33 @@ export class ScriptEntityController {
 
   @Get(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async findOne(@Param('id') id: string) {
-    return await this.scriptEntityService.findOne(id)
+  public async findOne(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: UserId
+  ) {
+    return await this.scriptEntityService.findOneWithRolesCheck(id, userId)
   }
 
   @Patch(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
   public async update(
     @Param('id') id: string,
-    @Body() updateAssetDto: UpdateScriptEntityDto
+    @Body() updateScriptEntityDto: UpdateScriptEntityDto,
+    @UserToken('user_id') userId: UserId
   ) {
-    return await this.scriptEntityService.update(id, updateAssetDto)
+    return await this.scriptEntityService.updateWithRolesCheck(
+      id,
+      updateScriptEntityDto,
+      userId
+    )
   }
 
   @Delete(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
-  public async delete(@Param('id') id: string) {
-    return await this.scriptEntityService.delete(id)
+  public async delete(
+    @Param('id') id: string,
+    @UserToken('user_id') userId: UserId
+  ) {
+    return await this.scriptEntityService.deleteWithRolesCheck(id, userId)
   }
 }
