@@ -16,6 +16,7 @@ var _recently_edited_scripts: Array[Dictionary] = []
 
 @onready var _visual_script_editor = $VisualScriptEditor
 @onready var _gd_script_editor = $GDScriptEditor
+@onready var _luau_script_editor = $LuauScriptEditor
 @onready var _script_entry_creation_dialog = $ScriptEntryCreationDialog
 @onready var _script_entry_signal_tree_populator = $ScriptEntryCreationDialog/ScriptEntrySignalTreePopulator
 
@@ -68,6 +69,9 @@ func _load_from_script_instance(script_instance: ScriptInstance, rezoom: bool = 
 	if script_instance is GDScriptInstance:
 		_gd_script_editor.load_from_script_instance(script_instance)
 		set_gd_script_editor_visibility(true)
+	elif script_instance is LuauScriptInstance:
+		_luau_script_editor.load_from_script_instance(script_instance)
+		set_luau_script_editor_visibility(true)
 	elif script_instance is VisualScriptInstance:
 		_visual_script_editor.load_from_script_instance(script_instance, rezoom)
 		set_visual_script_editor_visibility(true)
@@ -104,7 +108,10 @@ func request_close() -> void:
 	if _script_variable_editor.visible:
 		_script_variable_editor.toggle_variable_editor() # This does more than just .hide()
 		return
-	if _gd_script_editor.visible:
+	if _luau_script_editor.visible:
+		_luau_script_editor.request_close()
+		_script_editor_holder.hide()
+	elif _gd_script_editor.visible:
 		_gd_script_editor.hide()
 		_script_editor_holder.hide()
 	elif _visual_script_editor.visible:
@@ -123,6 +130,7 @@ func request_close() -> void:
 
 func clear_script_editor() -> void:
 	_visual_script_editor.cleanup_and_clear_script_editor()
+	_luau_script_editor.hide()
 	_script_instance = null
 	_last_edited_attached_object = null
 	_last_edited_script_id = ""
@@ -161,6 +169,13 @@ func copy_selection() -> void:
 func paste_copied_data() -> void:
 	if _visual_script_editor.visible:
 		_visual_script_editor.paste_copied_data()
+
+
+func set_luau_script_editor_visibility(is_editor_visible: bool) -> void:
+	_script_editor_holder.visible = is_editor_visible
+	_luau_script_editor.visible = is_editor_visible
+	_gd_script_editor.visible = not is_editor_visible
+	_visual_script_editor.visible = not is_editor_visible
 
 
 func set_gd_script_editor_visibility(is_editor_visible: bool) -> void:

@@ -186,7 +186,9 @@ func _serialize_entry_parameters_to_json() -> Dictionary:
 static func create(script_inst_dict: Dictionary) -> ScriptInstance:
 	var script_type: String = script_inst_dict.get("type", "MirrorVisualScript")
 	var script_instance: ScriptInstance
-	if script_type == "GDScript":
+	if script_type == "Luau":
+		script_instance = LuauScriptInstance.new()
+	elif script_type == "GDScript":
 		script_instance = GDScriptInstance.new()
 	else:
 		script_instance = VisualScriptInstance.new()

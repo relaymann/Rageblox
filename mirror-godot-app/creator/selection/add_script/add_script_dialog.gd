@@ -53,6 +53,10 @@ func _attach_existing_script(existing_script_id: String) -> void:
 	_audio_stream_player_script_attached.play()
 
 
+func _create_new_luau_script() -> void:
+	_create_new_script_base("Luau")
+
+
 func _create_new_visual_script() -> void:
 	_create_new_script_base("MirrorVisualScript")
 

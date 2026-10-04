@@ -15,8 +15,15 @@ script = ExtResource("2_wf3s5")
 layout_mode = 2
 theme_override_constants/separation = 20
 
+[node name="CreateLuauScript" type="Button" parent="CreateNewScript"]
+custom_minimum_size = Vector2(150, 2.08165e-12)
+layout_mode = 2
+text = "New Luau"
+icon = ExtResource("3_jay8g")
+expand_icon = true
+
 [node name="CreateVisualScript" type="Button" parent="CreateNewScript"]
-custom_minimum_size = Vector2(180, 2.08165e-12)
+custom_minimum_size = Vector2(160, 2.08165e-12)
 layout_mode = 2
 text = "New Visual Script"
 icon = ExtResource("3_jay8g")
@@ -40,6 +47,7 @@ auto_hide = false
 [node name="SearchField" parent="FilterMenu/MarginContainer/FilterMenu" index="0"]
 placeholder_text = "Search scripts in space..."
 
+[connection signal="pressed" from="CreateNewScript/CreateLuauScript" to="." method="_on_create_luau_script_pressed"]
 [connection signal="pressed" from="CreateNewScript/CreateVisualScript" to="." method="_on_create_visual_script_pressed"]
 [connection signal="pressed" from="CreateNewScript/CreateGDScript" to="." method="_on_create_gd_script_pressed"]
 [connection signal="item_activated" from="FilterMenu" to="." method="_on_filter_menu_item_activated"]
