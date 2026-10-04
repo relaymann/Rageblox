@@ -1,4 +1,4 @@
-import { Controller, Post, Query } from '@nestjs/common'
+import { Controller, Post, Query, Req } from '@nestjs/common'
 import { UserToken } from '../auth/get-user.decorator'
 import { FirebaseTokenAuthGuard } from '../auth/auth.guard'
 import { LoginCodeService } from './login-code.service'
@@ -22,7 +22,13 @@ export class LoginCodeController {
   }
 
   @Post('check-login-code')
-  async checkLoginCode(@Query('loginCode') loginCode: string) {
-    return await this.loginCodeService.getLoginCodeRecordByLoginCode(loginCode)
+  async checkLoginCode(
+    @Query('loginCode') loginCode: string,
+    @Req() request: { ip?: string }
+  ) {
+    return await this.loginCodeService.getLoginCodeRecordByLoginCode(
+      loginCode,
+      request.ip
+    )
   }
 }
