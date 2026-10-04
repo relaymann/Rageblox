@@ -82,7 +82,7 @@ global_script_class_icons={
 config/name="RageBlox"
 config/tags=PackedStringArray("open_source")
 run/main_scene="res://scenes/boot_scene.tscn"
-config/features=PackedStringArray("13b5ad64", "4.3", "rageblox")
+config/features=PackedStringArray("13b5ad64", "4.3", "mirror")
 boot_splash/bg_color=Color(0.0745098, 0.0862745, 0.184314, 1)
 boot_splash/image="res://art/white_logo_slate_bg_with_text.png"
 boot_splash/fullsize=false
@@ -149,7 +149,6 @@ show_advanced_settings=true
 map_builder=true
 suicide_keybinding=true
 enable_space_listing_pages=true
-the-mirror-tutorials=true
 always_spin_up_local_server=false
 check_version_on_start=true
 
