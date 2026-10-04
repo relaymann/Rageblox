@@ -156,10 +156,12 @@ export class PaginatedSearchAssetDto {
 export class PaginatedSearchAssetDtoV2 extends PaginatedSearchAssetDto {
   @IsOptional()
   @IsArray()
-  @Transform(({ value }) => value?.toString().split(',').map(String)) // This transforms the comma-separated strings into an array of strings
+  @ArrayMaxSize(2)
+  @Transform(({ value }) => value?.toString().split(',').map(String))
+  @IsIn(['creator', 'owner'], { each: true })
   @ApiProperty({
-    description: 'Comma-separated list of fields to populate',
-    examples: ['creator', 'owner', 'tagsV2', 'creator']
+    description: 'Comma-separated list of safe user fields to populate',
+    examples: ['creator', 'owner']
   })
   populate: string[]
 
