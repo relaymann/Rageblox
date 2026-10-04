@@ -128,6 +128,18 @@ export class UserGroupService {
   }
 
   public search(searchParams): Promise<any> {
+    const allowedFields = new Set(['name', 'publicDescription'])
+    const filterField = allowedFields.has(searchParams.filterField)
+      ? searchParams.filterField
+      : 'name'
+    const sortField = allowedFields.has(searchParams.sortField)
+      ? searchParams.sortField
+      : 'name'
+    const filterValue =
+      typeof searchParams.filterValue === 'string'
+        ? searchParams.filterValue.slice(0, 128)
+        : ''
+    const escapedFilter = filterValue.replace(/[.*+?^$\\{}()|[\\]\\\\]/g, '\\  public search(searchParams): Promise<any> {
     return this.userGroupModel
       .find({
         [searchParams.filterField]: {
@@ -138,6 +150,19 @@ export class UserGroupService {
       .sort({ [searchParams.sortField]: searchParams.sortValue })
       .limit(searchParams.limit)
       .skip(searchParams.skip)
+      .exec()
+  }')
+    const sortValue = Number(searchParams.sortValue) === -1 ? -1 : 1
+    const limit = Math.min(Math.max(Number(searchParams.limit) || 25, 1), 100)
+    const skip = Math.min(Math.max(Number(searchParams.skip) || 0, 0), 100000)
+
+    return this.userGroupModel
+      .find({
+        [filterField]: { $regex: new RegExp(escapedFilter, 'i') }
+      })
+      .sort({ [sortField]: sortValue })
+      .limit(limit)
+      .skip(skip)
       .exec()
   }
 
