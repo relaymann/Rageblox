@@ -965,9 +965,14 @@ func client_to_server_player_interact(interaction_target: Node, player: Player) 
 
 
 @rpc("call_remote", "any_peer", "reliable")
-func _client_to_server_player_interact_network(interact_target_path: String, player_id: String) -> void:
+func _client_to_server_player_interact_network(interact_target_path: String, _claimed_player_id: String) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if not _valid_remote_sender(sender):
+		return
 	var interaction_target: Node = get_node(interact_target_path)
-	var player: Player = Zone.social_manager.get_player(player_id)
+	# Never trust the client-supplied player identity. Resolve the player from
+	# the authenticated network peer that made this RPC.
+	var player: Player = Zone.social_manager.find_player_by_peer(sender)
 	if interaction_target and player and interaction_target.has_user_signal(&"player_interact"):
 		interaction_target.emit_signal(&"player_interact", player)
 	else:
