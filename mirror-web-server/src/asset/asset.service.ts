@@ -720,16 +720,12 @@ export class AssetService {
     sort: ISort = { updatedAt: SORT_DIRECTION.DESC }, // default: sort by updatedAt descending
     populate = false
   ): Promise<AssetDocument[]> {
-    const filter: FilterQuery<any> = searchDto.includeSoftDeleted
-      ? {
-          $and: [{ mirrorPublicLibrary: true }]
-        }
-      : {
-          $and: [
-            { mirrorPublicLibrary: true },
-            { isSoftDeleted: { $exists: false } }
-          ]
-        }
+    const filter: FilterQuery<any> = {
+      $and: [
+        { mirrorPublicLibrary: true },
+        { isSoftDeleted: { $exists: false } }
+      ]
+    }
 
     const andFilter = AssetService.getSearchFilter(searchDto)
     if (andFilter.length > 0) {
@@ -1497,13 +1493,11 @@ export class AssetService {
     searchDto: PaginatedSearchAssetDtoV2,
     userId: UserId = undefined
   ) {
-    const { page, perPage, includeSoftDeleted } = searchDto
-    const matchFilter: FilterQuery<Asset> = {}
-    const andFilter = AssetService.getSearchFilter(searchDto)
-
-    if (!includeSoftDeleted) {
-      andFilter.push({ isSoftDeleted: { $exists: false } })
+    const { page, perPage } = searchDto
+    const matchFilter: FilterQuery<Asset> = {
+      $and: [{ isSoftDeleted: { $exists: false } }]
     }
+    const andFilter = AssetService.getSearchFilter(searchDto)
 
     if (andFilter.length > 0) {
       matchFilter.$and = andFilter
