@@ -579,8 +579,11 @@ func _server_create_space_object(space_obj: Dictionary, receipt: Dictionary, pee
 	space_obj["name"] = _get_unique_name(space_obj.get("name", ""))
 	# Creator identity always comes from the authenticated network peer.
 	space_obj["creator"] = user_id
-	var server_receipt := receipt.duplicate(true)
-	server_receipt["created_by_user"] = user_id
+	var server_receipt: Dictionary = {
+		"created_by_user": user_id,
+		"auto_select": bool(receipt.get("auto_select", false)),
+		"uuid": str(receipt.get("uuid", "")),
+	}
 	Net.zone_socket.create_space_object(space_obj, server_receipt)
 
 
