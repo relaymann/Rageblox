@@ -201,11 +201,5 @@ export function getPopulateFieldsFromPaginatedSearchAssetDto(searchAssetDto) {
         displayName: 1
       }
     })
-  searchAssetDto?.populate?.includes('customData') &&
-    populateFields.push({
-      localField: 'customData',
-      from: 'customdatas',
-      unwind: true
-    })
   return populateFields
 }
