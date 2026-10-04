@@ -2147,7 +2147,7 @@ export class SpaceService implements IRoleConsumer {
       }
 
       andFilter.push({
-        [field]: new RegExp(search.replace(/[.*+?^$\{}()|[\]\\]/g, '\\$&'), 'i')
+        [field]: new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
       })
     }
     if (tag && tagType) {
