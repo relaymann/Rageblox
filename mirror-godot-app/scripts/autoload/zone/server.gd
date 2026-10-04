@@ -412,9 +412,14 @@ func _can_update_object_payload(peer_id: int, space_obj: Dictionary) -> bool:
 	if not _valid_object_dictionary(space_obj):
 		return false
 	var existing := _find_space_object(space_obj.get("_id", ""))
-	if existing.is_empty():
+	if existing.is_empty() or not _can_edit_space_object(peer_id, existing):
 		return false
-	return _can_edit_space_object(peer_id, existing)
+	# Identity and space ownership fields are server-controlled and cannot be
+	# rewritten through a client edit packet.
+	for protected_field in ["_id", "spaceId", "creator", "receipt"]:
+		if space_obj.has(protected_field) and space_obj.get(protected_field) != existing.get(protected_field):
+			return false
+	return true
 
 func _receive_data_server(id: int, data_array: Array) -> void:
 	var packet_type: int = data_array[0]
