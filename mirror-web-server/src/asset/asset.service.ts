@@ -110,6 +110,22 @@ export class AssetService {
     { localField: 'owner', from: 'users', unwind: true },
     { localField: 'customData', from: 'customdatas', unwind: true }
   ]
+
+  // Public asset responses must not expose arbitrary user CustomData.
+  private readonly publicAssetPopulateFields: PopulateField[] = [
+    {
+      localField: 'creator',
+      from: 'users',
+      unwind: true,
+      project: { displayName: 1 }
+    },
+    {
+      localField: 'owner',
+      from: 'users',
+      unwind: true,
+      project: { displayName: 1 }
+    }
+  ]
   /**
    * @deprecated use aggregation pipelines instead
    */
@@ -1253,7 +1269,7 @@ export class AssetService {
       this.assetModel,
       matchFilter,
       { page, perPage },
-      populate ? this.standardPopulateFields : [],
+      populate ? this.publicAssetPopulateFields : [],
       sort
     )
   }
