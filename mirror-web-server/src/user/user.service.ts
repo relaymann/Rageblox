@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { ApiProperty } from '@nestjs/swagger'
-import { ObjectId, UpdateResult } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import mongoose, { Model, mongo } from 'mongoose'
 import { v4 as uuidv4 } from 'uuid'
 import { AssetPublicData } from '../asset/asset.schema'
