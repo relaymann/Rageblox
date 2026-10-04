@@ -10,7 +10,6 @@ import {
   RawBodyRequest,
   Req,
   BadRequestException,
-  Headers,
   Patch
 } from '@nestjs/common'
 import { StripeService } from './stripe.service'
@@ -21,7 +20,6 @@ import { AddBank, AddCard, CardToken } from './dto/token.dto'
 import { UserToken } from '../auth/get-user.decorator'
 import { UserId } from '../util/mongo-object-id-helpers'
 import { PaymentIntentDto } from './dto/paymentIntent.dto'
-import { TransfersDto } from './dto/transfers.dto'
 import { ProductDto, SubscriptionDto } from './dto/subscription.dto'
 import { PublicFirebaseAuthNotRequired } from '../auth/public.decorator'
 @Controller('stripe')
