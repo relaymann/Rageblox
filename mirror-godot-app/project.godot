@@ -79,10 +79,10 @@ global_script_class_icons={
 
 [application]
 
-config/name="The Mirror"
+config/name="RageBlox"
 config/tags=PackedStringArray("open_source")
 run/main_scene="res://scenes/boot_scene.tscn"
-config/features=PackedStringArray("13b5ad64", "4.3", "mirror")
+config/features=PackedStringArray("13b5ad64", "4.3", "rageblox")
 boot_splash/bg_color=Color(0.0745098, 0.0862745, 0.184314, 1)
 boot_splash/image="res://art/white_logo_slate_bg_with_text.png"
 boot_splash/fullsize=false
@@ -142,7 +142,7 @@ export/convert_text_resources_to_binary=false
 
 enabled=PackedStringArray("res://addons/compressed_build_exporter/plugin.cfg", "res://addons/godot-firebase/plugin.cfg", "res://addons/gut/plugin.cfg", "res://addons/mirror_gltf/plugin.cfg", "res://addons/mirror_internal/plugin.cfg", "res://addons/omi_extensions/plugin.cfg")
 
-[feature_flags]
+[rageblox]\nproduct_name="RageBlox"\nproduct_namespace="rageblox"\n\n[feature_flags]
 
 preview=true
 show_advanced_settings=true
@@ -163,7 +163,7 @@ environment_variables/apiKey="AIzaSyBvq2t4pZUTg4t0t4yxco1cXuTB79hMT14"
 environment_variables/authDomain="the-mirror-backend-prod.firebaseapp.com"
 environment_variables/projectId="the-mirror-backend-prod"
 environment_variables/clientId="703637831969-srf6qjr180vor53n5j6sgke3ln3plrfj.apps.googleusercontent.com"
-environment_variables/cacheLocation="user://mirror.firebase_cache"
+environment_variables/cacheLocation="user://rageblox.firebase_cache"
 
 [gdnative]
 
