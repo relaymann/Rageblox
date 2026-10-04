@@ -138,7 +138,7 @@ export class UserService {
     return this.userModel
       .findOne({ _id: id, deleted: { $exists: false } })
       .select(select)
-      .populate('customData') // TODO this needs to be filtered with roles
+      
       .exec()
   }
 
