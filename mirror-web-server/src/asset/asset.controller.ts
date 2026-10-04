@@ -81,7 +81,7 @@ export class AssetFullDataPaginatedResponse
   @ApiProperty({ type: [Asset] })
   data: Asset[]
 }
-@UsePipes(new ValidationPipe({ whitelist: false }))
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }))
 @Controller('asset')
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}
@@ -536,6 +536,7 @@ export class AssetController {
   }
 
   @Post('tag')
+  @FirebaseTokenAuthGuard()
   public async addTagToAssetsWithRoleChecks(
     @UserToken('user_id') userId: UserId,
     @Body() addTagToAssetDto: AddTagToAssetDto

@@ -99,6 +99,11 @@ export class AssetService {
     private readonly logger: Logger
   ) {}
 
+  private _getSafeCreateAssetDto(dto: any): Record<string, unknown> {
+    const { ownerId, owner, creator, role, _id, ...safeDto } = dto
+    return safeDto
+  }
+
   public readonly standardPopulateFields: PopulateField[] = [
     { localField: 'creator', from: 'users', unwind: true }, // TODO: filter out properties for user so that not all are passed back
     { localField: 'owner', from: 'users', unwind: true },
@@ -159,10 +164,17 @@ export class AssetService {
   public async createAsset(
     dto: CreateAssetDto & { ownerId: string }
   ): Promise<AssetDocument> {
+    const { ownerId, owner, creator, role, _id, ...safeDto } = dto as CreateAssetDto & {
+      ownerId: string
+      owner?: unknown
+      creator?: unknown
+      role?: unknown
+      _id?: unknown
+    }
     const created = new this.assetModel({
-      owner: dto.ownerId,
-      creator: dto.ownerId, // default to ownerId since that owner is creating it.
-      ...dto
+      ...safeDto,
+      owner: ownerId,
+      creator: ownerId
     })
 
     // check if assetsInPack has valid assets
@@ -210,10 +222,17 @@ export class AssetService {
     file: Express.Multer.File
   ): Promise<AssetDocument> {
     try {
+      const { ownerId, owner, creator, role, _id, ...safeDto } = dto as CreateAssetDto & {
+        ownerId: string
+        owner?: unknown
+        creator?: unknown
+        role?: unknown
+        _id?: unknown
+      }
       const created = new this.assetModel({
-        owner: dto.ownerId,
-        creator: dto.ownerId, // default to ownerId since that owner is creating it.
-        ...dto
+        ...safeDto,
+        owner: ownerId,
+        creator: ownerId
       })
 
       // check if assetsInPack has valid assets
@@ -460,9 +479,9 @@ export class AssetService {
   ): Promise<MaterialDocument> {
     try {
       const created = new this.materialModel({
+        ...this._getSafeCreateAssetDto(dto),
         owner: dto.ownerId,
-        creator: dto.ownerId, // default to ownerId since that owner is creating it.
-        ...dto
+        creator: dto.ownerId
       })
 
       const { publicUrl: currentFile } =
@@ -522,9 +541,9 @@ export class AssetService {
   ): Promise<TextureDocument> {
     try {
       const created = new this.textureModel({
+        ...this._getSafeCreateAssetDto(dto),
         owner: dto.ownerId,
-        creator: dto.ownerId, // default to ownerId since that owner is creating it.
-        ...dto
+        creator: dto.ownerId
       })
 
       const { publicUrl: currentFile } =
@@ -582,9 +601,9 @@ export class AssetService {
   ): Promise<MapDocument> {
     try {
       const created = new this.mapAssetModel({
+        ...this._getSafeCreateAssetDto(dto),
         owner: dto.ownerId,
-        creator: dto.ownerId, // default to ownerId since that owner is creating it.
-        ...dto
+        creator: dto.ownerId
       })
 
       const { publicUrl: currentFile } =
