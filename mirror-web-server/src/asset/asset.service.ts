@@ -739,7 +739,7 @@ export class AssetService {
     const cursor = this.assetModel.find(filter).limit(1000).sort(sort)
 
     if (populate) {
-      cursor.populate(this._getStandardPopulateFieldsAsArray())
+      cursor.populate(this.publicAssetPopulateFields.map((field) => field.localField))
     }
 
     return cursor.exec()
