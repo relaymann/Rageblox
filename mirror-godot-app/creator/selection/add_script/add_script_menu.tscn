@@ -13,24 +13,24 @@ script = ExtResource("2_wf3s5")
 
 [node name="CreateNewScript" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 6
 
 [node name="CreateLuauScript" type="Button" parent="CreateNewScript"]
-custom_minimum_size = Vector2(150, 2.08165e-12)
+custom_minimum_size = Vector2(108, 2.08165e-12)
 layout_mode = 2
 text = "New Luau"
 icon = ExtResource("3_jay8g")
 expand_icon = true
 
 [node name="CreateVisualScript" type="Button" parent="CreateNewScript"]
-custom_minimum_size = Vector2(160, 2.08165e-12)
+custom_minimum_size = Vector2(108, 2.08165e-12)
 layout_mode = 2
 text = "New Visual Script"
 icon = ExtResource("3_jay8g")
 expand_icon = true
 
 [node name="CreateGDScript" type="Button" parent="CreateNewScript"]
-custom_minimum_size = Vector2(150, 2.08165e-12)
+custom_minimum_size = Vector2(108, 2.08165e-12)
 layout_mode = 2
 text = "New GDScript"
 icon = ExtResource("3_jay8g")
