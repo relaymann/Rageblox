@@ -175,15 +175,7 @@ export class UserGroupController {
     @UserToken('user_id') userId: string,
     @Param('id') id: string
   ) {
-    const groupMembership =
-      await this.userGroupMembershipService.findAllMembers(id, userId)
-    //only owner can delete group
-    // TODO this needs to be updated with RBAC
-    if (groupMembership.role == 0) {
-      return this.userGroupService.remove(id)
-    } else {
-      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN)
-    }
+    return await this.userGroupService.removeWithRolesCheck(id, userId)
   }
 
   private makeInviteExpirationDate(): Date {
