@@ -101,6 +101,8 @@ func can_toggle_main_menu() -> bool:
 func is_any_full_screen_or_modal_ui_visible(ignored_contexts: Array = []) -> bool:
 	if scoreboard_window.requires_mouse_for_ui():
 		return true
+	if rageblox_game_shell and rageblox_game_shell.blocks_gameplay_input():
+		return true
 	var visible_properties = {}
 	# We could make this register from the actual UI elements themselves
 	# for now I just made this a static list so you can see the data and types

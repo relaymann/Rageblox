@@ -277,7 +277,10 @@ func _on_help_button_pressed() -> void:
 
 
 func _on_back_button_pressed() -> void:
-	pass # Replace with function body.
+	if _history.size() > 1:
+		history_go_back()
+	else:
+		show_default_subpage(false)
 
 
 func _on_esc_button_pressed():

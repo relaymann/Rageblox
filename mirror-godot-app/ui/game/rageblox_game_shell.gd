@@ -15,6 +15,8 @@ var _chat_input: LineEdit
 func _ready() -> void:
 	layer = 80
 	_build()
+	get_viewport().size_changed.connect(_layout_for_viewport)
+	_layout_for_viewport()
 	RageBloxBetaPlatform.social_changed.connect(_refresh_players)
 	RageBloxBetaPlatform.chat_message_received.connect(_append_chat)
 	RageBloxBetaPlatform.connection_state_changed.connect(_refresh_status)
@@ -168,6 +170,8 @@ func _toggle_menu() -> void:
 	_menu_panel.visible = not _menu_panel.visible
 	_players_panel.hide()
 	_chat_panel.hide()
+	if _menu_panel.visible:
+		_menu_panel.get_child(0).get_child(0).get_child(1).grab_focus()
 
 func _toggle_players() -> void:
 	_players_panel.visible = not _players_panel.visible
@@ -281,3 +285,36 @@ func _refresh_all() -> void:
 	_refresh_players()
 	_refresh_chat()
 	_refresh_status(RageBloxBetaPlatform.connection_state)
+
+func blocks_gameplay_input() -> bool:
+	return _menu_panel.visible or _players_panel.visible or _chat_panel.visible
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"open_main_menu") and visible:
+		_toggle_menu()
+		get_viewport().set_input_as_handled()
+
+func _layout_for_viewport() -> void:
+	if not is_instance_valid(_root):
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	var margin := clampf(viewport_size.x * 0.018, 12.0, 28.0)
+	var top := margin
+	var button_height := 42.0
+	var x := margin
+	for child in _root.get_children():
+		if child is Button and child.text in ["☰", "Players", "Chat"]:
+			child.position = Vector2(x, top)
+			child.size = Vector2(maxf(72.0, child.custom_minimum_size.x), button_height)
+			x += child.size.x + 8.0
+	if is_instance_valid(_status):
+		_status.position = Vector2(x + 8.0, top + 11.0)
+	if is_instance_valid(_players_panel):
+		_players_panel.position = Vector2(maxf(margin, viewport_size.x - 340.0 - margin), top + button_height + 12.0)
+		_players_panel.size = Vector2(minf(320.0, maxf(240.0, viewport_size.x - 2.0 * margin)), minf(520.0, maxf(280.0, viewport_size.y - 120.0)))
+	if is_instance_valid(_chat_panel):
+		_chat_panel.position = Vector2(margin, top + button_height + 12.0)
+		_chat_panel.size = Vector2(minf(430.0, maxf(280.0, viewport_size.x - 2.0 * margin)), minf(500.0, maxf(280.0, viewport_size.y - 120.0)))
+	if is_instance_valid(_menu_panel):
+		_menu_panel.position = Vector2(margin, top + button_height + 12.0)
+		_menu_panel.size = Vector2(minf(360.0, maxf(260.0, viewport_size.x - 2.0 * margin)), minf(520.0, maxf(320.0, viewport_size.y - 120.0)))

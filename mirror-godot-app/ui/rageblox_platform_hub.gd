@@ -17,6 +17,24 @@ func _ready() -> void:
 	RageBloxBetaPlatform.social_changed.connect(_refresh)
 	RageBloxBetaPlatform.avatar_changed.connect(_refresh)
 	_refresh()
+	call_deferred("_load_backend_experiences")
+
+func _load_backend_experiences() -> void:
+	if not is_instance_valid(Net) or not Net.is_fully_logged_in():
+		return
+	var params := SpaceClient.SpaceListRequestParameters.new()
+	params.per_page = 36
+	var promise: Promise = Net.space_client.get_published_spaces(params)
+	var published = await promise.wait_till_fulfilled()
+	if promise.is_error() or not published is Array:
+		return
+	RageBloxBetaPlatform.cache_experiences(published)
+	for item in published:
+		if item is Dictionary:
+			var id := StringName(str(item.get("_id", "")))
+			if id != StringName():
+				RageBloxServices.cache_experience(id, item)
+	_refresh()
 
 func _build() -> void:
 	var root := MarginContainer.new()
@@ -135,12 +153,8 @@ func _experience_card(item: Dictionary) -> PanelContainer:
 	var creator := str(item.get("creator", item.get("creatorName", "Unknown creator")))
 	var players := int(item.get("playerCount", 0))
 	var genre := str(item.get("genre", item.get("category", "Experience")))
-	var panel := _card(title, "%s • %s • %d playing" % [creator, genre, players], "Play", func():
-		RageBloxServices.mark_experience_played(id)
-		RageBloxBetaPlatform.record_event(&"experience_play", {"id": str(id)})
-		if GameUI.instance and GameUI.instance.main_menu_ui:
-			GameUI.instance.main_menu_ui.change_subpage(&"ViewSpace", item)
-			GameUI.instance.main_menu_ui.hide()
+	var panel := _card(title, "%s • %s • %d playing" % [creator, genre, players], "View", func():
+		_open_experience(item)
 	)
 	var favorite := Button.new()
 	favorite.text = "★" if RageBloxServices.favorite_experiences.has(id) else "☆"
@@ -151,6 +165,16 @@ func _experience_card(item: Dictionary) -> PanelContainer:
 	)
 	panel.get_child(0).add_child(favorite)
 	return panel
+
+func _open_experience(item: Dictionary) -> void:
+	var id := str(item.get("_id", item.get("id", "")))
+	if id.is_empty() or not GameUI.instance or not GameUI.instance.main_menu_ui:
+		return
+	RageBloxServices.mark_experience_played(StringName(id))
+	RageBloxBetaPlatform.record_event(&"experience_view", {"id": id})
+	GameUI.instance.main_menu_ui.change_page(&"Discover")
+	GameUI.instance.main_menu_ui.change_subpage(&"ViewSpace", item)
+	GameUI.instance.main_menu_ui.show()
 
 func _build_home() -> void:
 	var continue_items := RageBloxBetaPlatform.get_experiences(&"recent")

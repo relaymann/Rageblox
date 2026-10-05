@@ -54,10 +54,24 @@ func _ready() -> void:
 	_load()
 	_refresh_players()
 	set_process(true)
+	if Zone.client:
+		if not Zone.client.connected.is_connected(_on_zone_connected):
+			Zone.client.connected.connect(_on_zone_connected)
+		if not Zone.client.disconnected.is_connected(_on_zone_disconnected):
+			Zone.client.disconnected.connect(_on_zone_disconnected)
 
 func _process(_delta: float) -> void:
-	if Zone.is_client() and Zone.is_space_loaded():
+	if Zone.is_client() and Zone.is_space_loaded() and current_players.is_empty():
 		_refresh_players()
+
+func _on_zone_connected() -> void:
+	set_connection_state(&"connected")
+	_refresh_players()
+
+func _on_zone_disconnected() -> void:
+	set_connection_state(&"disconnected")
+	current_players.clear()
+	social_changed.emit()
 
 func _refresh_players() -> void:
 	if not is_instance_valid(Zone):

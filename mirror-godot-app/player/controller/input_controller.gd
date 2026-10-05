@@ -46,7 +46,21 @@ func _notification(what: int) -> void:
 func is_avatar_input_enabled() -> bool:
 	if GameUI.instance.is_keyboard_needed_for_ui() or GameUI.instance.is_mouse_needed_for_ui():
 		return false
+	if GameUI.instance.rageblox_game_shell and GameUI.instance.rageblox_game_shell.blocks_gameplay_input():
+		return false
 	return is_player_input_allowed and does_game_mode_accept_input
+
+func get_move_action() -> Vector2:
+	return Input.get_vector(&"player_move_left", &"player_move_right", &"player_move_forward", &"player_move_backward")
+
+func get_jump_action() -> bool:
+	return Input.is_action_just_pressed(&"player_jump")
+
+func get_interact_action() -> bool:
+	return Input.is_action_just_pressed(&"player_interact")
+
+func get_menu_action() -> bool:
+	return Input.is_action_just_pressed(&"open_main_menu")
 
 
 func get_intended_movement_direction() -> Vector3:

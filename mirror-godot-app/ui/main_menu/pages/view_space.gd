@@ -164,8 +164,10 @@ func populate(space: Dictionary) -> void:
 
 func _on_build_button_pressed():
 	var space_id = _get_space_id(_space)
-	if space_id == null:
+	if space_id.is_empty():
 		return
+	RageBloxServices.mark_experience_played(StringName(space_id))
+	RageBloxServices.set_presence(StringName(space_id), 0)
 	Zone.client.quit_to_main_menu()
 	Zone.client.start_join_zone_by_space_id(space_id)
 	GameUI.instance.loading_ui.set_loading_image(_space_image.texture)
@@ -182,8 +184,10 @@ func refresh_pane(space_id):
 func _on_play_published_space() -> void:
 	print("Play published space")
 	var space_id = _get_space_id(_space)
-	if space_id == null:
+	if space_id.is_empty():
 		return
+	RageBloxServices.mark_experience_played(StringName(space_id))
+	RageBloxServices.set_presence(StringName(space_id), 0)
 	var promise = Net.space_client.get_published_space_versions(space_id)
 	var versions = await promise.wait_till_fulfilled()
 	if versions.size() == 0:
