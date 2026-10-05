@@ -81,7 +81,7 @@ func _on_version_request_errored(_request: Dictionary) -> void:
 	if Net.version_client.version_manifest_received.is_connected(_on_version_manifest_received):
 		Net.version_client.version_manifest_received.disconnect(_on_version_manifest_received)
 	if Net.version_client.version_payload_received.is_connected(_on_version_payload_received):
-		Net.version_client.version_manifest_received.disconnect(_on_version_payload_received)
+		Net.version_client.version_payload_received.disconnect(_on_version_payload_received)
 	_get_version_failed()
 
 

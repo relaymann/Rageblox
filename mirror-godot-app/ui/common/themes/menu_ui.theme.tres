@@ -39,12 +39,12 @@ expand_margin_bottom = 2.0
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1qg7f"]
 content_margin_left = 12.0
 content_margin_right = 12.0
-bg_color = Color(0.29, 0.526667, 1, 1)
+bg_color = Color(0.16, 0.17, 0.19, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
-shadow_color = Color(0.388235, 0.580392, 0.968627, 0.156863)
+shadow_color = Color(0.78, 0.09, 0.12, 0.18)
 shadow_size = 10
 
 [sub_resource type="GDScript" id="GDScript_osmcv"]
@@ -52,22 +52,22 @@ shadow_size = 10
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c1gf6"]
 content_margin_left = 12.0
 content_margin_right = 12.0
-bg_color = Color(0.145098, 0.419608, 0.984314, 1)
+bg_color = Color(0.73, 0.075, 0.11, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
-shadow_color = Color(0.282353, 0.505882, 0.968627, 0.156863)
+shadow_color = Color(0.78, 0.09, 0.12, 0.18)
 shadow_size = 5
 script = SubResource("GDScript_osmcv")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ygyo0"]
-bg_color = Color(0.117139, 0.256438, 0.794643, 1)
+bg_color = Color(0.56, 0.045, 0.07, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
-shadow_color = Color(0.152941, 0.278431, 0.529412, 0.156863)
+shadow_color = Color(0.78, 0.09, 0.12, 0.16)
 shadow_size = 40
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uiptl"]
@@ -161,7 +161,7 @@ shadow_size = 5
 script = SubResource("GDScript_osmcv")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wcs1q"]
-bg_color = Color(0.0431373, 0.0627451, 0.129412, 0.701961)
+bg_color = Color(0.055, 0.06, 0.07, 0.96)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -178,10 +178,10 @@ draw_center = false
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ecgey"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1gnkj"]
-bg_color = Color(0.0431373, 0.0627451, 0.129412, 1)
+bg_color = Color(0.055, 0.06, 0.07, 1)
 border_width_top = 24
 border_width_bottom = 24
-border_color = Color(0.0431373, 0.0627451, 0.129412, 1)
+border_color = Color(0.055, 0.06, 0.07, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -204,8 +204,8 @@ spacing_top = 6
 spacing_bottom = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_glqot"]
-bg_color = Color(0.0941176, 0.141176, 0.290196, 1)
-border_color = Color(0.0705882, 1, 0.843137, 1)
+bg_color = Color(0.12, 0.13, 0.15, 1)
+border_color = Color(0.78, 0.09, 0.12, 0.72)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
@@ -216,7 +216,7 @@ content_margin_left = 4.0
 content_margin_top = 2.0
 content_margin_right = 4.0
 content_margin_bottom = 2.0
-bg_color = Color(0.0431373, 0.0627451, 0.129412, 1)
+bg_color = Color(0.055, 0.06, 0.07, 1)
 
 [sub_resource type="FontVariation" id="Font_y5boo"]
 
@@ -287,8 +287,8 @@ CheckBox/icons/radio_checked = null
 CheckBox/icons/radio_checked_disabled = null
 CheckButton/styles/normal = SubResource("StyleBoxFlat_wcs1q")
 FlatButton/base_type = &"Button"
-FlatButton/colors/font_hover_color = Color(0.333333, 1, 0.831373, 1)
-FlatButton/colors/icon_hover_color = Color(0.333333, 1, 0.831373, 1)
+FlatButton/colors/font_hover_color = Color(1, 0.45, 0.48, 1)
+FlatButton/colors/icon_hover_color = Color(1, 0.45, 0.48, 1)
 FlatButton/styles/disabled = SubResource("StyleBoxFlat_k7nwg")
 FlatButton/styles/focus = SubResource("StyleBoxFlat_k7nwg")
 FlatButton/styles/hover = SubResource("StyleBoxFlat_iwpcx")
