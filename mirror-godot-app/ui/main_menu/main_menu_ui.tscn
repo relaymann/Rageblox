@@ -36,7 +36,7 @@
 [ext_resource type="AudioStream" uid="uid://cvgwto68ecirv" path="res://ui/main_menu/audio/back_close.wav" id="31_rrg3a"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_4jjhp"]
-load_path = "res://.godot/imported/red_bg.jpg"
+load_path = "res://.godot/imported/blue_bg.jpg-9388e80f4f099bfea8a9c2c05cb56a97.ctex"
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0aacv"]
 shader = ExtResource("8_w8ibq")
@@ -117,7 +117,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource("CompressedTexture2D_4jjhp")
+texture = ExtResource("3_fbtol")
 expand_mode = 1
 
 [node name="Pages" type="Control" parent="."]
