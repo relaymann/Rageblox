@@ -23,6 +23,7 @@ jobs:
     with:
       environment: "dev"
       self-hosted-runner: false
+      windows-only: true
 
   build-windows-client:
     name: 🏁 Build Windows Dev PR
@@ -51,6 +52,7 @@ jobs:
       editor-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/MirrorGodotEditorWindows.exe
       template-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/windows_release_x86_64.exe
   build-macos-client:
+    if: false
     name: 🍎 Build MacOS Dev PR
     uses: ./.github/workflows/client-build-tool.yml
     needs: get-or-build-engine
@@ -79,6 +81,7 @@ jobs:
       editor-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/MirrorGodotEditorMac.app.zip
       template-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/macos_template.app.zip
   build-linux-client:
+    if: false
     name: 🐧 Build Linux Dev PR
     uses: ./.github/workflows/client-build-tool.yml
     needs: get-or-build-engine
