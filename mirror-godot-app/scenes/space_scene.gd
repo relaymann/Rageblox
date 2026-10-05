@@ -4,6 +4,7 @@ extends Node
 
 const TEMPLATES_DIRECTORY: String = "res://prefabs/space/templates/"
 const SPACE_TEMPLATE: PackedScene = preload("res://prefabs/space/templates/space_template.tscn")
+const RAGEBLOX_SHOWCASE_SCENE: PackedScene = preload("res://experiences/rageblox_showcase/rageblox_showcase.tscn")
 
 # these should be populated from space data
 var lower_y_limit: int = -200
@@ -49,6 +50,15 @@ func spawn_template(is_host: bool, space_data: Dictionary) -> void:
 	lower_y_limit = _current_template.lower_y_limit
 	print("SETUP TEMPLATE %s" % str(is_host))
 	self.add_child(_current_template)
+	if bool(space_data.get("rageblox_showcase", false)):
+		var showcase_world := RAGEBLOX_SHOWCASE_SCENE.instantiate()
+		if showcase_world is Node3D:
+			showcase_world.name = "RageBloxShowcaseWorld"
+			add_child(showcase_world)
+			register_spawn_points(showcase_world)
+			lower_y_limit = int(space_data.get("lowerLimitY", -12))
+		else:
+			push_error("RageBlox Showcase scene is not a Node3D")
 
 
 func _handle_template_ready() -> void:

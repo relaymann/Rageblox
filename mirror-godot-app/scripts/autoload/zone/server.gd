@@ -168,6 +168,24 @@ func _setup_edit_server() -> void:
 
 func _setup_play_server() -> void:
 	Zone.current_mode = Zone.ZONE_MODE.PLAY
+	if space_id == "rageblox-showcase":
+		var showcase_space: Dictionary = {
+			"_id": "rageblox-showcase",
+			"name": "RageBlox Showcase",
+			"title": "RageBlox Showcase",
+			"creator": "RageBlox",
+			"creatorName": "RageBlox",
+			"genre": "Showcase",
+			"category": "Showcase",
+			"description": "The built-in RageBlox beta showcase.",
+			"rageblox_showcase": true,
+			"lowerLimitY": -12,
+			"play_server": true,
+		}
+		Zone.Scene.spawn_template(true, showcase_space)
+		space_data_received.emit(showcase_space)
+		_server_data_received = true
+		return
 	var promise = Net.zone_client.server_get_latest_published_space(space_id)
 	var published_space = await promise.wait_till_fulfilled()
 	if promise.is_error():
