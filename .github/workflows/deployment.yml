@@ -18,8 +18,7 @@ jobs:
   get-or-build-engine:
     name: Building Engine
     uses: ./.github/workflows/engine.yml
-    secrets:
-      GCP_BUCKET_UPLOAD: ${{ secrets.GCP_BUCKET_UPLOAD }}
+    secrets: inherit
     with:
       environment: "dev"
       self-hosted-runner: false
