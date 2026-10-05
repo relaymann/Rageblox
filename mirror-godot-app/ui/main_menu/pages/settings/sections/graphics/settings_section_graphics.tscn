@@ -22,9 +22,9 @@ script = ExtResource("3_tlyu6")
 
 [node name="InspectorPropertyScroller" parent="Options/RenderQuality" index="0" instance=ExtResource("5_742y4")]
 layout_mode = 2
-values = ["LOW", "MEDIUM", "HIGH"]
+values = ["LOW", "MEDIUM", "HIGH", "ULTRA"]
 reset_value = 1
-current_value = 1
+current_value = 2
 label_text = "Render Quality"
 
 [node name="Label" parent="Options/RenderQuality/InspectorPropertyScroller/LabelHolder" index="0"]
@@ -35,7 +35,7 @@ text = "Render Quality"
 custom_minimum_size = Vector2(64, 0)
 
 [node name="OptionLabel" parent="Options/RenderQuality/InspectorPropertyScroller/PanelContainer/MarginContainer/HBoxContainer/VBoxContainer" index="0"]
-text = "MEDIUM"
+text = "HIGH"
 
 [node name="ButtonRight" parent="Options/RenderQuality/InspectorPropertyScroller/PanelContainer/MarginContainer/HBoxContainer" index="2"]
 custom_minimum_size = Vector2(64, 0)

@@ -2,7 +2,7 @@
 
 [ext_resource type="Theme" uid="uid://ggwm8asxintx" path="res://ui/common/themes/menu_ui.theme.tres" id="1_bsgag"]
 [ext_resource type="Script" path="res://ui/main_menu/main_menu_ui.gd" id="2_0tnty"]
-[ext_resource type="Texture2D" uid="uid://dmhs7xypyms7g" path="res://ui/common/images/blue_bg.jpg" id="3_fbtol"]
+[ext_resource type="Texture2D" uid="uid://dmhs7xypyms7g" path="res://ui/common/images/red_bg.jpg" id="3_fbtol"]
 [ext_resource type="PackedScene" uid="uid://0mra323xtoht" path="res://ui/main_menu/pages/home_page.tscn" id="4_ra4e2"]
 [ext_resource type="PackedScene" uid="uid://dkowcs24a0rg" path="res://ui/main_menu/pages/my_spaces.tscn" id="6_dxmr5"]
 [ext_resource type="Texture2D" uid="uid://b2c8c1u26wpl8" path="res://ui/common/images/yellow_bg.jpg" id="6_e07s2"]
@@ -36,7 +36,7 @@
 [ext_resource type="AudioStream" uid="uid://cvgwto68ecirv" path="res://ui/main_menu/audio/back_close.wav" id="31_rrg3a"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_4jjhp"]
-load_path = "res://.godot/imported/blue_bg.jpg-9388e80f4f099bfea8a9c2c05cb56a97.ctex"
+load_path = "res://.godot/imported/red_bg.jpg"
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0aacv"]
 shader = ExtResource("8_w8ibq")
@@ -229,7 +229,7 @@ theme_override_constants/separation = 20
 metadata/_edit_layout_mode = 1
 
 [node name="MinimizeWindow" type="TextureButton" parent="WindowOptions"]
-self_modulate = Color(0.145098, 0.419608, 0.984314, 1)
+self_modulate = Color(0.780392, 0.105882, 0.145098, 1)
 custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -239,7 +239,7 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="CloseWindow" type="TextureButton" parent="WindowOptions"]
-self_modulate = Color(0.145098, 0.419608, 0.984314, 1)
+self_modulate = Color(0.780392, 0.105882, 0.145098, 1)
 custom_minimum_size = Vector2(12, 12)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -250,7 +250,7 @@ stretch_mode = 5
 
 [node name="BackButton" type="TextureButton" parent="."]
 visible = false
-modulate = Color(0.0705882, 1, 0.843137, 1)
+modulate = Color(0.933333, 0.211765, 0.25098, 1)
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 0
 offset_left = 25.0

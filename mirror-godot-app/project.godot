@@ -118,6 +118,7 @@ GameplayTools="*res://prefabs/autoload/gameplay_tools/gameplay_tools.tscn"
 DebugGeometry="*res://addons/debug_geometry.gd"
 MirrorScriptServer="*res://script/mirror_script_server.gd"
 Util="*res://scripts/autoload/util_funcs.gd"
+PlatformExperience="*res://scripts/autoload/platform_experience.gd"
 
 [debug]
 
@@ -161,6 +162,10 @@ suicide_keybinding=true
 enable_space_listing_pages=true
 always_spin_up_local_server=false
 check_version_on_start=true
+reduced_motion=false
+accessibility_high_contrast=false
+controller_navigation=true
+platform_quality_preset="HIGH"
 
 [filesystem]
 
