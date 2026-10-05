@@ -174,8 +174,12 @@ jobs:
 
       - name: Download editor and template
         run: |
-          curl ${{ inputs.editor-download-url }} > ${{ inputs.editor-binary-download }}
-          curl ${{ inputs.template-download-url }} > ${{ inputs.template-binary-name }}
+          curl --fail --show-error --location --retry 3 --retry-delay 2 \
+            "${{ inputs.editor-download-url }}" \
+            --output "${{ inputs.editor-binary-download }}"
+          curl --fail --show-error --location --retry 3 --retry-delay 2 \
+            "${{ inputs.template-download-url }}" \
+            --output "${{ inputs.template-binary-name }}"
 
       - name: Unzip editor binary
         if: ${{ inputs.should-unzip-editor }}
@@ -200,18 +204,17 @@ jobs:
         if: ${{ !inputs.should-install-timeout-macos }}
         run: |
           chmod +x ./${{ inputs.editor-binary-name }}
-          timeout 3m ./${{ inputs.editor-binary-name }} --editor --headless || true;
+          timeout 3m ./${{ inputs.editor-binary-name }} --editor --headless
 
       - name: Wait for import of all assets
         if: ${{ inputs.should-install-timeout-macos }}
         run: |
           chmod +x ./${{ inputs.editor-binary-name }}
-          gtimeout 3m ./${{ inputs.editor-binary-name }} --editor --headless || true;
+          gtimeout 3m ./${{ inputs.editor-binary-name }} --editor --headless
 
       - name: Unit Tests
         timeout-minutes: 15
-        # disabled until we can fix gut
-        if: false
+        if: ${{ inputs.should-run-unit-tests }}
         run: |
           chmod +x ./${{ inputs.editor-binary-name }}
           ./${{ inputs.editor-binary-name }} -s --path ./ addons/gut/gut_cmdln.gd --headless
@@ -247,21 +250,21 @@ jobs:
           echo "app_platform=${platform}" >> $GITHUB_ENV
 
       - uses: msys2/setup-msys2@v2
-        if: ${{ inputs.os == 'windows-latest' }}
+        if: ${{ startsWith(inputs.os, 'windows-') || startsWith(inputs.os, 'windows') }}
         with:
           update: true
           install: >-
             zip
 
       - name: Zip for client download
-        if: ${{ inputs.os != 'windows-latest' }}
+        if: ${{ !startsWith(inputs.os, 'windows-') && !startsWith(inputs.os, 'windows') }}
         run: |
           cd build/
           ls ./
           zip -r ${{env.app_platform}}.zip "${{ inputs.game-binary-name }}" *.pck
 
       - name: Zip for client download
-        if: ${{ inputs.os == 'windows-latest' }}
+        if: ${{ startsWith(inputs.os, 'windows-') || startsWith(inputs.os, 'windows') }}
         shell: msys2 {0}
         run: |
           cd build/
@@ -273,13 +276,6 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         with:
           credentials_json: '${{ secrets.GCP_DEPLOYMENT_SECRET }}'
-
-      - name: Upload build to GCP (for auto-updater)
-        if: inputs.should-deploy
-        uses: 'google-github-actions/upload-cloud-storage@v2'
-        with:
-          path: build/${{ env.app_platform }}.tar.gz
-          destination: ${{ inputs.bucket-name }}/versions/${{ env.app_ver }}/
 
       - name: Upload build to GCP (for users)
         if: inputs.should-deploy
