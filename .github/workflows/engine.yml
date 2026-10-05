@@ -64,11 +64,11 @@ jobs:
 
           - name: Windows Template
             cache-name: windows-template
-            target: template_debug
+            target: template_release
             strip: true
             tests: false
             sconsflags: arch=x86_64 debug_symbols=no optimize=speed
-            bin: "./bin/godot.windows.template_debug.x86_64"
+            bin: "./bin/godot.windows.template_release.x86_64"
             artifact-name: "windows_release_x86_64"
             artifact: true
             bucket-name: mirror_native_client_builds/Engine
@@ -179,14 +179,14 @@ jobs:
 
           - name: MacOS Template
             cache-name: macos-template
-            target: template_debug
+            target: template_release
             tests: false
             strip: true
             sconsflags: debug_symbols=no optimize=speed use_static_cpp=yes
             dist-app: "macos_template.app"
             packaged-app: "macos_template.app"
-            bin-name: "godot.macos.template_debug.universal"
-            bin-name-x86_64: "godot.macos.template_debug.x86_64"
+            bin-name: "godot.macos.template_release.universal"
+            bin-name-x86_64: "godot.macos.template_release.x86_64"
             bin-name-arm64: "godot.macos.template_debug.arm64"
             artifact-bin-name: "godot_macos_release.universal"
             artifact-name: "macos_template.app"
@@ -315,10 +315,10 @@ jobs:
 
           - name: Linux Template
             cache-name: linux-template
-            target: template_debug
+            target: template_release
             strip: true
             sconsflags: arch=x86_64 debug_symbols=no optimize=speed use_static_cpp=yes
-            bin: "./bin/godot.linuxbsd.template_debug.x86_64"
+            bin: "./bin/godot.linuxbsd.template_release.x86_64"
             artifact-name: "linux_release.x86_64"
             artifact: true
             tests: no
