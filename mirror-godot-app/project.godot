@@ -84,9 +84,9 @@ config/tags=PackedStringArray("open_source")
 run/main_scene="res://scenes/boot_scene.tscn"
 config/features=PackedStringArray("13b5ad64", "4.3", "mirror")
 boot_splash/bg_color=Color(0.0745098, 0.0862745, 0.184314, 1)
-boot_splash/image="res://art/white_logo_slate_bg_with_text.png"
+boot_splash/image="res://art/rageblox_wordmark.svg"
 boot_splash/fullsize=false
-config/icon="res://art/icons/icon.svg"
+config/icon="res://art/icons/rageblox_icon.svg"
 config/macos_native_icon="res://art/icons/mac/macos_icon.icns"
 config/windows_native_icon="res://art/icons/windows_icon.ico"
 
