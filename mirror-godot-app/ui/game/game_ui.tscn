@@ -28,6 +28,7 @@
 [ext_resource type="Theme" uid="uid://d1qd6ity2mdpl" path="res://creator/creator_ui.theme.tres" id="25_7pbh6"]
 [ext_resource type="Script" path="res://ui/game/connect_by_ip_ui.gd" id="26_viw1y"]
 [ext_resource type="PackedScene" uid="uid://bb7qixdwwk0il" path="res://ui/login/login_code_ui.tscn" id="28_3eh7d"]
+[ext_resource type="PackedScene" path="res://ui/game/rageblox_game_shell.tscn" id="29_rageblox"]
 
 [node name="GameUI" type="CanvasLayer"]
 script = ExtResource("1_2ryxh")
@@ -152,6 +153,9 @@ text = "connect"
 visible = true
 
 [node name="NotificationsUI" parent="." instance=ExtResource("13_gvu03")]
+
+[node name="RageBloxGameShell" parent="." instance=ExtResource("29_rageblox")]
+visible = false
 
 [connection signal="select_asset_id" from="DragDetector" to="CreatorUI" method="_on_drag_detector_select_asset_id"]
 [connection signal="toggle_main_menu_open" from="CreatorUI" to="MainMenuUI" method="toggle_main_menu_open"]

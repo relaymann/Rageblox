@@ -22,6 +22,7 @@ extends CanvasLayer
 @onready var file_search: FileDialog = $FileSearch
 @onready var _global_menu: Node = $GlobalMenu
 @onready var _hover_text = $HoverText
+@onready var rageblox_game_shell: CanvasLayer = $RageBloxGameShell
 
 var ui_node_grabbing_input = null
 
@@ -168,6 +169,7 @@ func on_enter_space(is_creator: bool) -> void:
 	chat_ui.clear_chat()
 	chat_ui.show()
 	hotbar.show()
+	rageblox_game_shell.show()
 	health_display.try_show()
 	if is_instance_valid(_global_menu):
 		_global_menu.on_enter_space()
@@ -190,6 +192,7 @@ func on_exit_space() -> void:
 	drag_detector.hide()
 	chat_ui.hide()
 	hotbar.hide()
+	rageblox_game_shell.hide()
 	teams_handler.hide()
 	creator_ui.hide()
 	creator_ui.clear()
@@ -204,6 +207,7 @@ func on_exit_space() -> void:
 func logout() -> void:
 	drag_detector.hide()
 	chat_ui.hide()
+	rageblox_game_shell.hide()
 	creator_ui.hide()
 	loading_ui.hide()
 	main_menu_ui.hide()

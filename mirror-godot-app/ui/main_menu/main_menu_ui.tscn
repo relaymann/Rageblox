@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://tgcx8ymhgpxe" path="res://ui/main_menu/pages/avatar/avatar.tscn" id="9_aqh2v"]
 [ext_resource type="Texture2D" uid="uid://ynudu6op5xa4" path="res://ui/common/images/red_bg.jpg" id="9_wg5xp"]
 [ext_resource type="PackedScene" uid="uid://cx2mo1w80rpi6" path="res://ui/main_menu/pages/settings/settings.tscn" id="10_6f3nv"]
+[ext_resource type="PackedScene" path="res://ui/rageblox_platform_hub.tscn" id="27_hub"]
 [ext_resource type="PackedScene" uid="uid://qan235j7m5xi" path="res://ui/main_menu/header.tscn" id="10_jeyvr"]
 [ext_resource type="Texture2D" uid="uid://clj7egq88dkx5" path="res://ui/common/images/teal_bg.jpg" id="11_5ctgy"]
 [ext_resource type="Texture2D" uid="uid://15cvus520agc" path="res://ui/common/images/logo-icon.svg" id="11_8pcq8"]
@@ -153,6 +154,11 @@ metadata/bg_texture = ExtResource("11_5ctgy")
 visible = false
 layout_mode = 1
 metadata/bg_texture = ExtResource("11_amoyd")
+
+[node name="RageBloxHub" parent="Pages" instance=ExtResource("27_hub")]
+visible = false
+layout_mode = 1
+metadata/bg_texture = ExtResource("3_fbtol")
 
 [node name="HeaderMenu" parent="." instance=ExtResource("10_jeyvr")]
 layout_mode = 1
