@@ -26,27 +26,26 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Scons Build
+    - name: Scons Build (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      env:
+        SCONSFLAGS: ${{ inputs.sconsflags }}
+      run: |
+        Set-Location godot-engine
+        if ("${{ inputs.target }}" -ne "editor") { Remove-Item -Recurse -Force editor -ErrorAction SilentlyContinue }
+        $env:BUILD_NAME = "gh"
+        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} $env:SCONSFLAGS
+        Get-ChildItem bin/
+
+    - name: Scons Build (Unix)
+      if: runner.os != 'Windows'
       shell: sh
       env:
-          SCONSFLAGS: ${{ inputs.sconsflags }}
-          SCONS_CACHE: ${{ inputs.scons-cache }}
-          SCONS_CACHE_LIMIT: ${{ inputs.scons-cache-limit }}
+        SCONSFLAGS: ${{ inputs.sconsflags }}
       run: |
         cd godot-engine
-        echo "Building with flags:" platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} ${{ env.SCONSFLAGS }}
-
-        if [ "${{ inputs.target }}" != "editor" ]; then
-          # Ensure we don't include editor code in export template builds.
-          rm -rf editor
-        fi
-
-        if [ "${{ github.event.number }}" != "" ]; then
-          # Set build identifier with pull request number if available. This is displayed throughout the editor.
-          export BUILD_NAME="gh-${{ github.event.number }}"
-        else
-          export BUILD_NAME="gh"
-        fi
-
-        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} ${{ env.SCONSFLAGS }}
+        if [ "${{ inputs.target }}" != "editor" ]; then rm -rf editor; fi
+        export BUILD_NAME="gh"
+        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} ${{ inputs.sconsflags }}
         ls -l bin/
