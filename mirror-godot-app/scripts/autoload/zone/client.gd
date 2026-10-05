@@ -118,7 +118,8 @@ func connect_to_server(server_addr: Variant, port: Variant) -> bool:
 	if server_addr.is_empty():
 		return false
 	client_peer = ENetMultiplayerPeer.new()
-	Zone.instance_manager.space_objects_created.connect(_client_on_game_ui_space_loaded)
+	if not Zone.instance_manager.space_objects_created.is_connected(_client_on_game_ui_space_loaded):
+		Zone.instance_manager.space_objects_created.connect(_client_on_game_ui_space_loaded)
 	var error_status := client_peer.create_client(server_addr, port)
 	last_connection_address = server_addr
 	last_connection_port = port
@@ -159,6 +160,8 @@ func _connection_failed() -> void:
 
 
 func _client_on_connected_to_server() -> void:
+	retry_count = 0
+	_next_retry_time = 0.0
 	print("----------------------------------------")
 	print("ClientPeer: Connected to a server... waiting for server to grant access")
 	print("----------------------------------------")

@@ -172,6 +172,12 @@ func _open_experience(item: Dictionary) -> void:
 		return
 	RageBloxServices.mark_experience_played(StringName(id))
 	RageBloxBetaPlatform.record_event(&"experience_view", {"id": id})
+	if id == "rageblox-showcase":
+		RageBloxServices.set_presence(StringName(id), 0)
+		GameUI.instance.loading_ui.show()
+		GameUI.instance.main_menu_ui.hide()
+		Zone.client.start_join_localhost()
+		return
 	GameUI.instance.main_menu_ui.change_page(&"Discover")
 	GameUI.instance.main_menu_ui.change_subpage(&"ViewSpace", item)
 	GameUI.instance.main_menu_ui.show()

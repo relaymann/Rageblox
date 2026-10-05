@@ -51,7 +51,7 @@ func is_avatar_input_enabled() -> bool:
 	return is_player_input_allowed and does_game_mode_accept_input
 
 func get_move_action() -> Vector2:
-	return Input.get_vector(&"player_move_left", &"player_move_right", &"player_move_forward", &"player_move_backward")
+	return Input.get_vector(&"player_move_left", &"player_move_right", &"player_move_forward", &"player_move_back")
 
 func get_jump_action() -> bool:
 	return Input.is_action_just_pressed(&"player_jump")

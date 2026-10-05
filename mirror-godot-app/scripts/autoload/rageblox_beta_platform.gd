@@ -52,6 +52,8 @@ var studio_session: Dictionary = {
 
 func _ready() -> void:
 	_load()
+	var showcase := {"id": &"rageblox-showcase", "_id": "rageblox-showcase", "name": "RageBlox Showcase", "title": "RageBlox Showcase", "creatorName": "RageBlox", "creator": "RageBlox", "genre": "Showcase", "category": "Showcase", "description": "The built-in beta showcase for testing movement, camera, interaction, avatar, HUD, respawn and networking.", "playerCount": 1, "featured": true, "new": true, "local": true}
+	cache_experiences([showcase])
 	_refresh_players()
 	set_process(true)
 	if Zone.client:
