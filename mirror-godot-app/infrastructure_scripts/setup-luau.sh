@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LUAU_ROOT="$ROOT/mirror-godot-app/GodotLuau"
+LUAU_ROOT="$ROOT/GodotLuau"
 PACKAGE="$LUAU_ROOT/GodotLuau.zip"
-DEST="$ROOT/mirror-godot-app"
+DEST="$ROOT"
 if [[ ! -f "$PACKAGE" ]]; then
   echo "RageBlox Luau package is missing: $PACKAGE"
   echo "Initialize submodules recursively with: git submodule update --init --recursive"
