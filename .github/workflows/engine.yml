@@ -8,6 +8,10 @@ on:
       self-hosted-runner:
         required: true
         type: boolean
+      windows-only:
+        required: false
+        type: boolean
+        default: false
       deploy-to-gcp:
         required: false
         type: boolean
@@ -85,14 +89,21 @@ jobs:
         if: steps.vars.outputs.sha_short == ''
         run: exit 1
 
-      - name: Setup Godot build cache
-        uses: ./godot-engine/.github/actions/godot-cache
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          cache-name: ${{ matrix.cache-name }}
-        continue-on-error: true
+          python-version: "3.12"
 
-      - name: Setup python and scons
-        uses: ./godot-engine/.github/actions/godot-deps
+      - name: Setup SCons
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install scons==4.8.0 pywin32
+
+      - name: Setup Visual C++
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       #- name: Download Direct3D 12 SDK components
       #  run: python ./misc/scripts/install_d3d12_sdk_windows.py
@@ -143,6 +154,7 @@ jobs:
           path: ./godot-engine/bin/${{ matrix.artifact-name }}.exe
           destination: ${{ matrix.bucket-name }}/${{steps.vars.outputs.sha_short}}/
   build-macos:
+    if: ${{ !inputs.windows-only }}
     runs-on: ${{ inputs.self-hosted-runner && 'macos-mirror' || 'macos-latest' }}
     name: ${{ matrix.name }}
     environment: ${{ inputs.environment }}
@@ -282,6 +294,7 @@ jobs:
           path: ./godot-engine/bin/${{ matrix.artifact-name }}.zip
           destination: ${{ matrix.bucket-name }}/${{steps.vars.outputs.sha_short}}/
   build-linux:
+    if: ${{ !inputs.windows-only }}
     runs-on: ${{ inputs.self-hosted-runner && 'linux-mirror' || 'ubuntu-22.04' }}
     name: ${{ matrix.name }}
     environment: ${{ inputs.environment }}
@@ -396,6 +409,7 @@ jobs:
           path: ./godot-engine/bin/${{ matrix.artifact-name }}
           destination: ${{ matrix.bucket-name }}/${{steps.vars.outputs.sha_short}}/
   build-android-linux:
+    if: ${{ !inputs.windows-only }}
     runs-on: ${{ inputs.self-hosted-runner && 'linux-mirror' || 'ubuntu-22.04' }}
     name: ${{ matrix.name }}
     environment: ${{ inputs.environment }}
