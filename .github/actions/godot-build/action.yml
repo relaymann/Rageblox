@@ -20,8 +20,6 @@ inputs:
     default: "${{ github.workspace }}/.scons-cache/"
   scons-cache-limit:
     description: The scons cache size limit.
-    # actions/cache has 10 GiB limit, and GitHub runners have a 14 GiB disk.
-    # Limit to 7 GiB to avoid having the extracted cache fill the disk.
     default: 7168
 runs:
   using: "composite"
@@ -35,6 +33,15 @@ runs:
         Set-Location godot-engine
         if ("${{ inputs.target }}" -ne "editor") { Remove-Item -Recurse -Force editor -ErrorAction SilentlyContinue }
         $env:BUILD_NAME = "gh"
+        # Hosted Windows runners can expose MinGW's g++ ahead of MSVC. Godot's
+        # Windows SCons configuration emits MSVC-style flags, so explicitly
+        # select the MSVC toolchain prepared by msvc-dev-cmd.
+        $env:CC = "cl.exe"
+        $env:CXX = "cl.exe"
+        $env:AR = "lib.exe"
+        $env:LINK = "link.exe"
+        $env:LD = "link.exe"
+        $env:RC = "rc.exe"
         $sconsFlags = @($env:SCONSFLAGS -split '\s+' | Where-Object { $_ -ne '' })
         scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} @sconsFlags
         Get-ChildItem bin/
