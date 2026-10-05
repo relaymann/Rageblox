@@ -19,7 +19,7 @@ func _add_quality_settings() -> void:
 
 
 func is_value_valid(value: Variant) -> bool:
-	return value is int and (value >= GameplaySettings.RenderQuality.LOW and value <= GameplaySettings.RenderQuality.HIGH)
+	return value is int and (value >= GameplaySettings.RenderQuality.LOW and value <= GameplaySettings.RenderQuality.ULTRA)
 
 
 func apply_setting_to_ui(value: int) -> void:

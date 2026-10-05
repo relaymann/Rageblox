@@ -26,6 +26,28 @@ var current_profile: int = 2
 
 
 
+func set_ultra():
+	anisotropic_filter_level = 16
+	use_nearest_mipmap_filter = false
+	msaa = 2
+	taa = true
+	fxaa = false
+	ssao_quality = 3
+	dof_quality = 3
+	ssr_quality = 2
+	dof_enabled = true
+	volumetric_volume_depth = 192
+	volumetric_volume_size = 192
+	volumetric_use_filter = false
+	sdfgi_probe_ray_count = RenderingServer.ENV_SDFGI_RAY_COUNT_128
+	texture_array_reflections = true
+	force_vertex_shading = false
+	force_lambert_over_burley = false
+	subsurface_scattering_quality = 0 if Util.is_vr_enabled() else 2
+	soft_shadow_filter_quality = 7
+	current_profile = 4
+
+
 func set_high():
 	anisotropic_filter_level = 16
 	use_nearest_mipmap_filter = false

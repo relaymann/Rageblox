@@ -13,7 +13,7 @@ signal view_distance_changed(new_value: int)
 signal settings_loaded()
 
 enum RenderQuality {
-	LOW, MEDIUM, HIGH
+	LOW, MEDIUM, HIGH, ULTRA
 }
 
 
@@ -216,6 +216,8 @@ func _apply_render_quality(new_render_quality: int):
 			render_profile.set_low()
 		RenderQuality.HIGH:
 			render_profile.set_high()
+		RenderQuality.ULTRA:
+			render_profile.set_ultra()
 		_, RenderQuality.MEDIUM:
 			render_profile.set_medium()
 	render_profile.set_profile()

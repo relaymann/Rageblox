@@ -37,8 +37,18 @@ func set_quality(preset: StringName) -> void:
 
 func _apply_quality(preset: StringName) -> void:
 	var cfg: Dictionary = QUALITY_PRESETS[preset]
-	if is_instance_valid(GameplaySettings):
-		GameplaySettings.resolution_scale = float(cfg.resolution)
+	if not is_instance_valid(GameplaySettings):
+		return
+	match preset:
+		&"LOW":
+			GameplaySettings.render_quality = GameplaySettings.RenderQuality.LOW
+		&"MEDIUM":
+			GameplaySettings.render_quality = GameplaySettings.RenderQuality.MEDIUM
+		&"HIGH":
+			GameplaySettings.render_quality = GameplaySettings.RenderQuality.HIGH
+		&"ULTRA":
+			GameplaySettings.render_quality = GameplaySettings.RenderQuality.ULTRA
+	GameplaySettings.resolution_scale = float(cfg.resolution)
 
 func set_reduced_motion(enabled: bool) -> void:
 	reduced_motion = enabled

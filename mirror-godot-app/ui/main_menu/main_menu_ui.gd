@@ -47,17 +47,20 @@ func _register_state_in_history():
 
 
 func history_go_back():
-	# Pop current page & subpage from stack
-	_history.pop_back()
-	var previous = _history.pop_back()
-	if previous == null:
+	if _history.size() < 2:
 		return
-	var previous_page = previous.get("page")
-	if _current_page.name != previous_page:
+	_history.pop_back()
+	var previous: Dictionary = _history.pop_back()
+	var previous_page: StringName = StringName(previous.get("page", ""))
+	if previous_page == StringName("") or get_page_from_name(previous_page) == null:
+		return
+	if _current_page == null or _current_page.name != previous_page:
 		change_page(previous_page)
-		# Above line will add a history entry, so we can safely remove it
-		_history.pop_back()
-	change_subpage(previous.get("subpage"), previous.get("subpage_param"))
+		if _history.size() > 0 and _history.back().get("page", "") == previous_page:
+			_history.pop_back()
+	var previous_subpage: StringName = StringName(previous.get("subpage", ""))
+	if previous_subpage != StringName("") and _current_page.get_node_or_null("Pages/%s" % str(previous_subpage)) != null:
+		change_subpage(previous_subpage, previous.get("subpage_param"))
 
 
 func cleanup_history() -> void:
@@ -153,6 +156,9 @@ func show_default_subpage(register_history: bool = true) -> void:
 	if subpages:
 		if _current_subpage != null:
 			_current_subpage.hide()
+		if subpages.get_child_count() == 0:
+			_current_subpage = null
+			return
 		var default_subpage = subpages.get_child(0)
 		_current_subpage = default_subpage
 		default_subpage.show()
@@ -162,13 +168,14 @@ func show_default_subpage(register_history: bool = true) -> void:
 
 # Sets the current page. Used to change pages
 func change_page(page_name: StringName) -> void:
-	if _current_page.name == page_name:
+	var new_current_page := get_page_from_name(page_name)
+	if not is_instance_valid(new_current_page):
+		print("Page not found: %s" % str(page_name))
 		return
-	_current_page.hide()
-	var new_current_page = get_page_from_name(page_name)
-	if not new_current_page:
-		print("Page not found")
+	if is_instance_valid(_current_page) and _current_page.name == page_name:
 		return
+	if is_instance_valid(_current_page):
+		_current_page.hide()
 	_previous_page = _current_page
 	_current_page = new_current_page
 	_reset_subpages(_current_page)
@@ -192,7 +199,7 @@ func _check_update_background_image() -> void:
 
 
 func get_page_from_name(page_name) -> Control:
-	return $Pages.get_node(String(page_name))
+	return $Pages.get_node_or_null(String(page_name)) as Control
 
 
 # Set the first subpage as current if there are subpages
@@ -205,11 +212,16 @@ func _reset_subpages(page: Control) -> void:
 
 # Keeps the focus on the main page button to match the visuals
 func _keep_page_as_selected(previous_page_name: StringName) -> void:
-	var current_page_button: Button = _header_menu.get_node(str(_current_page.name))
-	var previous_page_button: Button = _header_menu.get_node(str(previous_page_name))
+	if not is_instance_valid(_current_page):
+		return
+	var current_page_button: Button = _header_menu.get_node_or_null(str(_current_page.name))
+	var previous_page_button: Button = _header_menu.get_node_or_null(str(previous_page_name))
+	if not is_instance_valid(current_page_button):
+		return
 	var stylebox_focus = current_page_button.get_theme_stylebox("focus")
 	var stylebox_normal = current_page_button.get_theme_stylebox("normal")
-	previous_page_button.add_theme_stylebox_override("normal", stylebox_normal)
+	if is_instance_valid(previous_page_button):
+		previous_page_button.add_theme_stylebox_override("normal", stylebox_normal)
 	current_page_button.add_theme_stylebox_override("normal", stylebox_focus)
 
 
@@ -227,8 +239,8 @@ func change_subpage(page_name: StringName, param: Variant = null) -> void:
 	if _current_subpage.name == page_name && param == null:
 		return
 	_current_subpage.hide()
-	var new_current_subpage = _current_page.get_node("Pages/%s" % str(page_name))
-	if not new_current_subpage:
+	var new_current_subpage = _current_page.get_node_or_null("Pages/%s" % str(page_name))
+	if not is_instance_valid(new_current_subpage):
 		print("Subpage %s not found" % str(page_name))
 		return
 	_current_subpage = new_current_subpage

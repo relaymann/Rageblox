@@ -119,6 +119,7 @@ DebugGeometry="*res://addons/debug_geometry.gd"
 MirrorScriptServer="*res://script/mirror_script_server.gd"
 Util="*res://scripts/autoload/util_funcs.gd"
 PlatformExperience="*res://scripts/autoload/platform_experience.gd"
+RageBloxServices="*res://scripts/autoload/rageblox_platform_services.gd"
 
 [debug]
 
