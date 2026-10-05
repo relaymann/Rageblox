@@ -138,6 +138,8 @@ var _asset_colormap_image: AssetData
 var _collision_generation_task_id: int = -1
 var _normalmap_generation_task_id: int = -1
 var _collision_generation_awaiting: bool = false
+var _viewer_camera: Camera3D
+var _last_viewer_chunk: Vector2i = Vector2i(2147483647, 2147483647)
 
 @onready var _is_using_server_camera = ProjectSettings.get_setting("mirror/use_server_camera")
 
@@ -234,10 +236,16 @@ func _mesh_cache_refresh():
 
 
 func _update_viewer_position(viewer_position: Vector3):
-	_visual_node.global_position.x = floor(viewer_position.x)
-	_visual_node.global_position.z = floor(viewer_position.z)
-	_visual_node.global_position.x -= int(floor(viewer_position.x)) % int(chunk_size)
-	_visual_node.global_position.z -= int(floor(viewer_position.z)) % int(chunk_size)
+	var viewer_x := int(floor(viewer_position.x))
+	var viewer_z := int(floor(viewer_position.z))
+	var chunk_x := viewer_x - (viewer_x % int(chunk_size))
+	var chunk_z := viewer_z - (viewer_z % int(chunk_size))
+	var viewer_chunk := Vector2i(chunk_x, chunk_z)
+	if viewer_chunk == _last_viewer_chunk:
+		return
+	_last_viewer_chunk = viewer_chunk
+	_visual_node.global_position.x = chunk_x
+	_visual_node.global_position.z = chunk_z
 
 
 func _clear_children():
@@ -699,12 +707,13 @@ func set_cliff_material_asset_id(material_id):
 func _process(_delta):
 	if Engine.is_editor_hint() or Zone.is_host():
 		return
-	var local_player: Player = PlayerData.get_local_player()
-	if local_player == null:
-		return
-	var camera: Camera3D = local_player.camera_get_viewport().get_camera_3d()
-	if camera != null:
-		_update_viewer_position(camera.global_position)
+	if not is_instance_valid(_viewer_camera):
+		var local_player: Player = PlayerData.get_local_player()
+		if local_player == null:
+			return
+		_viewer_camera = local_player.camera_get_viewport().get_camera_3d()
+	if is_instance_valid(_viewer_camera):
+		_update_viewer_position(_viewer_camera.global_position)
 	else:
 		_update_viewer_position(Vector3.ZERO)
 

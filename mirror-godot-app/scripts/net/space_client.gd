@@ -302,9 +302,8 @@ func _update_space_completed(space_data: Dictionary) -> void:
 	var space_id = space_data["_id"]
 	spaces[space_id] = space_data
 	for i in range(user_spaces.size()):
-		var user_space = user_spaces[i]
-		if user_space["_id"] == space_id:
-			user_space[i] = space_data
+		if user_spaces[i]["_id"] == space_id:
+			user_spaces[i] = space_data
 
 
 ## Success method called when a space is deleted.
@@ -351,9 +350,8 @@ func _update_image_space_completed(space_data: Dictionary) -> void:
 	var space_id = space_data["_id"]
 	spaces[space_id] = space_data
 	for i in range(user_spaces.size()):
-		var user_space = user_spaces[i]
-		if user_space["_id"] == space_id:
-			user_space[i] = space_data
+		if user_spaces[i]["_id"] == space_id:
+			user_spaces[i] = space_data
 	print("Updated image for space: %s index: %d" %
 			[space_data.get("_id",""), space_data.get("image_index", -1)])
 
@@ -370,10 +368,14 @@ func _update_space_object_completed(space_object_data: Dictionary) -> void:
 
 ## Success method called when a space object is deleted.
 func _delete_space_object_completed(space_object_data: Dictionary) -> void:
-	var space_id = space_object_data["space"]
-	var object_id = space_object_data["_id"]
-	if space_object_data.is_empty() and space_objects[space_id].has(object_id):
-		space_objects[space_id].erase(space_id)
+	var space_id: String = space_object_data.get("space", "")
+	var object_id: String = space_object_data.get("_id", "")
+	if space_id.is_empty() or object_id.is_empty():
+		return
+	if space_objects.has(space_id) and space_objects[space_id].has(object_id):
+		space_objects[space_id].erase(object_id)
+		if space_objects[space_id].is_empty():
+			space_objects.erase(space_id)
 
 
 ## Success method called when a space object is received.

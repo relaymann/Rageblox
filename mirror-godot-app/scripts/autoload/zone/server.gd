@@ -558,9 +558,12 @@ func server_update_space_objects(space_objs: Array) -> void:
 func server_delete_space_objects(space_obj_ids: Array) -> void:
 	for space_obj_id in space_obj_ids:
 		Zone.instance_manager.remove_space_object_by_id(space_obj_id)
+	var ids_to_delete: Dictionary = {}
+	for space_obj_id in space_obj_ids:
+		ids_to_delete[StringName(space_obj_id)] = true
 	for i in range(Zone.space_objects.size()-1, -1, -1):
-		var id = StringName(Zone.space_objects[i]["_id"])
-		if space_obj_ids.has(id):
+		var id := StringName(Zone.space_objects[i]["_id"])
+		if ids_to_delete.has(id):
 			Zone.space_objects.pop_at(i)
 
 	# Tell RESTful server (zone_socket)
@@ -682,10 +685,11 @@ func _client_create_objects(client_peer_id_to_sync: int, space_objects: Array) -
 			properties_to_send[prop_name] = so_instance.get_additional_property(prop_name)
 		var receipt: Dictionary = {} # Empty receipt because these are not newly placed objects.
 		# disabled because this breaks loading a space the second connection attempt
-		if space_object_data.has("receipt"):
-			space_object_data.erase("receipt")
+		var object_data_to_send: Dictionary = space_object_data.duplicate(true)
+		if object_data_to_send.has("receipt"):
+			object_data_to_send.erase("receipt")
 			push_error("The SpaceObject itself should not have a receipt.")
-		Zone.client_create_object(client_peer_id_to_sync, space_object_data, receipt, properties_to_send)
+		Zone.client_create_object(client_peer_id_to_sync, object_data_to_send, receipt, properties_to_send)
 
 
 func _server_send_sync_space(client_peer_id_to_sync: int) -> void:
@@ -701,18 +705,15 @@ func _server_send_sync_space(client_peer_id_to_sync: int) -> void:
 
 func _get_unique_space_objects_sorted_by_dst_to_spawn() -> Array:
 	var all_objs: Array = Zone.space_objects.duplicate()
-	var no_duplicates = []
-	for index in range(all_objs.size()):
-		var dup_exists_after = false
-		for sub_index in range(index + 1, all_objs.size()):
-			if all_objs[index]["_id"] == all_objs[sub_index]["_id"]:
-				# To prevent the client ingesting invalid objects that have been duplicated. It alleviates the issue for now and lets us release.
-				# If they get to the client nothing works properly. I will fix this in a follow up PR properly.
-				push_error("Duplicate ID found in the server list of objects, I have skipped it: ", all_objs[index]["_id"])
-				dup_exists_after = true
-				break
-		if not dup_exists_after:
-			no_duplicates.append(all_objs[index])
+	var objects_by_id: Dictionary = {}
+	for obj in all_objs:
+		var object_id: String = str(obj.get("_id", ""))
+		if objects_by_id.has(object_id):
+			# Preserve the previous behavior of keeping the last duplicate while
+			# avoiding the old O(n^2) pairwise duplicate scan.
+			push_error("Duplicate ID found in the server list of objects, keeping the latest: ", object_id)
+		objects_by_id[object_id] = obj
+	var no_duplicates: Array = objects_by_id.values()
 	no_duplicates.sort_custom(_sort_by_dst_to_origin)
 	return no_duplicates
 

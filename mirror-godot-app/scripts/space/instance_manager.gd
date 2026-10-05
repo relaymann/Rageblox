@@ -15,7 +15,6 @@ var ready_to_simulate: bool = false
 var remotely_selected_nodes: Array
 var space_object_validate_selection_time := 0.5
 var space_object_validate_selection_timer := 0.0
-var _pending_objects = []
 var _load_object_start_time = 0
 
 
@@ -90,14 +89,13 @@ func _are_preloaded_space_objects_setup(instances) -> bool:
 
 func _await_assets_preloaded() -> void:
 	var instances = get_all_instances()
-	var now = Time.get_unix_time_from_system()
-	var timeout = now + 240
+	var timeout = Time.get_unix_time_from_system() + 240.0
 	var files_preloaded = false
-	while now < timeout and not files_preloaded:
+	while Time.get_unix_time_from_system() < timeout and not files_preloaded:
 		if _are_preloaded_space_objects_setup(instances):
 			files_preloaded = true
 			break
-		await get_tree().create_timer(3).timeout
+		await get_tree().create_timer(3.0).timeout
 	if not files_preloaded:
 		Zone.space_load_timed_out.emit()
 		return
@@ -202,20 +200,13 @@ func count_remaining_objects_to_be_ready() -> int:
 		# we can safely skip invalid instances
 		# they can be caused by deleted space objects
 		if not is_instance_valid(space_obj):
-			push_error("invalid instance")
 			continue
 		if not (space_obj is SpaceObject):
 			continue
 		if space_obj.is_error():
-			push_error(Zone.get_instance_type(), " skipped errored object: ", space_obj.get_space_object_name(), "path", space_obj.get_path())
 			continue
-		if space_obj.is_ready():
-			if _pending_objects.has(space_obj):
-				_pending_objects.erase(space_obj)
-		else:
-			if not _pending_objects.has(space_obj):
-				_pending_objects.push_back(space_obj)
-			count+=1
+		if not space_obj.is_ready():
+			count += 1
 	return count
 
 
@@ -230,7 +221,6 @@ func count_loaded_objects() -> int:
 		if not (space_obj is SpaceObject):
 			continue
 		if space_obj.is_error():
-			push_error(Zone.get_instance_type(), " skipped errored object: ", space_obj.get_space_object_name(), "path", space_obj.get_path())
 			continue
 		if not space_obj.is_ready():
 			continue
@@ -306,10 +296,9 @@ func create_space_object(space_object_dictionary: Dictionary, receipt: Dictionar
 # We call this to ensure preloaded objects are loaded correctly
 # We skip any errored space objects now too, except for terrain
 func client_await_assets_loaded() -> void:
-	var now = Time.get_unix_time_from_system()
-	var timeout = now + 240
+	var timeout = Time.get_unix_time_from_system() + 240.0
 	var files_loaded = false
-	while now < timeout and not files_loaded:
+	while Time.get_unix_time_from_system() < timeout and not files_loaded:
 		var instances = get_all_instances()
 		# if we're the client we need to exit this event if we don't want to finish joining
 		# this resolves rejoining breaking
@@ -338,9 +327,6 @@ func _what_spaceobjects_arent_loaded(instances) -> Array:
 	var waiting_for_objects = []
 	for space_obj in instances:
 		if not is_instance_valid(space_obj):
-			# erasing an entity during iteration is a big no-no.
-			# always do it after.
-			instances.erase(space_obj)
 			waiting_for_objects.push_back("invalid space object in memory was it freed?")
 			continue
 		if (not space_obj.is_ready()) and space_obj.is_preloaded:
