@@ -43,6 +43,7 @@ var _drag_detector: Control = null
 @onready var _restore_space_window = $RestoreSpaceWindow
 @onready var _save_version_window = $SaveVersionWindow
 @onready var asset_detail_window = $AssetDetailWindow
+@onready var _command_palette: StudioCommandPalette = $StudioCommandPalette
 
 
 func setup(drag_detector: Control) -> void:
@@ -79,6 +80,14 @@ func clear_selection() -> void:
 
 
 func _unhandled_input(input_event: InputEvent) -> void:
+	if input_event is InputEventKey and input_event.pressed and not input_event.echo and input_event.keycode == KEY_K and input_event.ctrl_pressed:
+		if _command_palette.visible:
+			_command_palette.close_palette()
+		elif can_accept_creator_input():
+			_command_palette.open_palette()
+		return
+	if _command_palette.visible:
+		return
 	if not can_accept_creator_input():
 		return
 	if input_event is InputEventAction:
@@ -468,6 +477,11 @@ func _on_toggle_teams_editor_pressed() -> void:
 
 func _on_drag_detector_select_asset_id(asset_id: String) -> void:
 	object_creation.set_selected_asset_id(asset_id)
+
+
+func _on_build_toolbar_playtest_requested() -> void:
+	Zone.client_ready_check()
+	Notify.success("Ready Check", "Preview Mode ready check started.")
 
 
 func _on_build_toolbar_publish_button_pressed():

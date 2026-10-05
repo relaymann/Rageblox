@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" uid="uid://clpkop8mwppa1" path="res://ui/publish_space/publish_space_window.tscn" id="20_ke81j"]
 [ext_resource type="PackedScene" uid="uid://ch1hev25h7jhv" path="res://ui/restore_space/restore_space_window.tscn" id="24_gried"]
 [ext_resource type="PackedScene" uid="uid://cwurtihmdgfqf" path="res://ui/save_version/save_version_window.tscn" id="25_xlepj"]
+[ext_resource type="PackedScene" path="res://creator/studio_command_palette.tscn" id="26_cmd"]
 
 [node name="CreatorUI" type="Control"]
 layout_mode = 3
@@ -141,6 +142,21 @@ visible = false
 layout_mode = 1
 sidebar = NodePath("../ObjectCreation/Sidebar")
 object_selection = NodePath("../ObjectSelection")
+
+[node name="StudioCommandPalette" parent="." instance=ExtResource("26_cmd")]
+visible = false
+layout_mode = 0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -210.0
+offset_right = 260.0
+offset_bottom = 210.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="ContextMenu" parent="." instance=ExtResource("2_gucyd")]
 visible = false

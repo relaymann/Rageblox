@@ -9,6 +9,8 @@ signal request_change_page(subpage_name: StringName)
 @onready var _connect_btn: Button = $Popup/Panel/MarginContainer/VBoxContainer/Connect
 @onready var _avatar_preview: Node3D = $HBoxContainer/AvatarPreview/SubViewport/AvatarPreview
 @onready var _save_button: Button = $HBoxContainer/VBoxContainer/ContinueWithAvatar
+@onready var _outfit_slots: HBoxContainer = $HBoxContainer/VBoxContainer/OutfitSlots
+var _active_outfit_slot := 0
 
 var _target_avatar_url: String = "":
 	set(new_value):
@@ -20,6 +22,8 @@ var _avatar_download_url: String = ""
 func _ready():
 	Net.user_client.user_profile_data_loaded.connect(_load_current_profile_preview)
 	_download_popup.hide()
+	_outfit_slots.setup()
+	_outfit_slots.slot_pressed.connect(_on_outfit_slot_pressed)
 	_connect_btn.text = "Connect"
 	var main_menu = get_parent().get_parent()
 
@@ -135,6 +139,23 @@ func _promise_set_preview_model(avatar_url: String) -> void:
 func _on_avatar_downloaded() -> void:
 	_connect_btn.text = "Connect"
 	_promise_set_preview_model(_avatar_download_url)
+
+
+func _on_outfit_slot_pressed(slot: int) -> void:
+	_active_outfit_slot = slot
+	var saved := RageBloxServices.avatar_outfits[slot] if slot < RageBloxServices.avatar_outfits.size() else {}
+	if not saved.is_empty() and saved.has("avatar_url"):
+		var url := str(saved["avatar_url"])
+		if url.begins_with("themirror://") and Net.file_client.resource_avatars.has(url):
+			_target_avatar_url = url
+			_avatar_preview.set_avatar_with_resource_path(Net.file_client.resource_avatars[url])
+			_save_button.grab_focus()
+		elif url.begins_with("http"):
+			_promise_set_preview_model(url)
+			return
+	if not _target_avatar_url.is_empty():
+		RageBloxServices.save_avatar_outfit(slot, {"avatar_url": _target_avatar_url, "saved_at": Time.get_unix_time_from_system()})
+		Notify.success("Outfit Saved", "Avatar saved to outfit slot %d." % (slot + 1))
 
 
 func _on_continue_with_avatar_pressed() -> void:

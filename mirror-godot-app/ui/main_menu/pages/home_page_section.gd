@@ -72,6 +72,10 @@ func _fetch_data(_cnt_items_to_fetch: int) -> Array:
 
 	if list is Dictionary:
 		list = list.get("data", [])
+	if list is Array and is_instance_valid(RageBloxServices):
+		for item in list:
+			if item is Dictionary and item.has("_id"):
+				RageBloxServices.cache_experience(StringName(str(item["_id"])), item)
 
 	if _include_localhost_item or _include_new_space_item:
 		var items: Array
@@ -104,19 +108,17 @@ func _calculate_container_with(items_per_row: int) -> int:
 
 
 func fadeout_items() -> void:
-	var tween = create_tween()
+	var tween := create_tween().set_parallel(true)
 	for child in _items_container.get_children():
-		tween = create_tween()
-		tween.tween_property(child, "modulate", Color(1,1,1,0), 0.3)
+		tween.tween_property(child, "modulate", Color(1, 1, 1, 0), 0.2)
 	await tween.finished
 
 
 func fadein_items() -> void:
-	var tween = create_tween()
+	var tween := create_tween().set_parallel(true)
 	for child in _items_container.get_children():
-		child.modulate = Color(1,1,1,0)
-		tween = create_tween()
-		tween.tween_property(child, "modulate", Color(1,1,1,1), 0.3)
+		child.modulate = Color(1, 1, 1, 0)
+		tween.tween_property(child, "modulate", Color(1, 1, 1, 1), 0.2)
 	await tween.finished
 
 
@@ -160,6 +162,8 @@ func _on_create_pressed() -> void:
 
 
 func _on_space_pressed(space: Dictionary) -> void:
+	if is_instance_valid(RageBloxServices) and space.has("_id"):
+		RageBloxServices.mark_experience_played(StringName(str(space["_id"])))
 	GameUI.instance.main_menu_ui.change_subpage(&"ViewSpace", space)
 	_audio_stream_player_click.play()
 
