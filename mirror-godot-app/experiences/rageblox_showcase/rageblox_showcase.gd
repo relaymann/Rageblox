@@ -1,16 +1,19 @@
 extends Node3D
 class_name RageBloxShowcase
 
-const ACCENT := Color(0.78, 0.09, 0.12)
-const DARK := Color(0.055, 0.06, 0.07)
+const ACCENT := Color(0.9, 0.07, 0.12)
+const DARK := Color(0.025, 0.03, 0.045)
 const LIGHT := Color(0.78, 0.8, 0.84)
-const GROUND := Color(0.18, 0.2, 0.23)
+const GROUND := Color(0.12, 0.145, 0.18)
 const PLATFORM := Color(0.26, 0.28, 0.32)
 
 func _ready() -> void:
+	_build_environment()
 	_build_ground()
 	_build_plaza()
 	_build_movement_course()
+	_build_creator_lab()
+	_build_multiplayer_lab()
 	_build_interaction_area()
 	_build_signage()
 
@@ -101,3 +104,49 @@ func _build_interaction_area() -> void:
 
 func _build_signage() -> void:
 	_label(self, "Explore the map to test movement, jumping, camera, interaction and respawn.", Vector3(0, 1.7, 9), Color(0.72, 0.74, 0.78), 0.55)
+
+func _build_environment() -> void:
+	var environment_node := WorldEnvironment.new()
+	environment_node.name = "ShowcaseEnvironment"
+	var environment := Environment.new()
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color(0.012, 0.016, 0.025)
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color(0.25, 0.29, 0.38)
+	environment.ambient_light_energy = 0.7
+	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.glow_enabled = true
+	environment_node.environment = environment
+	add_child(environment_node)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-52, -28, 0)
+	sun.light_energy = 1.15
+	sun.shadow_enabled = true
+	add_child(sun)
+	for data in [[Vector3(0, 8, 0), Color(0.8, 0.15, 0.18)], [Vector3(-24, 6, -16), Color(0.15, 0.3, 0.9)], [Vector3(20, 6, 16), Color(0.9, 0.2, 0.1)]]:
+		var light := OmniLight3D.new()
+		light.position = data[0]
+		light.light_color = data[1]
+		light.light_energy = 3.0
+		light.omni_range = 18.0
+		add_child(light)
+
+func _build_creator_lab() -> void:
+	_box(self, "CreatorLabFloor", Vector3(-23, 0.3, 17), Vector3(22, 0.6, 14), DARK)
+	_label(self, "CREATOR LAB", Vector3(-23, 3.0, 12.3), Color.WHITE, 0.95)
+	_label(self, "Parts • Materials • Gizmos • Luau", Vector3(-23, 2.1, 12.3), LIGHT, 0.52)
+	var colors := [Color(0.92, 0.12, 0.15), Color(0.18, 0.45, 0.95), Color(0.2, 0.78, 0.5)]
+	for i in 3:
+		var x := -30.0 + i * 7.0
+		_box(self, "BuildPart%d" % i, Vector3(x, 2.0, 18), Vector3(4, 4, 4), colors[i])
+		_box(self, "BuildBase%d" % i, Vector3(x, 0.65, 18), Vector3(5.2, 0.3, 5.2), PLATFORM)
+		_label(self, ["PARTS", "MATERIALS", "SCRIPTING"][i], Vector3(x, 4.8, 18), Color.WHITE, 0.52)
+
+func _build_multiplayer_lab() -> void:
+	_box(self, "MultiplayerLabFloor", Vector3(23, 0.3, 17), Vector3(22, 0.6, 14), DARK)
+	_label(self, "MULTIPLAYER LAB", Vector3(23, 3.0, 12.3), Color.WHITE, 0.95)
+	_label(self, "Replication • Players • Servers", Vector3(23, 2.1, 12.3), LIGHT, 0.52)
+	for i in 3:
+		var x := 16.0 + i * 7.0
+		_cylinder(self, "PlayerPod%d" % i, Vector3(x, 1.6, 18), 1.7, 3.2, PLATFORM)
+		_label(self, "PLAYER %d" % (i + 1), Vector3(x, 4.3, 18), Color.WHITE, 0.48)
