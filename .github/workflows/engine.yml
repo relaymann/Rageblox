@@ -160,13 +160,16 @@ jobs:
           path: ./godot-engine/bin/${{ matrix.artifact-name }}.exe
           name: ${{ matrix.artifact-name }}.exe
 
+      # GitHub artifacts are the primary developer download. GCP publishing is optional.
       - uses: 'google-github-actions/auth@v2'
         if: ${{ inputs.deploy-to-gcp }}
+        continue-on-error: true
         with:
           credentials_json: '${{ secrets.GCP_BUCKET_UPLOAD }}'
 
       - name: Upload binary
         if: ${{ inputs.deploy-to-gcp }}
+        continue-on-error: true
         uses: 'google-github-actions/upload-cloud-storage@v2'
         with:
           path: ./godot-engine/bin/${{ matrix.artifact-name }}.exe

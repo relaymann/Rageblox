@@ -30,7 +30,6 @@ runs:
       env:
         SCONSFLAGS: ${{ inputs.sconsflags }}
       run: |
-        Set-Location godot-engine
         if ("${{ inputs.target }}" -ne "editor") { Remove-Item -Recurse -Force editor -ErrorAction SilentlyContinue }
         $env:BUILD_NAME = "gh"
 
