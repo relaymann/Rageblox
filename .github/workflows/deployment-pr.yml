@@ -22,9 +22,13 @@ jobs:
       environment: dev
       self-hosted-runner: false
       windows-only: false
-      deploy-to-gcp: true
+      # Same-repository PRs can use the repository's GCP secret so the client
+      # jobs can download the exact engine artifacts they just built. Fork and
+      # Dependabot PRs cannot receive repository secrets, so they stay artifact-only.
+      deploy-to-gcp: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
 
   build-windows-client:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     name: 🏁 Build Windows Dev PR
     needs: get-or-build-engine
     uses: ./.github/workflows/client-build-tool.yml
@@ -50,6 +54,7 @@ jobs:
       editor-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/MirrorGodotEditorWindows.exe
       template-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/windows_release_x86_64.exe
   build-macos-client:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     name: 🍎 Build MacOS Dev PR
     needs: get-or-build-engine
     uses: ./.github/workflows/client-build-tool.yml
@@ -77,6 +82,7 @@ jobs:
       editor-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/MirrorGodotEditorMac.app.zip
       template-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/macos_template.app.zip
   build-linux-client:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     name: 🐧 Build Linux Dev PR
     needs: get-or-build-engine
     uses: ./.github/workflows/client-build-tool.yml

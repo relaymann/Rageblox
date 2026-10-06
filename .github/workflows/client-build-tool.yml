@@ -271,6 +271,17 @@ jobs:
           ls ./
           zip -r ${{env.app_platform}}.zip "${{ inputs.game-binary-name }}" *.pck
 
+      - name: Validate GCP deployment credentials
+        if: ${{ inputs.should-deploy || inputs.should-deploy-as-server }}
+        shell: bash
+        env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_DEPLOYMENT_SECRET }}
+        run: |
+          if [ -z "$GCP_CREDENTIALS_JSON" ]; then
+            echo "GCP_DEPLOYMENT_SECRET is required when deployment is enabled." >&2
+            exit 1
+          fi
+
       - name: Google Cloud Platform authentication
         if: ${{ inputs.should-deploy || inputs.should-deploy-as-server }}
         uses: 'google-github-actions/auth@v2'

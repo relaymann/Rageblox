@@ -88,6 +88,17 @@ jobs:
         if: steps.vars.outputs.sha_short == ''
         run: exit 1
 
+      - name: Validate GCP credentials before build
+        if: ${{ inputs.deploy-to-gcp }}
+        shell: pwsh
+        env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_BUCKET_UPLOAD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:GCP_CREDENTIALS_JSON)) {
+            Write-Error "GCP_BUCKET_UPLOAD is required when deploy-to-gcp is enabled."
+            exit 1
+          }
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -210,6 +221,17 @@ jobs:
       - name: Ensuring git hash exists (or will fail job)
         if: steps.vars.outputs.sha_short == ''
         run: exit 1
+
+      - name: Validate GCP credentials before build
+        if: ${{ inputs.deploy-to-gcp }}
+        shell: bash
+        env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_BUCKET_UPLOAD }}
+        run: |
+          if [ -z "$GCP_CREDENTIALS_JSON" ]; then
+            echo "GCP_BUCKET_UPLOAD is required when deploy-to-gcp is enabled." >&2
+            exit 1
+          fi
 
       - name: Setup python and scons
         uses: ./godot-engine/.github/actions/godot-deps
@@ -348,6 +370,17 @@ jobs:
         if: steps.vars.outputs.sha_short == ''
         run: exit 1
 
+      - name: Validate GCP credentials before build
+        if: ${{ inputs.deploy-to-gcp }}
+        shell: bash
+        env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_BUCKET_UPLOAD }}
+        run: |
+          if [ -z "$GCP_CREDENTIALS_JSON" ]; then
+            echo "GCP_BUCKET_UPLOAD is required when deploy-to-gcp is enabled." >&2
+            exit 1
+          fi
+
       - name: Setup Godot build cache
         uses: ./godot-engine/.github/actions/godot-cache
         with:
@@ -461,6 +494,17 @@ jobs:
       - name: Ensuring git hash exists (or will fail job)
         if: steps.vars.outputs.sha_short == ''
         run: exit 1
+
+      - name: Validate GCP credentials before build
+        if: ${{ inputs.deploy-to-gcp }}
+        shell: bash
+        env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_BUCKET_UPLOAD }}
+        run: |
+          if [ -z "$GCP_CREDENTIALS_JSON" ]; then
+            echo "GCP_BUCKET_UPLOAD is required when deploy-to-gcp is enabled." >&2
+            exit 1
+          fi
 
       - name: Setup Godot build cache
         uses: ./godot-engine/.github/actions/godot-cache
