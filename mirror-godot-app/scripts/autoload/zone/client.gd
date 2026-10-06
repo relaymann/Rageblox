@@ -439,6 +439,9 @@ func start_join_zone_by_zone_id(zone_id) -> void:
 func start_join_localhost() -> void:
 	start_join_zone_by_space_id(_LOCALHOST)
 
+func start_join_showcase() -> void:
+	start_join_zone_by_space_id("rageblox-showcase")
+
 
 func start_join_zone_by_space_id(space_id: String) -> void:
 	_is_joining_play_space = false
