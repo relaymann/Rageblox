@@ -53,5 +53,5 @@ runs:
         cd godot-engine
         if [ "${{ inputs.target }}" != "editor" ]; then rm -rf editor; fi
         export BUILD_NAME="gh"
-        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} ${{ inputs.sconsflags }}
+        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} ${{ inputs.sconsflags }} cache_path="${GITHUB_WORKSPACE}/.scons_cache"
         ls -l bin/
