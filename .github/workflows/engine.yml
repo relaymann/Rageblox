@@ -78,15 +78,21 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Get short commit hash
+      - name: Get RageBlox commit hash
         id: vars
+        working-directory: ${{ github.workspace }}
+        shell: pwsh
         run: |
-          echo "Git hash: $(git rev-parse --short=8 HEAD)"
-          echo "sha_short=$(git rev-parse --short=8 HEAD)" >> $Env:GITHUB_OUTPUT
+          $sha = "${{ github.sha }}".Substring(0, 8)
+          Write-Host "RageBlox hash: $sha"
+          "sha_short=$sha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
-      - name: Ensuring git hash exists (or will fail job)
+      - name: Verify RageBlox commit hash
         if: steps.vars.outputs.sha_short == ''
-        run: exit 1
+        shell: pwsh
+        run: |
+          Write-Error "RageBlox commit hash was not generated."
+          exit 1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -268,11 +274,13 @@ jobs:
         run: |
           sh ./misc/scripts/install_vulkan_sdk_macos.sh
 
-      - name: Setup Godot build cache
-        uses: ./godot-engine/.github/actions/godot-cache
+      - name: Restore Godot SCons cache
+        uses: actions/cache@v4
         with:
-          cache-name: ${{ matrix.cache-name }}
-        continue-on-error: true
+          path: ${{ github.workspace }}/.scons_cache
+          key: ${{ runner.os }}-scons-${{ matrix.cache-name }}-${{ hashFiles('godot-engine/SConstruct') }}
+          restore-keys: |
+            ${{ runner.os }}-scons-${{ matrix.cache-name }}-
 
       - name: Setup scons (python is already installed on self-hosted runners!)
         shell: bash
@@ -409,11 +417,13 @@ jobs:
             exit 1
           fi
 
-      - name: Setup Godot build cache
-        uses: ./godot-engine/.github/actions/godot-cache
+      - name: Restore Godot SCons cache
+        uses: actions/cache@v4
         with:
-          cache-name: ${{ matrix.cache-name }}
-        continue-on-error: true
+          path: ${{ github.workspace }}/.scons_cache
+          key: ${{ runner.os }}-scons-${{ matrix.cache-name }}-${{ hashFiles('godot-engine/SConstruct') }}
+          restore-keys: |
+            ${{ runner.os }}-scons-${{ matrix.cache-name }}-
 
       - name: Setup scons
         shell: bash
@@ -534,11 +544,13 @@ jobs:
             exit 1
           fi
 
-      - name: Setup Godot build cache
-        uses: ./godot-engine/.github/actions/godot-cache
+      - name: Restore Godot SCons cache
+        uses: actions/cache@v4
         with:
-          cache-name: ${{ matrix.cache-name }}
-        continue-on-error: true
+          path: ${{ github.workspace }}/.scons_cache
+          key: ${{ runner.os }}-scons-${{ matrix.cache-name }}-${{ hashFiles('godot-engine/SConstruct') }}
+          restore-keys: |
+            ${{ runner.os }}-scons-${{ matrix.cache-name }}-
 
       - name: Setup scons
         shell: bash
