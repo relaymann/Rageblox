@@ -128,10 +128,8 @@ jobs:
 
       - name: Compilation
         shell: pwsh
-        env:
-          SCONSFLAGS: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
         run: |
-          Set-Location "$env:GITHUB_WORKSPACE\\godot-engine"
+          Set-Location "$env:GITHUB_WORKSPACE\godot-engine"
           if ("${{ matrix.target }}" -ne "editor") {
             Remove-Item -Recurse -Force editor -ErrorAction SilentlyContinue
           }
@@ -143,10 +141,22 @@ jobs:
             Remove-Item "Env:$name" -ErrorAction SilentlyContinue
           }
 
-          $sconsFlags = @($env:SCONSFLAGS -split '\\s+' | Where-Object { $_ -ne '' })
-          scons platform=windows target=${{ matrix.target }} tests=${{ matrix.tests }} use_mingw=no use_llvm=no msvc_version=14.5 @sconsFlags cache_path="$env:GITHUB_WORKSPACE\\.scons_cache"
-          Get-ChildItem bin/
+          # SCons on Windows must receive one argument per option. Do not pass
+          # the combined SCONSFLAGS string through the environment.
+          $sconsFlagsText = "${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}"
+          $sconsFlags = @($sconsFlagsText -split '\s+' | Where-Object { $_ -ne '' })
 
+          & scons platform=windows target=${{ matrix.target }} tests=${{ matrix.tests }} use_mingw=no use_llvm=no msvc_version=14.5 @sconsFlags cache_path="$env:GITHUB_WORKSPACE\.scons_cache"
+          if ($LASTEXITCODE -ne 0) {
+            $exitCode = $LASTEXITCODE
+            Write-Error "SCons failed with exit code $exitCode."
+            exit $exitCode
+          }
+          if (-not (Test-Path -LiteralPath "bin" -PathType Container)) {
+            Write-Error "SCons did not create godot-engine/bin."
+            exit 1
+          }
+          Get-ChildItem bin/
       - name: Strip binaries
         if: ${{ matrix.strip }}
         run: |

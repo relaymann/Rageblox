@@ -17,7 +17,7 @@ inputs:
     default: ""
   scons-cache:
     description: The scons cache path.
-    default: "${{ github.workspace }}/.scons-cache/"
+    default: "${{ github.workspace }}/.scons_cache/"
   scons-cache-limit:
     description: The scons cache size limit.
     default: 7168
@@ -27,8 +27,6 @@ runs:
     - name: Scons Build (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
-      env:
-        SCONSFLAGS: ${{ inputs.sconsflags }}
       run: |
         if ("${{ inputs.target }}" -ne "editor") { Remove-Item -Recurse -Force editor -ErrorAction SilentlyContinue }
         $env:BUILD_NAME = "gh"
@@ -40,10 +38,18 @@ runs:
           Remove-Item "Env:$name" -ErrorAction SilentlyContinue
         }
 
-        $sconsFlags = @($env:SCONSFLAGS -split '\s+' | Where-Object { $_ -ne '' })
-        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} use_mingw=no use_llvm=no msvc_version=14.5 @sconsFlags cache_path="${{ github.workspace }}/.scons_cache"
+        $sconsFlags = @("${{ inputs.sconsflags }}" -split '\s+' | Where-Object { $_ -ne '' })
+        & scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} use_mingw=no use_llvm=no msvc_version=14.5 @sconsFlags cache_path="${{ github.workspace }}/.scons_cache"
+        if ($LASTEXITCODE -ne 0) {
+          $exitCode = $LASTEXITCODE
+          Write-Error "SCons failed with exit code $exitCode."
+          exit $exitCode
+        }
+        if (-not (Test-Path -LiteralPath "bin" -PathType Container)) {
+          Write-Error "SCons did not create bin."
+          exit 1
+        }
         Get-ChildItem bin/
-
     - name: Scons Build (Unix)
       if: runner.os != 'Windows'
       shell: sh
