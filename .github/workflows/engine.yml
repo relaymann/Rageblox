@@ -88,17 +88,6 @@ jobs:
         if: steps.vars.outputs.sha_short == ''
         run: exit 1
 
-      - name: Validate GCP credentials before build
-        if: ${{ inputs.deploy-to-gcp }}
-        shell: pwsh
-        env:
-          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_BUCKET_UPLOAD }}
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:GCP_CREDENTIALS_JSON)) {
-            Write-Error "GCP_BUCKET_UPLOAD is required when deploy-to-gcp is enabled."
-            exit 1
-          }
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -120,22 +109,37 @@ jobs:
       #- name: Download Direct3D 12 SDK components
       #  run: python ./misc/scripts/install_d3d12_sdk_windows.py
 
-      - name: Setup Godot build cache
-        uses: ./godot-engine/.github/actions/godot-cache
+      - name: Restore Godot SCons cache
+        uses: actions/cache@v4
         with:
-          cache-name: ${{ matrix.cache-name }}
-        continue-on-error: true
+          path: .scons_cache
+          key: windows-scons-${{ matrix.cache-name }}-${{ hashFiles('godot-engine/SConstruct') }}
+          restore-keys: |
+            windows-scons-${{ matrix.cache-name }}-
 
       - name: Setup MSVC problem matcher
         uses: ammaraskar/msvc-problem-matcher@master
 
       - name: Compilation
-        uses: ./.github/actions/godot-build
-        with:
-          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
-          platform: windows
-          target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
+        shell: pwsh
+        env:
+          SCONSFLAGS: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+        run: |
+          Set-Location "$env:GITHUB_WORKSPACE\\godot-engine"
+          if ("${{ matrix.target }}" -ne "editor") {
+            Remove-Item -Recurse -Force editor -ErrorAction SilentlyContinue
+          }
+          $env:BUILD_NAME = "gh"
+
+          # Hosted Windows runners expose MinGW/Git/LLVM alongside MSVC.
+          # Force Godot/SCons to use the configured native MSVC toolchain.
+          foreach ($name in @("MINGW_PREFIX", "MSYSTEM", "MSYS", "MSYS2_ARG_CONV_EXCL")) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+
+          $sconsFlags = @($env:SCONSFLAGS -split '\\s+' | Where-Object { $_ -ne '' })
+          scons platform=windows target=${{ matrix.target }} tests=${{ matrix.tests }} use_mingw=no use_llvm=no msvc_version=14.5 @sconsFlags cache_path="$env:GITHUB_WORKSPACE\\.scons_cache"
+          Get-ChildItem bin/
 
       - name: Strip binaries
         if: ${{ matrix.strip }}
