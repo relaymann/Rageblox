@@ -103,6 +103,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: godot-engine/SConstruct
 
       - name: Setup SCons
         shell: pwsh
@@ -135,13 +137,6 @@ jobs:
           target: ${{ matrix.target }}
           tests: ${{ matrix.tests }}
 
-      - name: Save Godot SCons cache
-        uses: actions/cache/save@v4
-        if: ${{ success() }}
-        with:
-          path: .scons_cache
-          key: godot-scons-windows-${{ matrix.cache-name }}-${{ steps.godot-source.outputs.sha }}
-        continue-on-error: true
       - name: Strip binaries
         if: ${{ matrix.strip }}
         run: |
