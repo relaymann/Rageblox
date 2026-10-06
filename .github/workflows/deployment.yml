@@ -15,14 +15,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare-gcp:
+    name: Check optional GCP deployment credentials
+    runs-on: ubuntu-latest
+    outputs:
+      available: ${{ steps.detect.outputs.available }}
+    steps:
+      - id: detect
+        shell: bash
+        env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_BUCKET_UPLOAD }}
+        run: |
+          if [ -n "$GCP_CREDENTIALS_JSON" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
   get-or-build-engine:
     name: Building Engine
+    needs: prepare-gcp
     uses: ./.github/workflows/engine.yml
     secrets: inherit
     with:
       environment: "dev"
       self-hosted-runner: false
       windows-only: true
+      deploy-to-gcp: ${{ needs.prepare-gcp.outputs.available == 'true' }}
 
   build-windows-client:
     name: 🏁 Build Windows Dev PR
@@ -34,6 +53,9 @@ jobs:
       should-deploy: false
       should-run-unit-tests: true
       should-notify-on-failure: false
+      use-engine-artifacts: true
+      editor-engine-artifact-name: MirrorGodotEditorWindows.exe
+      template-engine-artifact-name: windows_release_x86_64.exe
       editor-binary-workflow: deployment.yml
       editor-binary-name: MirrorGodotEditorWindows.exe
       editor-binary-download: MirrorGodotEditorWindows.exe

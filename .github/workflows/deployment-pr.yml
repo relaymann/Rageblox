@@ -13,8 +13,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare-gcp:
+    name: Check optional GCP deployment credentials
+    runs-on: ubuntu-latest
+    outputs:
+      available: ${{ steps.detect.outputs.available }}
+    steps:
+      - id: detect
+        shell: bash
+        env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_BUCKET_UPLOAD }}
+        run: |
+          if [ -n "$GCP_CREDENTIALS_JSON" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
   get-or-build-engine:
     name: Building Engine for PR
+    needs: prepare-gcp
     uses: ./.github/workflows/engine.yml
     secrets:
       GCP_BUCKET_UPLOAD: ${{ secrets.GCP_BUCKET_UPLOAD }}
@@ -25,10 +43,9 @@ jobs:
       # Same-repository PRs can use the repository's GCP secret so the client
       # jobs can download the exact engine artifacts they just built. Fork and
       # Dependabot PRs cannot receive repository secrets, so they stay artifact-only.
-      deploy-to-gcp: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+      deploy-to-gcp: ${{ needs.prepare-gcp.outputs.available == 'true' }}
 
   build-windows-client:
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     name: 🏁 Build Windows Dev PR
     needs: get-or-build-engine
     uses: ./.github/workflows/client-build-tool.yml
@@ -36,6 +53,9 @@ jobs:
       should-deploy: false
       should-run-unit-tests: true
       should-notify-on-failure: false
+      use-engine-artifacts: true
+      editor-engine-artifact-name: MirrorGodotEditorWindows.exe
+      template-engine-artifact-name: windows_release_x86_64.exe
       editor-binary-workflow: deployment.yml
       editor-binary-name: MirrorGodotEditorWindows.exe
       editor-binary-download: MirrorGodotEditorWindows.exe
@@ -54,7 +74,6 @@ jobs:
       editor-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/MirrorGodotEditorWindows.exe
       template-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/windows_release_x86_64.exe
   build-macos-client:
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     name: 🍎 Build MacOS Dev PR
     needs: get-or-build-engine
     uses: ./.github/workflows/client-build-tool.yml
@@ -62,6 +81,9 @@ jobs:
       should-deploy: false
       should-run-unit-tests: true
       should-notify-on-failure: false
+      use-engine-artifacts: true
+      editor-engine-artifact-name: MirrorGodotEditorMac.app.zip
+      template-engine-artifact-name: macos_template.app.zip
       should-unzip-editor: true
       should-install-timeout-macos: true
       editor-binary-workflow: deployment.yml
@@ -82,7 +104,6 @@ jobs:
       editor-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/MirrorGodotEditorMac.app.zip
       template-download-url: https://storage.googleapis.com/mirror_native_client_builds/Engine/${{needs.get-or-build-engine.outputs.commit_hash}}/macos_template.app.zip
   build-linux-client:
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     name: 🐧 Build Linux Dev PR
     needs: get-or-build-engine
     uses: ./.github/workflows/client-build-tool.yml
@@ -90,6 +111,9 @@ jobs:
       should-deploy: false
       should-run-unit-tests: true
       should-notify-on-failure: false
+      use-engine-artifacts: true
+      editor-engine-artifact-name: MirrorGodotEditorLinux.x86_64
+      template-engine-artifact-name: linux_release.x86_64
       editor-binary-workflow: deployment.yml
       editor-binary-name: MirrorGodotEditorLinux.x86_64
       editor-binary-download: MirrorGodotEditorLinux.x86_64

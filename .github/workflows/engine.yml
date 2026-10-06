@@ -202,7 +202,7 @@ jobs:
             packaged-app: "macos_template.app"
             bin-name: "godot.macos.template_release.universal"
             bin-name-x86_64: "godot.macos.template_release.x86_64"
-            bin-name-arm64: "godot.macos.template_debug.arm64"
+            bin-name-arm64: "godot.macos.template_release.arm64"
             artifact-bin-name: "godot_macos_release.universal"
             artifact-name: "macos_template.app"
             bucket-name: mirror_native_client_builds/Engine

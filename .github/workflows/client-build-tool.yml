@@ -102,6 +102,16 @@ on:
       template-download-url:
         required: true
         type: string
+      use-engine-artifacts:
+        required: false
+        type: boolean
+        default: false
+      editor-engine-artifact-name:
+        required: false
+        type: string
+      template-engine-artifact-name:
+        required: false
+        type: string
       keep-openxr-binaries:
         required: false
         type: boolean
@@ -133,7 +143,7 @@ defaults:
 jobs:
   client-build-tool:
     name: Build
-    environment: ${{ inputs.environment }}
+    # Explicitly passed deployment secrets must not be shadowed by an environment secret.
     runs-on: ${{ inputs.os }}
     timeout-minutes: 65
     outputs:
@@ -172,7 +182,22 @@ jobs:
           rm -Rf project.godot
           mv ${{ inputs.custom-project-file }} project.godot
 
-      - name: Download editor and template
+      - name: Download editor artifact
+        if: ${{ inputs.use-engine-artifacts }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.editor-engine-artifact-name }}
+          path: .
+
+      - name: Download template artifact
+        if: ${{ inputs.use-engine-artifacts }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.template-engine-artifact-name }}
+          path: .
+
+      - name: Download editor and template from GCP
+        if: ${{ !inputs.use-engine-artifacts }}
         run: |
           curl --fail --show-error --location --retry 3 --retry-delay 2 \
             "${{ inputs.editor-download-url }}" \
@@ -180,6 +205,15 @@ jobs:
           curl --fail --show-error --location --retry 3 --retry-delay 2 \
             "${{ inputs.template-download-url }}" \
             --output "${{ inputs.template-binary-name }}"
+
+      - name: Validate engine artifacts
+        if: ${{ inputs.use-engine-artifacts }}
+        shell: bash
+        run: |
+          test -n "${{ inputs.editor-engine-artifact-name }}"
+          test -n "${{ inputs.template-engine-artifact-name }}"
+          test -f "${{ inputs.editor-binary-download }}"
+          test -f "${{ inputs.template-binary-name }}"
 
       - name: Unzip editor binary
         if: ${{ inputs.should-unzip-editor }}
