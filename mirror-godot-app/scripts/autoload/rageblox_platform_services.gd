@@ -103,7 +103,7 @@ func set_favorite(experience_id: StringName, favorite: bool) -> void:
 	_save_local_state()
 
 func set_friend_presence(user_id: StringName, online: bool, experience_id: StringName = StringName()) -> void:
-	var friend := friends.get(user_id, {"display_name": str(user_id), "online": false})
+	var friend: Dictionary = friends.get(user_id, {"display_name": str(user_id), "online": false})
 	friend["online"] = online
 	friend["experience_id"] = experience_id
 	friends[user_id] = friend

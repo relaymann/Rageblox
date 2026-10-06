@@ -1,4 +1,3 @@
-class_name PlatformExperience
 extends Node
 ## Unified RageBlox platform policy/state layer.
 ## Keeps platform UX, accessibility, performance and input behavior consistent

@@ -238,13 +238,13 @@ jobs:
         if: ${{ !inputs.should-install-timeout-macos }}
         run: |
           chmod +x ./${{ inputs.editor-binary-name }}
-          timeout 3m ./${{ inputs.editor-binary-name }} --headless --import --path . --verbose
+          timeout 10m ./${{ inputs.editor-binary-name }} --headless --import --path . --verbose
 
       - name: Wait for import of all assets
         if: ${{ inputs.should-install-timeout-macos }}
         run: |
           chmod +x ./${{ inputs.editor-binary-name }}
-          gtimeout 3m ./${{ inputs.editor-binary-name }} --headless --import --path . --verbose
+          gtimeout 10m ./${{ inputs.editor-binary-name }} --headless --import --path . --verbose
 
       - name: Unit Tests
         timeout-minutes: 15

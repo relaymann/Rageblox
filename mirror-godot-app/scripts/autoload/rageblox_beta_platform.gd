@@ -210,8 +210,6 @@ func set_avatar_value(section: String, key: String, value: Variant) -> void:
 	if not avatar_config.has(section) or not avatar_config[section] is Dictionary:
 		avatar_config[section] = {}
 	avatar_config[section][key] = value
-	else:
-		avatar_config[section][key] = value
 	avatar_changed.emit()
 	_save()
 

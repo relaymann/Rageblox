@@ -65,7 +65,7 @@ func _can_remote_edit_node(node: Node, sender_peer_id: int) -> bool:
 		return false
 	if node is SpaceObject:
 		var data: Dictionary = node.space_object_data
-		var creator := data.get("creator", data.get("receipt", {}).get("created_by_user", ""))
+		var creator: String = str(data.get("creator", data.get("receipt", {}).get("created_by_user", "")))
 		return creator == user_id
 	return false
 
