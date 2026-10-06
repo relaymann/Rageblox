@@ -215,6 +215,63 @@ jobs:
         with:
           path: ./godot-engine/bin/${{ matrix.artifact-name }}.exe
           destination: ${{ matrix.bucket-name }}/${{steps.vars.outputs.sha_short}}/
+  build-windows-showcase:
+    needs: build-windows
+    runs-on: ${{ inputs.self-hosted-runner && 'windows-mirror' || 'windows-latest' }}
+    name: Windows Showcase
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Download Windows Editor
+        uses: actions/download-artifact@v4
+        with:
+          name: MirrorGodotEditorWindows.exe
+          path: .ci/showcase/editor
+      - name: Download Windows Template
+        uses: actions/download-artifact@v4
+        with:
+          name: windows_release_x86_64.exe
+          path: .ci/showcase/template
+      - name: Prepare custom export template
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:GITHUB_WORKSPACE ".ci/showcase/editor/MirrorGodotEditorWindows.exe"
+          $template = Join-Path $env:GITHUB_WORKSPACE ".ci/showcase/template/windows_release_x86_64.exe"
+          if (-not (Test-Path -LiteralPath $editor -PathType Leaf)) { throw "Windows editor artifact is missing: $editor" }
+          if (-not (Test-Path -LiteralPath $template -PathType Leaf)) { throw "Windows template artifact is missing: $template" }
+          $presetPath = Join-Path $env:GITHUB_WORKSPACE "mirror-godot-app/export_presets.cfg"
+          $preset = Get-Content -LiteralPath $presetPath -Raw
+          $start = $preset.IndexOf("[preset.0.options]")
+          $end = $preset.IndexOf("[preset.1]", $start)
+          if ($start -lt 0 -or $end -lt 0) { throw "Windows export preset could not be located." }
+          $section = $preset.Substring($start, $end - $start)
+          $templateConfigPath = $template.Replace("\", "/")
+          $section = $section.Replace('custom_template/release=""', ('custom_template/release="' + $templateConfigPath + '"'))
+          $section = $section.Replace("binary_format/embed_pck=false", "binary_format/embed_pck=true")
+          Set-Content -LiteralPath $presetPath -Value ($preset.Substring(0, $start) + $section + $preset.Substring($end)) -NoNewline
+      - name: Export RageBlox Showcase
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:GITHUB_WORKSPACE ".ci/showcase/editor/MirrorGodotEditorWindows.exe"
+          $project = Join-Path $env:GITHUB_WORKSPACE "mirror-godot-app"
+          $outputDir = Join-Path $env:GITHUB_WORKSPACE "showcase-build"
+          $output = Join-Path $outputDir "RageBlox-Showcase-Windows.exe"
+          New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
+          & $editor --headless --path $project --export-release "Windows" $output
+          if ($LASTEXITCODE -ne 0) { $exitCode = $LASTEXITCODE; Write-Error "RageBlox Showcase export failed with exit code $exitCode."; exit $exitCode }
+          if (-not (Test-Path -LiteralPath $output -PathType Leaf)) { throw "RageBlox Showcase executable was not produced." }
+          $size = (Get-Item -LiteralPath $output).Length
+          if ($size -lt 1048576) { throw "RageBlox Showcase executable is unexpectedly small ($size bytes)." }
+          Write-Host "Verified embedded Showcase build: $output ($size bytes)"
+      - name: Upload RageBlox Showcase
+        uses: actions/upload-artifact@v4
+        with:
+          name: RageBlox-Showcase-Windows.exe
+          path: ./showcase-build/RageBlox-Showcase-Windows.exe
+          retention-days: 14
+          if-no-files-found: error
+
   build-macos:
     if: ${{ !inputs.windows-only }}
     runs-on: ${{ inputs.self-hosted-runner && 'macos-mirror' || 'macos-latest' }}
