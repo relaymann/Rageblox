@@ -153,12 +153,31 @@ jobs:
         run: |
           mv ${{ matrix.bin }}.exe bin/${{ matrix.artifact-name }}.exe
 
-      - name: Upload artifact
-        uses: ./.github/actions/upload-artifact
+      - name: Verify Windows artifact
         if: ${{ matrix.artifact }}
+        shell: pwsh
+        run: |
+          $artifact = Join-Path $env:GITHUB_WORKSPACE "godot-engine/bin/${{ matrix.artifact-name }}.exe"
+          if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) {
+            Write-Error "Expected Windows artifact was not produced: $artifact"
+            Get-ChildItem "$env:GITHUB_WORKSPACE/godot-engine/bin" -Force | Format-Table Name,Length
+            exit 1
+          }
+          $size = (Get-Item -LiteralPath $artifact).Length
+          if ($size -lt 1048576) {
+            Write-Error "Windows artifact is unexpectedly small ($size bytes): $artifact"
+            exit 1
+          }
+          Write-Host "Verified Windows artifact: $artifact ($size bytes)"
+
+      - name: Upload artifact
+        if: ${{ matrix.artifact }}
+        uses: actions/upload-artifact@v4
         with:
           path: ./godot-engine/bin/${{ matrix.artifact-name }}.exe
           name: ${{ matrix.artifact-name }}.exe
+          retention-days: 14
+          if-no-files-found: error
 
       # GitHub artifacts are the primary developer download. GCP publishing is optional.
       - uses: 'google-github-actions/auth@v2'
