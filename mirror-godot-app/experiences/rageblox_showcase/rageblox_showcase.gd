@@ -95,7 +95,7 @@ func _build_interaction_area() -> void:
 	var button := preload("res://experiences/rageblox_showcase/showcase_interactable.gd").new()
 	button.name = "DoorSwitch"
 	button.position = Vector3(0, 1.2, 17)
-	button.door_path = NodePath("TestDoor")
+	button.door_path = NodePath("../TestDoor")
 	add_child(button)
 	_box(button, "ButtonTop", Vector3(0, 0.35, 0), Vector3(1.4, 0.25, 1.4), ACCENT)
 	_label(button, "E  OPEN / CLOSE", Vector3(0, 1.0, 0), Color.WHITE, 0.5)
