@@ -42,7 +42,7 @@ runs:
         }
 
         $sconsFlags = @($env:SCONSFLAGS -split '\s+' | Where-Object { $_ -ne '' })
-        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} use_mingw=no use_llvm=no msvc_version=14.5 @sconsFlags
+        scons platform=${{ inputs.platform }} target=${{ inputs.target }} tests=${{ inputs.tests }} use_mingw=no use_llvm=no msvc_version=14.5 @sconsFlags cache_path="${{ github.workspace }}/.scons_cache"
         Get-ChildItem bin/
 
     - name: Scons Build (Unix)
