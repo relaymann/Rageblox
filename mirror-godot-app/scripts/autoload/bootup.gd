@@ -105,7 +105,7 @@ func _complete_bootup():
 
 
 func _ready() -> void:
-	if "--rageblox-studio" in OS.get_cmdline_args():
+	if "--rageblox-studio" in OS.get_cmdline_args() or bool(ProjectSettings.get_setting("rageblox/studio_launcher", false)):
 		var studio_scene := load("res://scenes/studio_start.tscn")
 		var studio_ui := studio_scene.instantiate()
 		get_tree().root.add_child(studio_ui)
