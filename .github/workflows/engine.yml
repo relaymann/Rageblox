@@ -305,7 +305,7 @@ jobs:
           $end = $preset.IndexOf("[preset.1]", $start)
           if ($start -lt 0 -or $end -lt 0) { throw "Windows export preset could not be located." }
           $section = $preset.Substring($start, $end - $start)
-          $templatePath = $template.Replace("", "/")
+          $templatePath = $template -replace '\\', '/'
           $section = $section.Replace('custom_template/release=""', ('custom_template/release="' + $templatePath + '"'))
           $section = $section.Replace("binary_format/embed_pck=false", "binary_format/embed_pck=true")
           $section = $section.Replace('application/product_name="The Mirror"', 'application/product_name="RageBlox Studio"')
