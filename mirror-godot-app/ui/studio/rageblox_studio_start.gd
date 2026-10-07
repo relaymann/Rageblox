@@ -298,7 +298,7 @@ func _project_file(display_name: String) -> String:
 	return "; RageBlox Studio experience\n; Managed automatically by RageBlox Studio.\nconfig_version=5\n\n[application]\nconfig/name=%s\nrun/main_scene="res://main.tscn"\n\n[display]\nwindow/size/viewport_width=1280\nwindow/size/viewport_height=720\nwindow/stretch/mode="canvas_items"\n\n[rendering]\nrenderer/rendering_method="gl_compatibility"\nrenderer/rendering_method.mobile="gl_compatibility"\n\n[rageblox]\ncreator_primary_language="Luau"\ntemplate="%s"\n" % [_quote(display_name), _template];
 
 func _scene_file(display_name: String) -> String:
-	return '[gd_scene load_steps=2 format=3]\n\n[ext_resource type="Script" path="res://world.gd" id="1"]\n\n[node name="Experience" type="Node3D"]\n\n[node name="WorldEnvironment" type="WorldEnvironment" parent="."]\n\n[node name="CreatorStart" type="Label" parent="."]\ntext = "RageBlox Experience: %s"\n' % display_name.replace('"', "\\"")
+	return "[gd_scene format=3]\n\n[node name=\"Experience\" type=\"Node3D\"]\n\n[node name=\"CreatorSpawn\" type=\"Marker3D\" parent=\".\"]\nposition = Vector3(0, 1, 0)\n\n[node name=\"World\" type=\"Node3D\" parent=\".\"]\n"
 
 func _quote(value: String) -> String:
 	return '"' + value.replace("\\", "\\\\").replace('"', "\\"") + '"'
