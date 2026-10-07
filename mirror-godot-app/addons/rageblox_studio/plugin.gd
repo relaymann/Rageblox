@@ -31,7 +31,10 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	if selection and selection.selection_changed.is_connected(_refresh_selection):
 		selection.selection_changed.disconnect(_refresh_selection)
-	for c in [toolbar, explorer, properties, toolbox]:
+	if is_instance_valid(toolbar):
+		remove_control_from_container(CONTAINER_TOOLBAR, toolbar)
+		toolbar.queue_free()
+	for c in [explorer, properties, toolbox]:
 		if is_instance_valid(c):
 			remove_control_from_docks(c)
 			c.queue_free()
