@@ -105,6 +105,11 @@ func _complete_bootup():
 
 
 func _ready() -> void:
+	if "--rageblox-studio" in OS.get_cmdline_args():
+		var studio_scene := load("res://scenes/studio_start.tscn")
+		var studio_ui := studio_scene.instantiate()
+		get_tree().root.add_child(studio_ui)
+		return
 	GameUI._root_node = get_node("/root/")
 	_setup_gltf()
 	if await _auto_start_server():
