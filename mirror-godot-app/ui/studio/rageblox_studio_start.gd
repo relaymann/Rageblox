@@ -291,11 +291,32 @@ func _create_experience() -> void:
 	if not _write_file(root.path_join("project.godot"), project) or not _write_file(root.path_join("main.tscn"), scene):
 		_status.text = "Could not finish creating the experience."
 		return
+	if not _install_studio_plugin(root):
+		_status.text = "Could not install the RageBlox Studio creator tools."
+		return
 	_add_recent(display_name, root)
 	_open_editor(root)
 
+func _install_studio_plugin(root: String) -> bool:
+	var plugin_dir := root.path_join("addons/rageblox_studio")
+	if DirAccess.make_dir_recursive_absolute(plugin_dir) != OK:
+		return false
+	for source in ["res://addons/rageblox_studio/plugin.cfg", "res://addons/rageblox_studio/plugin.gd"]:
+		var source_file := FileAccess.open(source, FileAccess.READ)
+		if source_file == null:
+			return false
+		var target := plugin_dir.path_join(source.get_file())
+		var target_file := FileAccess.open(target, FileAccess.WRITE)
+		if target_file == null:
+			source_file.close()
+			return false
+		target_file.store_string(source_file.get_as_text())
+		target_file.close()
+		source_file.close()
+	return true
+
 func _project_file(display_name: String) -> String:
-	return "; RageBlox Studio experience\n; Managed automatically by RageBlox Studio.\nconfig_version=5\n\n[application]\nconfig/name=%s\nrun/main_scene="res://main.tscn"\n\n[display]\nwindow/size/viewport_width=1280\nwindow/size/viewport_height=720\nwindow/stretch/mode="canvas_items"\n\n[rendering]\nrenderer/rendering_method="gl_compatibility"\nrenderer/rendering_method.mobile="gl_compatibility"\n\n[rageblox]\ncreator_primary_language="Luau"\ntemplate="%s"\n" % [_quote(display_name), _template];
+	return "; RageBlox Studio experience\n; Managed automatically by RageBlox Studio.\nconfig_version=5\n\n[application]\nconfig/name=%s\nrun/main_scene="res://main.tscn"\n\n[display]\nwindow/size/viewport_width=1280\nwindow/size/viewport_height=720\nwindow/stretch/mode="canvas_items"\n\n[editor_plugins]\nenabled=PackedStringArray("res://addons/rageblox_studio/plugin.cfg")\n\n[rendering]\nrenderer/rendering_method="gl_compatibility"\nrenderer/rendering_method.mobile="gl_compatibility"\n\n[rageblox]\ncreator_primary_language="Luau"\ntemplate="%s"\n" % [_quote(display_name), _template];
 
 func _scene_file(display_name: String) -> String:
 	return "[gd_scene format=3]\n\n[node name=\"Experience\" type=\"Node3D\"]\n\n[node name=\"CreatorSpawn\" type=\"Marker3D\" parent=\".\"]\nposition = Vector3(0, 1, 0)\n\n[node name=\"World\" type=\"Node3D\" parent=\".\"]\n"
