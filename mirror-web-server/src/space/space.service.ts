@@ -741,7 +741,8 @@ export class SpaceService implements IRoleConsumer {
 
     // update custom data first, if it's there
     if (this.canUpdateWithRolesCheck(userId, space)) {
-      const safeUpdateDto = this.sanitizeRoleSensitiveSpaceFields(updateSpaceDto)
+      const safeUpdateDto =
+        this.sanitizeRoleSensitiveSpaceFields(updateSpaceDto)
       if (safeUpdateDto.activeSpaceVersion) {
         if (!isValidObjectId(safeUpdateDto.activeSpaceVersion)) {
           throw new BadRequestException('Invalid active space version')
@@ -757,14 +758,11 @@ export class SpaceService implements IRoleConsumer {
           )
         }
       }
-      if (
-        safeUpdateDto.patchCustomData ||
-        safeUpdateDto.removeCustomDataKeys
-      ) {
+      if (safeUpdateDto.patchCustomData || safeUpdateDto.removeCustomDataKeys) {
         await this.customDataService.updateCustomDataAdmin(
           space.customData.id,
-          updateSpaceDto?.patchCustomData,
-          updateSpaceDto?.removeCustomDataKeys
+          safeUpdateDto?.patchCustomData,
+          safeUpdateDto?.removeCustomDataKeys
         )
       }
 
@@ -775,8 +773,8 @@ export class SpaceService implements IRoleConsumer {
       ) {
         await this.spaceVariablesDataService.updateSpaceVariablesDataAdmin(
           space?.spaceVariablesData?.id,
-          updateSpaceDto?.patchSpaceVariablesData,
-          updateSpaceDto?.removeSpaceVariablesDataKeys
+          safeUpdateDto?.patchSpaceVariablesData,
+          safeUpdateDto?.removeSpaceVariablesDataKeys
         )
       }
 

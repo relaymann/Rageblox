@@ -136,10 +136,9 @@ describe('SpaceService', () => {
       } as any
     )
 
-    expect(updateSpy).toHaveBeenCalledWith(
-      '507f1f77bcf86cd799439011',
-      { name: 'safe-name' }
-    )
+    expect(updateSpy).toHaveBeenCalledWith('507f1f77bcf86cd799439011', {
+      name: 'safe-name'
+    })
   })
 
   it('should be defined', () => {
