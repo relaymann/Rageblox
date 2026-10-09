@@ -71,7 +71,13 @@ export class LoginCodeService {
     loginCode: string,
     requesterIp?: string
   ): Promise<LoginCode> {
-    if (!requesterIp || requesterIp.length > 128) {
+    // Login codes are fixed-width numeric secrets. Reject non-strings and
+    // malformed input before it reaches the MongoDB query or rate limiter.
+    if (typeof loginCode !== 'string' || !/^\d{6}$/.test(loginCode)) {
+      throw new BadRequestException('Login code must be exactly 6 digits')
+    }
+
+    if (typeof requesterIp !== 'string' || !requesterIp || requesterIp.length > 128) {
       throw new BadRequestException('Invalid requester')
     }
 
@@ -83,7 +89,10 @@ export class LoginCodeService {
       .exec()
     const attempts = Number(rateLimitResult?.[0])
     if (attempts > 30) {
-      throw new HttpException('Too many login-code attempts', HttpStatus.TOO_MANY_REQUESTS)
+      throw new HttpException(
+        'Too many login-code attempts',
+        HttpStatus.TOO_MANY_REQUESTS
+      )
     }
     const loginCodeRecord = await this.loginCodeModel
       .findOneAndUpdate(
@@ -97,7 +106,9 @@ export class LoginCodeService {
       )
       .exec()
     if (!loginCodeRecord) {
-      throw new NotFoundException('Login code is invalid, expired, or already used')
+      throw new NotFoundException(
+        'Login code is invalid, expired, or already used'
+      )
     }
     return loginCodeRecord
   }
