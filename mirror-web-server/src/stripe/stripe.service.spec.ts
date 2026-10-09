@@ -22,6 +22,7 @@ describe('StripeService subscription webhook entitlements', () => {
     process.env.STRIPE_WEBHOOK_SECRET = 'test-webhook-secret'
     process.env.STRIPE_PREMIUM_PRICE_ID = 'price-premium'
     userModel = {
+      findById: vi.fn(),
       findByIdAndUpdate: vi.fn().mockResolvedValue({}),
       findOneAndUpdate: vi.fn().mockResolvedValue({})
     }
