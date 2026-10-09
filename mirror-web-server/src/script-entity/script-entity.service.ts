@@ -60,8 +60,7 @@ export class ScriptEntityService {
       creator: userId
     })
     const role = await this.roleService.create({
-      defaultRole:
-        safeCreateDto.defaultRole ?? this._getDefaultRoleForScripts,
+      defaultRole: safeCreateDto.defaultRole ?? this._getDefaultRoleForScripts,
       creator: userId
     })
     created.role = role
@@ -168,7 +167,7 @@ export class ScriptEntityService {
 
     this.validateDefaultRole(updateScriptEntityDto.defaultRole)
 
-    const safeUpdateDto: UpdateScriptEntityDto = {}
+    const safeUpdateDto: any = {}
     for (const field of ['blocks', 'code', 'defaultRole'] as const) {
       if (Object.prototype.hasOwnProperty.call(updateScriptEntityDto, field)) {
         safeUpdateDto[field] = updateScriptEntityDto[field] as any
@@ -176,13 +175,17 @@ export class ScriptEntityService {
     }
     if (
       safeUpdateDto.blocks !== undefined &&
-      (!Array.isArray(safeUpdateDto.blocks) || safeUpdateDto.blocks.length > 4096)
+      (!Array.isArray(safeUpdateDto.blocks) ||
+        safeUpdateDto.blocks.length > 4096)
     ) {
-      throw new BadRequestException('Script blocks must be an array of at most 4096 items')
+      throw new BadRequestException(
+        'Script blocks must be an array of at most 4096 items'
+      )
     }
     if (
       safeUpdateDto.code !== undefined &&
-      (typeof safeUpdateDto.code !== 'string' || safeUpdateDto.code.length > 65536)
+      (typeof safeUpdateDto.code !== 'string' ||
+        safeUpdateDto.code.length > 65536)
     ) {
       throw new BadRequestException('Script code exceeds the maximum length')
     }

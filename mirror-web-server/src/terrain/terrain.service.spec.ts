@@ -35,9 +35,7 @@ describe('TerrainService', () => {
       _id: 'terrain-id',
       owner: { toString: () => 'user-1' }
     })
-    const updateSpy = vi
-      .spyOn(service as any, 'update')
-      .mockResolvedValue({})
+    const updateSpy = vi.spyOn(service as any, 'update').mockResolvedValue({})
 
     await service.updateWithRolesCheck(
       'terrain-id',
