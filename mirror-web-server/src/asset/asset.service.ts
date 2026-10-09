@@ -1027,11 +1027,7 @@ export class AssetService {
       if (searchableFields.has(field)) {
         const safeSearch = search
           .slice(0, 128)
-          .replace(/[.*+?^${}()|[\]\\]/g, '\\const safeSearch = search
-          .slice(0, 128)
-          .replace(/[.*+?^${}()|[\]\\]/g, '\\const safeSearch = search
-          .slice(0, 128).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')')
-        andFilter.push')
+          .replace(/[.*+?^\${}()|[\]\\]/g, '\\$&')
         andFilter.push({
           $or: [
             { [field]: new RegExp(safeSearch, 'i') },
