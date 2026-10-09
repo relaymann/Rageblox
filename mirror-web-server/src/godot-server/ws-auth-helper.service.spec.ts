@@ -1,5 +1,4 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { WebSocket } from 'ws'
 import { WsAuthHelperService } from './ws-auth-helper.service'
 import { CHANNELS } from '../redis/redis.channels'
 
@@ -35,7 +34,7 @@ describe('WsAuthHelperService', () => {
       setMaxListeners: vi.fn(),
       close: vi.fn(),
       send: vi.fn(),
-      readyState: WebSocket.OPEN
+      readyState: 1
     } as any
   }
 
