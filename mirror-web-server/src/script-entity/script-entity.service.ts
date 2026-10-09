@@ -30,7 +30,48 @@ export class ScriptEntityService {
     userId: UserId,
     createScriptEntityDto: CreateScriptEntityDto
   ): Promise<ScriptEntityDocument> {
-    const defaultRole = createScriptEntityDto.defaultRole
+    this.validateDefaultRole(createScriptEntityDto.defaultRole)
+
+    const safeCreateDto: Partial<CreateScriptEntityDto> = {}
+    if (Array.isArray(createScriptEntityDto.blocks)) {
+      safeCreateDto.blocks = createScriptEntityDto.blocks
+    }
+    if (typeof createScriptEntityDto.code === 'string') {
+      if (createScriptEntityDto.code.length > 65536) {
+        throw new BadRequestException('Script code exceeds the maximum length')
+      }
+      safeCreateDto.code = createScriptEntityDto.code
+    }
+    if (
+      !safeCreateDto.code &&
+      (!Array.isArray(safeCreateDto.blocks) || safeCreateDto.blocks.length === 0)
+    ) {
+      throw new BadRequestException('Script blocks or code are required')
+    }
+    if (safeCreateDto.blocks && safeCreateDto.blocks.length > 4096) {
+      throw new BadRequestException('Script has too many blocks')
+    }
+    if (createScriptEntityDto.defaultRole !== undefined) {
+      safeCreateDto.defaultRole = createScriptEntityDto.defaultRole
+    }
+
+    const created = new this.scriptEntityModel({
+      ...safeCreateDto,
+      creator: userId
+    })
+    const role = await this.roleService.create({
+      defaultRole:
+        safeCreateDto.defaultRole ?? this._getDefaultRoleForScripts,
+      creator: userId
+    })
+    created.role = role
+    const createdScript = await created.save()
+
+    await this.addScriptToUserRecents(userId, createdScript._id)
+    return createdScript
+  }
+
+  private validateDefaultRole(defaultRole?: ROLE): void {
     const validRoles = Object.values(ROLE).filter(
       (role): role is number => typeof role === 'number'
     )
@@ -42,21 +83,6 @@ export class ScriptEntityService {
         'The default script role must be a valid non-owner role'
       )
     }
-
-    const created = new this.scriptEntityModel({
-      ...createScriptEntityDto,
-      creator: userId
-    })
-    const role = await this.roleService.create({
-      defaultRole:
-        createScriptEntityDto.defaultRole ?? this._getDefaultRoleForScripts,
-      creator: userId
-    })
-    created.role = role
-    const createdScript = await created.save()
-
-    await this.addScriptToUserRecents(userId, createdScript._id)
-    return createdScript
   }
 
   async findOne(id: string): Promise<ScriptEntityDocument> {
@@ -140,7 +166,28 @@ export class ScriptEntityService {
       )
     }
 
-    return await this.update(id, updateScriptEntityDto)
+    this.validateDefaultRole(updateScriptEntityDto.defaultRole)
+
+    const safeUpdateDto: UpdateScriptEntityDto = {}
+    for (const field of ['blocks', 'code', 'defaultRole'] as const) {
+      if (Object.prototype.hasOwnProperty.call(updateScriptEntityDto, field)) {
+        safeUpdateDto[field] = updateScriptEntityDto[field] as any
+      }
+    }
+    if (
+      safeUpdateDto.blocks !== undefined &&
+      (!Array.isArray(safeUpdateDto.blocks) || safeUpdateDto.blocks.length > 4096)
+    ) {
+      throw new BadRequestException('Script blocks must be an array of at most 4096 items')
+    }
+    if (
+      safeUpdateDto.code !== undefined &&
+      (typeof safeUpdateDto.code !== 'string' || safeUpdateDto.code.length > 65536)
+    ) {
+      throw new BadRequestException('Script code exceeds the maximum length')
+    }
+
+    return await this.update(id, safeUpdateDto)
   }
 
   async delete(id: string): Promise<ScriptEntityDocument> {

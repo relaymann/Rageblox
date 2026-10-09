@@ -16,11 +16,15 @@ describe('ScriptEntityService legacy script authorization', () => {
     scriptEntityModel = {
       aggregate: vi.fn().mockResolvedValue([]),
       findOne: vi.fn(),
+      findById: vi.fn(),
+      findByIdAndUpdate: vi.fn(),
       findOneAndUpdate: vi.fn(),
       findOneAndDelete: vi.fn()
     }
     roleService = {
-      getRoleCheckAggregationPipeline: vi.fn().mockReturnValue([])
+      getRoleCheckAggregationPipeline: vi.fn().mockReturnValue([]),
+      checkUserRoleForEntity: vi.fn().mockResolvedValue(true),
+      create: vi.fn().mockResolvedValue({ defaultRole: ROLE.CONTRIBUTOR })
     }
     service = new ScriptEntityService(scriptEntityModel, {} as any, roleService)
   })
@@ -41,6 +45,57 @@ describe('ScriptEntityService legacy script authorization', () => {
         defaultRole: 9999 as ROLE
       })
     ).rejects.toBeInstanceOf(BadRequestException)
+  })
+
+  it('prevents legacy script creators from injecting role or ownership metadata during updates', async () => {
+    const legacyScript = {
+      _id: scriptId,
+      creator: creatorId,
+      blocks: [],
+      role: null
+    }
+    scriptEntityModel.findById.mockReturnValue({
+      exec: vi.fn().mockResolvedValue(legacyScript)
+    })
+    const updateQuery = { exec: vi.fn().mockResolvedValue({}) }
+    scriptEntityModel.findByIdAndUpdate.mockReturnValue(updateQuery)
+
+    await service.updateWithRolesCheck(
+      scriptId,
+      {
+        blocks: [],
+        role: { defaultRole: ROLE.OWNER, users: { [otherUserId]: ROLE.OWNER } },
+        creator: otherUserId,
+        _id: otherUserId
+      } as any,
+      creatorId
+    )
+
+    expect(scriptEntityModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      scriptId,
+      { blocks: [] },
+      { new: true }
+    )
+  })
+
+  it('rejects OWNER as an updated script default role', async () => {
+    scriptEntityModel.findById.mockReturnValue({
+      exec: vi.fn().mockResolvedValue({
+        _id: scriptId,
+        creator: creatorId,
+        role: { _id: 'role-id' }
+      })
+    })
+
+    await expect(
+      service.updateWithRolesCheck(
+        scriptId,
+        { defaultRole: ROLE.OWNER },
+        creatorId
+      )
+    ).rejects.toBeInstanceOf(BadRequestException)
+
+    expect(scriptEntityModel.findByIdAndUpdate).not.toHaveBeenCalled()
   })
 
   it('allows the creator to read a legacy script with no role metadata', async () => {

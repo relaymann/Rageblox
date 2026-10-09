@@ -111,9 +111,17 @@ export class TerrainService {
       throw new NotFoundException()
     }
 
+    const {
+      owner: _owner,
+      _id: _id,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      ...safeUpdateTerrainDto
+    } = updateTerrainDto as any
+
     // if user is terrain owner, update terrain
     if (terrain?.owner.toString() === userId) {
-      return this.update(id, updateTerrainDto)
+      return this.update(id, safeUpdateTerrainDto)
     }
 
     // get space that uses this terrain
@@ -137,7 +145,7 @@ export class TerrainService {
       )
     }
 
-    return this.update(id, updateTerrainDto)
+    return this.update(id, safeUpdateTerrainDto)
   }
 
   /** Copy existing Terrain or create a new default Terrain if undefined */
