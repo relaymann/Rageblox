@@ -116,41 +116,56 @@ export class SpaceObjectService implements IRoleConsumer {
     userId: UserId,
     createSpaceObjectDto: CreateSpaceObjectDto
   ): Promise<Partial<Document<any, any, any>>> {
-    const roleCheck = await this.canCreateWithRolesCheck(
-      userId,
-      createSpaceObjectDto.spaceId
-    )
-
-    const assetSoftDeletedCheck = await this.assetService.isAssetSoftDeleted(
-      createSpaceObjectDto.asset
-    )
-
-    if (assetSoftDeletedCheck) {
-      throw new BadRequestException('This asset was soft deleted')
+    const safeCreateDto = { ...createSpaceObjectDto } as any
+    for (const field of [
+      'creator',
+      'creatorUserId',
+      'role',
+      'space',
+      '_id',
+      'createdAt',
+      'updatedAt'
+    ]) {
+      delete safeCreateDto[field]
     }
 
-    if (roleCheck) {
-      await this.assetService.addInstancedAssetToRecents(
-        createSpaceObjectDto.asset,
-        userId
-      )
-
-      return this.createAndNotifyAdmin({
-        creatorUserId: userId,
-        ...createSpaceObjectDto
-      })
-    } else {
+    const roleCheck = await this.canCreateWithRolesCheck(
+      userId,
+      safeCreateDto.spaceId
+    )
+    if (!roleCheck) {
       this.logger.log(
         `createOneWithRolesCheck, ForbiddenException, user: ${userId}`,
         SpaceService.name
       )
       throw new NotFoundException('Not found or insufficient permissions')
     }
+
+    if (safeCreateDto.parentSpaceObject) {
+      await this.assertParentBelongsToSpace(
+        safeCreateDto.parentSpaceObject,
+        safeCreateDto.spaceId
+      )
+    }
+
+    const assetSoftDeletedCheck = await this.assetService.isAssetSoftDeleted(
+      safeCreateDto.asset
+    )
+    if (assetSoftDeletedCheck) {
+      throw new BadRequestException('This asset was soft deleted')
+    }
+
+    await this.assetService.addInstancedAssetToRecents(
+      safeCreateDto.asset,
+      userId
+    )
+
+    return this.createAndNotifyAdmin({
+      creatorUserId: userId,
+      ...safeCreateDto
+    })
   }
 
-  /**
-   * @description This is where the business logic resides for what role level constitutes "create" access
-   */
   public async canCreateWithRolesCheck(userId: UserId, spaceId: SpaceId) {
     const space = await this.spaceService.getSpace(spaceId)
     // a Space MUST have a .role property
@@ -491,6 +506,29 @@ export class SpaceObjectService implements IRoleConsumer {
     }
   }
 
+  private async assertParentBelongsToSpace(
+    parentSpaceObjectId: string,
+    spaceId: string
+  ): Promise<void> {
+    if (!isMongoId(String(parentSpaceObjectId))) {
+      throw new BadRequestException('Invalid parent space object id')
+    }
+
+    const parentSpaceObject = await this.spaceObjectModel
+      .findById(parentSpaceObjectId)
+      .select('space')
+      .exec()
+
+    if (
+      !parentSpaceObject ||
+      String(parentSpaceObject.space) !== String(spaceId)
+    ) {
+      throw new BadRequestException(
+        'Parent space object must belong to the same space'
+      )
+    }
+  }
+
   /**
    * @description This is where the business logic resides for what role level constitutes "read" access
    */
@@ -627,7 +665,31 @@ export class SpaceObjectService implements IRoleConsumer {
   ): Promise<Partial<Document<any, any, any>>> {
     const spaceObject = await this._getSpaceObject(spaceObjectId)
     if (this.canUpdateWithRolesCheck(userId, spaceObject)) {
-      return await this.updateOne(spaceObjectId, updateSpaceObjectDto)
+      const safeUpdateDto = { ...updateSpaceObjectDto } as any
+      for (const field of [
+        'creator',
+        'creatorUserId',
+        'role',
+        'space',
+        'spaceId',
+        '_id',
+        'createdAt',
+        'updatedAt'
+      ]) {
+        delete safeUpdateDto[field]
+      }
+
+      if (safeUpdateDto.parentSpaceObject) {
+        const currentSpaceId = String(
+          spaceObject.space?._id ?? spaceObject.space
+        )
+        await this.assertParentBelongsToSpace(
+          safeUpdateDto.parentSpaceObject,
+          currentSpaceId
+        )
+      }
+
+      return await this.updateOne(spaceObjectId, safeUpdateDto)
     } else {
       this.logger.log(
         `updateOneAndNotifyWithRolesCheck failed for user: ${userId}`,
