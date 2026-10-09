@@ -1028,7 +1028,10 @@ export class AssetService {
         const safeSearch = search
           .slice(0, 128)
           .replace(/[.*+?^${}()|[\]\\]/g, '\\const safeSearch = search
+          .slice(0, 128)
+          .replace(/[.*+?^${}()|[\]\\]/g, '\\const safeSearch = search
           .slice(0, 128).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')')
+        andFilter.push')
         andFilter.push({
           $or: [
             { [field]: new RegExp(safeSearch, 'i') },

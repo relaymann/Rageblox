@@ -247,8 +247,8 @@ export class WsAuthHelperService {
     if (!subchannel || !this.channelSubs[subchannel]) {
       this.logger.log(
         `setupSubscriber: attempted but subchannel was falsey: ${JSON.stringify(
-            { subchannel }
-          )}`,
+          { subchannel }
+        )}`,
         WsAuthHelperService.name
       )
       return
