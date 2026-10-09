@@ -63,9 +63,9 @@ describe('EnvironmentService', () => {
       'user-1' as any
     )
 
-    expect((service as any).environmentModel.findByIdAndUpdate).toHaveBeenCalledWith(
-      id, { skyTopColor: [0.1, 0.2, 0.3] }, { new: true }
-    )
+    expect(
+      (service as any).environmentModel.findByIdAndUpdate
+    ).toHaveBeenCalledWith(id, { skyTopColor: [0.1, 0.2, 0.3] }, { new: true })
   })
 
   it('should be defined', () => {
