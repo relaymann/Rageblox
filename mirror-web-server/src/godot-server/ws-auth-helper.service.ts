@@ -159,9 +159,9 @@ export class WsAuthHelperService {
         )
       } catch (error) {
         this.logger.log(
-            'Authenticated user is not authorized for requested space',
-            WsAuthHelperService.name
-          )
+          'Authenticated user is not authorized for requested space',
+          WsAuthHelperService.name
+        )
         return client.close(1008, 'Not authorized for space')
       }
     }
@@ -246,9 +246,7 @@ export class WsAuthHelperService {
     const subchannel = client['subscriberChannel']
     if (!subchannel || !this.channelSubs[subchannel]) {
       this.logger.log(
-        `setupSubscriber: attempted but subchannel was falsey: ${JSON.stringify(
-            { subchannel }
-          )}`,
+        `setupSubscriber: attempted but subchannel was falsey: ${JSON.stringify({ subchannel })}`,
         WsAuthHelperService.name
       )
       return

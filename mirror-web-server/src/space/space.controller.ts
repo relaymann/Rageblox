@@ -651,7 +651,7 @@ export class SpaceController {
   @ApiCreatedResponse({ type: SpacePublicData })
   @UseInterceptors(
     AnyFilesInterceptor({
-      limits: { files: 4, fileSize: 10 * 1024 * 1024 },
+      limits: { files: 4, fileSize: 10 * 1024 * 1024 }
     })
   )
   @ApiParam({ name: 'id', type: 'string', required: true })

@@ -517,8 +517,8 @@ export class StripeService {
     }
 
     const subscription = rowBody.data.object as Stripe.Subscription
-    const metaData = (subscription.metadata || {}) as unknown as
-      StripeSubscriptionMetadataDto
+    const metaData =
+      (subscription.metadata || {}) as unknown as StripeSubscriptionMetadataDto
     if (typeof metaData.userId !== 'string' || !metaData.userId) {
       throw new BadRequestException(
         'Stripe subscription webhook is missing user metadata'
@@ -530,9 +530,7 @@ export class StripeService {
     const premiumPriceId = process.env.STRIPE_PREMIUM_PRICE_ID
     const subscriptionIsPremium =
       !!premiumPriceId &&
-      subscription.items?.data?.some(
-        (item) => item.price.id === premiumPriceId
-      )
+      subscription.items?.data?.some((item) => item.price.id === premiumPriceId)
     const subscriptionCanGrantPremium =
       subscriptionIsPremium &&
       ['active', 'trialing'].includes(subscription.status) &&

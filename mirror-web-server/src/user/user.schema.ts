@@ -76,7 +76,6 @@ export class UserPublicData {
   profileImage? = ''
   @ApiProperty({ type: 'string' })
   coverImage? = ''
-
 }
 
 @Schema({

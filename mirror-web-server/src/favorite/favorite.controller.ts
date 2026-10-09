@@ -61,7 +61,11 @@ export class FavoriteController {
     @Body() updateFavoriteDto: UpdateFavoriteDto,
     @UserToken('user_id') userId: string
   ) {
-    return await this.favoriteService.updateForUser(id, userId, updateFavoriteDto)
+    return await this.favoriteService.updateForUser(
+      id,
+      userId,
+      updateFavoriteDto
+    )
   }
 
   @Delete(':id')

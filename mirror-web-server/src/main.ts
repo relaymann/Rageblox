@@ -33,11 +33,12 @@ async function bootstrapRageBloxWebServer() {
                   winston.format.timestamp(),
                   winston.format.ms(),
                   nestWinstonModuleUtilities.format.nestLike(
-                      'rageblox-server',
-                      {
-                        colors: true,
-                    prettyPrint: true
-                  })
+                    'rageblox-server',
+                    {
+                      colors: true,
+                      prettyPrint: true
+                    }
+                  )
                 ),
                 level: process.env.NODE_ENV === NODE_ENV.TEST ? 'debug' : 'info'
               })
@@ -78,8 +79,10 @@ async function bootstrapRageBloxWebServer() {
     .map((origin) => origin.trim())
     .filter(Boolean)
 
-  if (process.env.NODE_ENV === NODE_ENV.PRODUCTION &&
-    allowedOrigins.length === 0) {
+  if (
+    process.env.NODE_ENV === NODE_ENV.PRODUCTION &&
+    allowedOrigins.length === 0
+  ) {
     throw new Error('ALLOWED_DOMAINS must be configured in production')
   }
 

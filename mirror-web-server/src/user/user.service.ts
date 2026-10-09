@@ -128,7 +128,6 @@ export class UserService {
     return this.userModel
       .findOne({ _id: id, deleted: { $exists: false } })
       .select(select)
-      
       .exec()
   }
 
