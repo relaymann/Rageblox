@@ -71,14 +71,22 @@ export class UserGroupMembershipService {
   public async getAllPublicMembersForPublicGroup(
     groupId: string
   ): Promise<UserGroupMembershipDocument[]> {
-    return await this.userGroupMembershipModel
-      .find({ group: groupId, membershipIsPubliclyVisible: true }) // TODO add a test to ensure private group membership isn't exposed
+    const memberships = await this.userGroupMembershipModel
+      .find({ group: groupId, membershipIsPubliclyVisible: true })
+      .populate({
+        path: 'group',
+        match: { public: { $in: [true, 'true'] } },
+        select: ['public']
+      })
       .populate('user', {
         role: 1,
         _id: 1,
         displayName: 1
       })
       .exec()
+
+    // A publicly visible membership must not expose membership in a private group.
+    return memberships.filter((membership: any) => membership.group)
   }
 
   public async findLeaderShip(groupId: string): Promise<any> {
