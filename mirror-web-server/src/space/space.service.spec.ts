@@ -25,6 +25,7 @@ import { RedisPubSubService } from '../redis/redis-pub-sub.service'
 import { MirrorDBService } from '../mirror-db/mirror-db.service'
 import { ScriptEntityService } from '../script-entity/script-entity.service'
 import { MaterialInstanceService } from './material-instance/material-instance.service'
+import { vi } from 'vitest'
 
 describe('SpaceService', () => {
   let service: SpaceService
@@ -79,6 +80,66 @@ describe('SpaceService', () => {
     }).compile()
 
     service = module.get<SpaceService>(SpaceService)
+  })
+
+  it('does not allow generic space updates to modify role or ownership fields', async () => {
+    vi.spyOn(service as any, 'getSpace').mockResolvedValue({
+      customData: { id: 'custom-data-id' },
+      spaceVariablesData: { id: 'space-variables-id' }
+    })
+    vi.spyOn(service as any, 'canUpdateWithRolesCheck').mockReturnValue(true)
+    const query = {
+      populate: vi.fn().mockReturnThis(),
+      exec: vi.fn().mockResolvedValue({})
+    }
+    vi.spyOn((service as any).spaceModel, 'findByIdAndUpdate').mockReturnValue(
+      query
+    )
+
+    await service.updateOneWithRolesCheck(
+      'user-1',
+      '507f1f77bcf86cd799439011',
+      {
+        name: 'safe-name',
+        users: { attacker: 100 },
+        userGroups: { attackerGroup: 100 },
+        ownerUserGroup: '507f1f77bcf86cd799439012',
+        role: { defaultRole: 100 },
+        creator: 'attacker',
+        _id: '507f1f77bcf86cd799439013'
+      } as any
+    )
+
+    expect((service as any).spaceModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      '507f1f77bcf86cd799439011',
+      { name: 'safe-name' },
+      { new: true }
+    )
+  })
+
+  it('sanitizes role and ownership fields before updating space variables', async () => {
+    vi.spyOn(service as any, 'getSpace').mockResolvedValue({})
+    vi.spyOn(service as any, 'canUpdateWithRolesCheck').mockReturnValue(true)
+    const updateSpy = vi
+      .spyOn(service as any, 'updateSpaceVariablesForOneAdmin')
+      .mockResolvedValue({})
+
+    await service.updateSpaceVariablesWithRolesCheck(
+      'user-1' as any,
+      '507f1f77bcf86cd799439011' as any,
+      {
+        name: 'safe-name',
+        users: { attacker: 100 },
+        userGroups: { attackerGroup: 100 },
+        ownerUserGroup: '507f1f77bcf86cd799439012',
+        role: { defaultRole: 100 }
+      } as any
+    )
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      '507f1f77bcf86cd799439011',
+      { name: 'safe-name' }
+    )
   })
 
   it('should be defined', () => {

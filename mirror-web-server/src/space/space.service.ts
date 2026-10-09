@@ -741,12 +741,13 @@ export class SpaceService implements IRoleConsumer {
 
     // update custom data first, if it's there
     if (this.canUpdateWithRolesCheck(userId, space)) {
-      if (updateSpaceDto.activeSpaceVersion) {
-        if (!isValidObjectId(updateSpaceDto.activeSpaceVersion)) {
+      const safeUpdateDto = this.sanitizeRoleSensitiveSpaceFields(updateSpaceDto)
+      if (safeUpdateDto.activeSpaceVersion) {
+        if (!isValidObjectId(safeUpdateDto.activeSpaceVersion)) {
           throw new BadRequestException('Invalid active space version')
         }
         const version = await this.spaceVersionModel
-          .findById(updateSpaceDto.activeSpaceVersion)
+          .findById(safeUpdateDto.activeSpaceVersion)
           .select({ spaceId: 1 })
           .lean()
           .exec()
@@ -757,8 +758,8 @@ export class SpaceService implements IRoleConsumer {
         }
       }
       if (
-        updateSpaceDto.patchCustomData ||
-        updateSpaceDto.removeCustomDataKeys
+        safeUpdateDto.patchCustomData ||
+        safeUpdateDto.removeCustomDataKeys
       ) {
         await this.customDataService.updateCustomDataAdmin(
           space.customData.id,
@@ -769,8 +770,8 @@ export class SpaceService implements IRoleConsumer {
 
       // update spaceVariablesData, if it's there
       if (
-        updateSpaceDto.patchSpaceVariablesData ||
-        updateSpaceDto.removeSpaceVariablesDataKeys
+        safeUpdateDto.patchSpaceVariablesData ||
+        safeUpdateDto.removeSpaceVariablesDataKeys
       ) {
         await this.spaceVariablesDataService.updateSpaceVariablesDataAdmin(
           space?.spaceVariablesData?.id,
@@ -779,16 +780,16 @@ export class SpaceService implements IRoleConsumer {
         )
       }
 
-      const updateData = omit(updateSpaceDto, 'customData')
+      const updateData = omit(safeUpdateDto, 'customData')
 
-      if (updateSpaceDto.publicBuildPermissions) {
+      if (safeUpdateDto.publicBuildPermissions) {
         updateData['role.defaultRole'] =
           this._getDefaultRoleByPublicBuildPermissions(
-            updateSpaceDto.publicBuildPermissions
+            safeUpdateDto.publicBuildPermissions
           )
 
         updateData['publicBuildPermissions'] =
-          updateSpaceDto.publicBuildPermissions
+          safeUpdateDto.publicBuildPermissions
       }
 
       return this.spaceModel
@@ -815,6 +816,26 @@ export class SpaceService implements IRoleConsumer {
   /**
    * @description This is where the business logic resides for what role level constitutes "update" access
    */
+  private sanitizeRoleSensitiveSpaceFields(
+    updateSpaceDto: UpdateSpaceDto
+  ): UpdateSpaceDto {
+    // Membership, ownership, and role maps are changed only through the
+    // dedicated owner-checked role/ownership endpoints, never generic updates.
+    return omit(updateSpaceDto, [
+      'users',
+      'userGroups',
+      'ownerUserGroup',
+      'owner',
+      'role',
+      'creator',
+      '_id',
+      'spaceId',
+      'spaceVariablesData',
+      'createdAt',
+      'updatedAt'
+    ]) as UpdateSpaceDto
+  }
+
   public canUpdateWithRolesCheck(
     userId: string,
     entityWithPopulatedProperties: SpaceDocument
@@ -880,7 +901,10 @@ export class SpaceService implements IRoleConsumer {
 
     // update custom data first, if it's there
     if (this.canUpdateWithRolesCheck(userId, space)) {
-      return this.updateSpaceVariablesForOneAdmin(spaceId, updateSpaceDto)
+      return this.updateSpaceVariablesForOneAdmin(
+        spaceId,
+        this.sanitizeRoleSensitiveSpaceFields(updateSpaceDto)
+      )
     } else {
       this.logger.log(
         `pdateSpaceVariablesWithRolesCheck failed for user: ${userId}`,
