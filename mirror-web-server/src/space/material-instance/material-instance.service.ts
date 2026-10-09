@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common'
 import { forwardRef, Inject } from '@nestjs/common'
 import { SpaceService, SpaceServiceType } from '../space.service'
 import { InjectModel } from '@nestjs/mongoose'
@@ -24,7 +28,9 @@ export class MaterialInstanceService {
     createMaterialInstanceDto: CreateMaterialInstanceDto,
     userId: string
   ): Promise<MaterialInstance> {
-    const populatedSpace = await this.spaceService.getSpace(createMaterialInstanceDto.spaceId)
+    const populatedSpace = await this.spaceService.getSpace(
+      createMaterialInstanceDto.spaceId
+    )
     if (
       userId !== process.env.WSS_SECRET &&
       !this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)
@@ -88,7 +94,10 @@ export class MaterialInstanceService {
     userId: string
   ): Promise<MaterialInstance> {
     const populatedSpace = await this.spaceService.getSpace(spaceId)
-    if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
+    if (
+      userId !== process.env.WSS_SECRET &&
+      !this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)
+    ) {
       throw new ForbiddenException()
     }
 
