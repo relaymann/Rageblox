@@ -72,7 +72,7 @@ export class TerrainService {
 
     // get space with populate fields for roles check
     const spaceWithPopuleFiels = await this.spaceService.getSpace(
-      \n      space._id.toString()
+      space._id.toString()
     )
 
     // check if user has permission to find terrain
