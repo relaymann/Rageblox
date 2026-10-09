@@ -65,6 +65,6 @@ describe('Zone Controller (Integration)', () => {
   })
 
   it('should fail without firebase auth', () => {
-    return request(app.getHttpServer()).get('/zone/testId').expect(403)
+    return request(app.getHttpServer()).get('/zone/testId').expect(401)
   })
 })

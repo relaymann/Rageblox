@@ -38,6 +38,6 @@ describe('UserGroup Controller (Integration)', () => {
   })
 
   it('should fail without firebase auth', () => {
-    return request(app.getHttpServer()).get('/user-group/my-groups').expect(403)
+    return request(app.getHttpServer()).get('/user-group/my-groups').expect(401)
   })
 })

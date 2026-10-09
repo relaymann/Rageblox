@@ -89,27 +89,27 @@ describe('User Controller (Integration)', () => {
 
   describe('Auth required endpoints', () => {
     it('should fail uploadPublic without firebase auth', () => {
-      return apiClient().get('/user/me').expect(403)
+      return apiClient().get('/user/me').expect(401)
     })
 
     it('should fail updateProfile without firebase auth', () => {
-      return apiClient().patch('/user/profile').expect(403)
+      return apiClient().patch('/user/profile').expect(401)
     })
 
     it('should fail updateDeepLink without firebase auth', () => {
-      return apiClient().patch('/user/deep-link').expect(403)
+      return apiClient().patch('/user/deep-link').expect(401)
     })
 
     it('should fail updateAvatarType without firebase auth', () => {
-      return apiClient().patch('/user/deep-link').expect(403)
+      return apiClient().patch('/user/deep-link').expect(401)
     })
 
     it('should fail addRpmAvatarUrl without firebase auth', () => {
-      return apiClient().post('/user/rpm-avatar-url').expect(403)
+      return apiClient().post('/user/rpm-avatar-url').expect(401)
     })
 
     it('should fail removeRpmAvatarUrl without firebase auth', () => {
-      return apiClient().delete('/user/rpm-avatar-url').expect(403)
+      return apiClient().delete('/user/rpm-avatar-url').expect(401)
     })
   })
 })

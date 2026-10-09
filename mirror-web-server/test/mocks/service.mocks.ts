@@ -148,6 +148,22 @@ export class MockScriptEntityService {
     return this.model.findById(id)
   }
 
+  findOneWithRolesCheck(id: string, _userId: string) {
+    return this.findOne(id)
+  }
+
+  updateWithRolesCheck(
+    id: string,
+    updateScriptEntityDto: UpdateScriptEntityDto,
+    _userId: string
+  ) {
+    return this.update(id, updateScriptEntityDto)
+  }
+
+  deleteWithRolesCheck(id: string, _userId: string) {
+    return this.delete(id)
+  }
+
   update(id: string, updateScriptEntityDto: UpdateScriptEntityDto) {
     return this.model.findByIdAndUpdate(id, updateScriptEntityDto, {
       new: true
