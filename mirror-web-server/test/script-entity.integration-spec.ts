@@ -50,20 +50,20 @@ describe('Script-Entity Controller With Guard (Integration)', () => {
     it('should fail findOne without firebase auth', () => {
       return request(app.getHttpServer())
         .get(`/script-entity/${id}`)
-        .expect(403)
+        .expect(401)
     })
     it('should fail create without firebase auth', () => {
-      return request(app.getHttpServer()).post('/script-entity').expect(403)
+      return request(app.getHttpServer()).post('/script-entity').expect(401)
     })
     it('should fail update without firebase auth', () => {
       return request(app.getHttpServer())
         .patch(`/script-entity/${id}`)
-        .expect(403)
+        .expect(401)
     })
     it('should fail delete without firebase auth', () => {
       return request(app.getHttpServer())
         .delete(`/script-entity/${id}`)
-        .expect(403)
+        .expect(401)
     })
   })
 })

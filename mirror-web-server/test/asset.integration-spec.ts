@@ -70,51 +70,51 @@ describe('Asset Controller (Integration)', () => {
 
   describe('Auth required endpoints', () => {
     it('should fail getMirrorPublicLibraryAssets without firebase auth', () => {
-      return request(app.getHttpServer()).get('/asset/library').expect(403)
+      return request(app.getHttpServer()).get('/asset/library').expect(401)
     })
 
     it('should fail create without firebase auth', () => {
-      return request(app.getHttpServer()).post('/asset').expect(403)
+      return request(app.getHttpServer()).post('/asset').expect(401)
     })
 
     it('should fail getAssetsForMe without firebase auth', () => {
-      return request(app.getHttpServer()).get('/asset/me').expect(403)
+      return request(app.getHttpServer()).get('/asset/me').expect(401)
     })
 
     it('should fail findAllForUser without firebase auth', () => {
       return request(app.getHttpServer())
         .get('/asset/user/test-asset-id')
-        .expect(403)
+        .expect(401)
     })
 
     it('should fail findOne without firebase auth', () => {
       return request(app.getHttpServer())
         .get('/asset/test-asset-id')
-        .expect(403)
+        .expect(401)
     })
 
     it('should fail update without firebase auth', () => {
       return request(app.getHttpServer())
         .patch('/asset/test-asset-id')
-        .expect(403)
+        .expect(401)
     })
 
     it('should fail remove without firebase auth', () => {
       return request(app.getHttpServer())
         .delete('/asset/test-asset-id')
-        .expect(403)
+        .expect(401)
     })
 
     it('should fail upload without firebase auth', () => {
       return request(app.getHttpServer())
         .post('/asset/test-asset-id/upload')
-        .expect(403)
+        .expect(401)
     })
 
     it('should fail uploadPublic without firebase auth', () => {
       return request(app.getHttpServer())
         .post('/asset/test-asset-id/upload/public')
-        .expect(403)
+        .expect(401)
     })
   })
 })

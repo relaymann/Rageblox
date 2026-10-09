@@ -50,25 +50,25 @@ describe('Space Object Controller With Guard (Integration)', () => {
     it('should fail findOne without firebase auth', () => {
       return request(app.getHttpServer())
         .get(`/space-object/${randomId}`)
-        .expect(403)
+        .expect(401)
     })
     it('should fail create without firebase auth: deprecated route', () => {
       return request(app.getHttpServer())
         .post('/space-object/space')
-        .expect(403)
+        .expect(401)
     })
     it('should fail create without firebase auth: new route', () => {
-      return request(app.getHttpServer()).post('/space-object').expect(403)
+      return request(app.getHttpServer()).post('/space-object').expect(401)
     })
     it('should fail update without firebase auth', () => {
       return request(app.getHttpServer())
         .patch(`/space-object/${randomId}`)
-        .expect(403)
+        .expect(401)
     })
     it('should fail delete without firebase auth', () => {
       return request(app.getHttpServer())
         .delete(`/space-object/${randomId}`)
-        .expect(403)
+        .expect(401)
     })
     /**
      * Permissions
@@ -82,7 +82,7 @@ describe('Space Object Controller With Guard (Integration)', () => {
     // xit('should not return space data if the Space is private', () => {
     //   return request(app.getHttpServer())
     //     .get(`/space-object/${spaceObject1InPrivateSpace}`)
-    //     .expect(403)
+    //     .expect(401)
     // })
   })
 })

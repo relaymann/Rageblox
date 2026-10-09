@@ -30,6 +30,6 @@ describe('Storage Controller (Integration)', () => {
   })
 
   it('should fail without firebase auth', () => {
-    return request(app.getHttpServer()).get('/storage/test').expect(403)
+    return request(app.getHttpServer()).get('/storage/test').expect(401)
   })
 })

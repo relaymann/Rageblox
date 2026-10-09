@@ -32,6 +32,6 @@ describe('Favorite Controller (Integration)', () => {
   })
 
   it('should fail without firebase auth', () => {
-    return request(app.getHttpServer()).get('/favorite/testId').expect(403)
+    return request(app.getHttpServer()).get('/favorite/testId').expect(401)
   })
 })
