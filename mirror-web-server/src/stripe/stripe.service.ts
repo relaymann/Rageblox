@@ -232,7 +232,14 @@ export class StripeService {
   }
 
   public async createSubscription(userId: string, data: SubscriptionDto) {
-    const { destination } = data
+    // Subscription creation must not act as a client-directed payout route.
+    // Direct transfers are disabled until an authorized marketplace payout flow exists.
+    if (data.destination) {
+      throw new BadRequestException(
+        'Client-directed subscription transfers are disabled; use an authorized marketplace payout flow.'
+      )
+    }
+
     const user = await this.userModel.findById(userId).exec()
     if (user?.stripeSubscriptionId) {
       throw new BadRequestException(
@@ -243,11 +250,8 @@ export class StripeService {
       throw new BadRequestException('Stripe customer account not found')
     }
 
-    const destinationAccount = await this.userModel.findById(destination).exec()
-
     const subscription = await this.createStripeSubscription(
       user.stripeCustomerId,
-      destinationAccount?.stripeAccountId || null,
       data,
       { userId }
     )
@@ -326,7 +330,6 @@ export class StripeService {
 
   private async createStripeSubscription(
     stripeCustomer: string,
-    destinationAccount: string,
     data: SubscriptionDto,
     metadata: StripeSubscriptionMetadataDto
   ) {
@@ -346,13 +349,6 @@ export class StripeService {
             payment_method_types: ['card'],
             save_default_payment_method: 'on_subscription'
           },
-          ...(destinationAccount //transfer_data when destinationAccount available
-            ? {
-                transfer_data: {
-                  destination: destinationAccount
-                }
-              }
-            : {}),
           metadata: { ...metadata },
           expand: ['latest_invoice.payment_intent']
         })
@@ -375,13 +371,6 @@ export class StripeService {
             payment_method_types: ['card'],
             save_default_payment_method: 'on_subscription'
           },
-          ...(destinationAccount //transfer_data when destinationAccount available
-            ? {
-                transfer_data: {
-                  destination: destinationAccount
-                }
-              }
-            : {}),
           metadata: { ...metadata },
           expand: ['latest_invoice.payment_intent']
         })

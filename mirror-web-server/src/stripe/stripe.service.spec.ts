@@ -28,9 +28,28 @@ describe('StripeService subscription webhook entitlements', () => {
     stripe = {
       webhooks: {
         constructEvent: vi.fn()
+      },
+      subscriptions: {
+        create: vi.fn()
       }
     }
     service = new StripeService(userModel, stripe)
+  })
+
+  it('rejects client-directed subscription transfers before contacting Stripe', async () => {
+    await expect(
+      service.createSubscription(userId, {
+        amount: 1000,
+        currency: 'usd',
+        productId: 'prod-test',
+        destination: 'seller-user-id'
+      } as any)
+    ).rejects.toThrow(
+      'Client-directed subscription transfers are disabled; use an authorized marketplace payout flow.'
+    )
+
+    expect(userModel.findById).not.toHaveBeenCalled()
+    expect(stripe.subscriptions.create).not.toHaveBeenCalled()
   })
 
   it('does not grant premium for an incomplete subscription', async () => {
