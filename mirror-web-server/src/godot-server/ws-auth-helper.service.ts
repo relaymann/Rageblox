@@ -30,6 +30,7 @@ export class WsAuthHelperService {
 
   handleConnectionHelper(client: WebSocket, args: any) {
     client['id'] = uuidv4()
+    delete client['authDisconnected']
     const clientId = client['id']
     // Defer initialization one microtask so the promise is registered before it
     // can synchronously reject a malformed handshake.
@@ -166,6 +167,15 @@ export class WsAuthHelperService {
       }
     }
 
+    // A socket may disconnect while JWT or space authorization is pending.
+    // Do not register a subscriber after that disconnect has already occurred.
+    if (
+      client['authDisconnected'] ||
+      client.readyState !== WebSocket.OPEN
+    ) {
+      return
+    }
+
     this.setupSubscriber(client, spaceId)
 
     this.initializationMap.delete(client['id'])
@@ -239,6 +249,7 @@ export class WsAuthHelperService {
   }
 
   removeSubscriber(client: WebSocket) {
+    client['authDisconnected'] = true
     delete this.initializationSuccess[client['id']]
     this.initializationMap.delete(client['id'])
 

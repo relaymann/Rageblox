@@ -213,13 +213,14 @@ export class SpaceObjectGateway {
     @AdminTokenWS() isAdmin: boolean,
     @UserTokenWS('user_id') userId: UserId,
     @MessageBody('id') spaceObjectId: SpaceObjectId,
-    @MessageBody('populateParent') populateParent = false, // if true, decently fast, 1 lookup
-    @MessageBody('recursiveParentPopulate') recursiveParentPopulate = false, // if true, slower with $graphLookup
-    @MessageBody('recursiveChildrenPopulate') recursiveChildrenPopulate = false // if true, slowest because 2 $graphLookups
+    @MessageBody('populateParent') populateParent = false,
+    @MessageBody('recursiveParentPopulate') recursiveParentPopulate = false,
+    @MessageBody('recursiveChildrenPopulate') recursiveChildrenPopulate = false
   ) {
     if (!isAdmin && !userId) {
       return
     }
+
     this.logger.log(
       `${JSON.stringify(
         {
@@ -234,8 +235,20 @@ export class SpaceObjectGateway {
       )}`,
       SpaceObjectGateway.name
     )
+
+    // The recursive populate helpers use unrestricted admin queries. Never use
+    // them for a regular user: parent/child links can cross space boundaries.
+    // Return the role-checked root object unless the caller is a trusted server.
+    if (!isAdmin) {
+      const authorizedObject =
+        await this.spaceObjectService.findOneWithRolesCheck(
+          userId,
+          spaceObjectId
+        )
+      return authorizedObject.toJSON()
+    }
+
     let returnData: any
-    // first check the parent populates, prioritizing recursiveParentPopulate
     if (recursiveParentPopulate) {
       returnData =
         await this.spaceObjectService.findOneAdminWithPopulatedParentSpaceObjectRecursiveLookup(
@@ -247,40 +260,23 @@ export class SpaceObjectGateway {
           spaceObjectId
         )
     } else {
-      // no recursive parent lookup nor parent lookup, so just find the spaceObject by itself
-      let data
-
-      if (userId) {
-        data = await this.spaceObjectService.findOneWithRolesCheck(
-          userId,
-          spaceObjectId
-        )
-      }
-
-      if (isAdmin) {
-        data = await this.spaceObjectService.findOneAdmin(spaceObjectId)
-      }
-
-      returnData = data.toJSON() // needs to be converted to JSON so it can be modified below
+      const data = await this.spaceObjectService.findOneAdmin(spaceObjectId)
+      returnData = data.toJSON()
     }
 
-    // check children populates
     if (recursiveChildrenPopulate) {
       const childLookup =
         await this.spaceObjectService.findOneAdminWithPopulatedChildSpaceObjectsRecursiveLookup(
           spaceObjectId
         )
-      // if it worked, merge the data
-
-      if (childLookup) {
-        returnData['childSpaceObjects'] = childLookup.childSpaceObjects
-      } else {
-        returnData['childSpaceObjects'] = []
-      }
+      returnData['childSpaceObjects'] = childLookup
+        ? childLookup.childSpaceObjects
+        : []
     }
 
     return returnData
   }
+
 
   @SubscribeMessage(ZoneSpaceObjectWsMessage.UPDATE_BATCH)
   public async updateMany(

@@ -64,6 +64,36 @@ describe('WsAuthHelperService', () => {
     expect(redis.subscriber.subscribe).not.toHaveBeenCalled()
   })
 
+  it('does not subscribe a socket that disconnects during space authorization', async () => {
+    const client = socket()
+    const spaceId = '507f1f77bcf86cd799439011'
+    let resolveAuthorization: (value: unknown) => void
+    spaceService.findOneWithRolesCheck.mockReturnValue(
+      new Promise((resolve) => {
+        resolveAuthorization = resolve
+      })
+    )
+
+    const initialization = (helper as any).initialize(client, [
+      {
+        headers: {
+          authorization: 'Bearer valid-shaped-token',
+          space: spaceId
+        }
+      }
+    ])
+
+    await vi.waitFor(() =>
+      expect(spaceService.findOneWithRolesCheck).toHaveBeenCalled()
+    )
+    helper.removeSubscriber(client)
+    resolveAuthorization!({})
+    await initialization
+
+    expect(redis.subscriber.subscribe).not.toHaveBeenCalled()
+    expect(helper.initializationSuccess[client.id]).toBeUndefined()
+  })
+
   it('subscribes authorized sockets and releases the Redis subscription on disconnect', async () => {
     const client = socket()
     const spaceId = '507f1f77bcf86cd799439011'

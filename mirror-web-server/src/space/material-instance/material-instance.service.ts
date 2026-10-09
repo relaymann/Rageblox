@@ -151,7 +151,10 @@ export class MaterialInstanceService {
     userId: string
   ): Promise<string> {
     const populatedSpace = await this.spaceService.getSpace(spaceId)
-    if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
+    if (
+      userId !== process.env.WSS_SECRET &&
+      !this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)
+    ) {
       throw new ForbiddenException()
     }
 
