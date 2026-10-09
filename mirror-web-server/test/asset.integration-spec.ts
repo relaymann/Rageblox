@@ -63,7 +63,7 @@ describe('Asset Controller (Integration)', () => {
       )
 
       return request(app.getHttpServer())
-        .get('/asset/search?email=test@test.com')
+        .get('/asset/search?search=test&field=name')
         .expect(200)
     })
   })
@@ -90,7 +90,7 @@ describe('Asset Controller (Integration)', () => {
     it('should fail findOne without firebase auth', () => {
       return request(app.getHttpServer())
         .get('/asset/test-asset-id')
-        .expect(401)
+        .expect(403)
     })
 
     it('should fail update without firebase auth', () => {

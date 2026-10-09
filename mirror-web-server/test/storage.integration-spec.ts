@@ -29,7 +29,7 @@ describe('Storage Controller (Integration)', () => {
     await app.init()
   })
 
-  it('should fail without firebase auth', () => {
-    return request(app.getHttpServer()).get('/storage/test').expect(401)
+  it('does not expose generic storage object access', () => {
+    return request(app.getHttpServer()).get('/storage/test').expect(404)
   })
 })
