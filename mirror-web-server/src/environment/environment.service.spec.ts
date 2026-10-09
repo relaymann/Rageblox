@@ -40,9 +40,10 @@ describe('EnvironmentService', () => {
     vi.spyOn((service as any).environmentModel, 'findById').mockReturnValue(
       environmentQuery
     )
-    vi.spyOn((service as any).environmentModel, 'findByIdAndUpdate').mockReturnValue(
-      updateQuery
-    )
+    vi.spyOn(
+      (service as any).environmentModel,
+      'findByIdAndUpdate'
+    ).mockReturnValue(updateQuery)
     ;(service as any).spaceModel = {
       findOne: vi.fn().mockReturnValue(spaceQuery)
     }
@@ -62,12 +63,8 @@ describe('EnvironmentService', () => {
       'user-1' as any
     )
 
-    expect(
-      (service as any).environmentModel.findByIdAndUpdate
-    ).toHaveBeenCalledWith(
-      id,
-      { skyTopColor: [0.1, 0.2, 0.3] },
-      { new: true }
+    expect((service as any).environmentModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      id, { skyTopColor: [0.1, 0.2, 0.3] }, { new: true }
     )
   })
 
