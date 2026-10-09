@@ -1186,9 +1186,11 @@ export class SpaceService implements IRoleConsumer {
             header[2] === 0xff) ||
           (file.mimetype === 'image/png' &&
             header.length >= 8 &&
-            header.subarray(0, 8).equals(
-              Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
-            )) ||
+            header
+              .subarray(0, 8)
+              .equals(
+                Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+              )) ||
           (file.mimetype === 'image/gif' &&
             header.length >= 6 &&
             (header.subarray(0, 6).toString('ascii') === 'GIF87a' ||

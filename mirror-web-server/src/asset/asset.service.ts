@@ -181,12 +181,14 @@ export class AssetService {
   public async createAsset(
     dto: CreateAssetDto & { ownerId: string }
   ): Promise<AssetDocument> {
-    const { ownerId,
+    const {
+      ownerId,
       owner,
       creator,
       role: providedRole,
       _id,
-      ...safeDto } = dto as CreateAssetDto & {
+      ...safeDto
+    } = dto as CreateAssetDto & {
       ownerId: string
       owner?: unknown
       creator?: unknown
@@ -244,7 +246,14 @@ export class AssetService {
     file: Express.Multer.File
   ): Promise<AssetDocument> {
     try {
-      const { ownerId, owner, creator, role: providedRole, _id, ...safeDto } = dto as CreateAssetDto & {
+      const {
+        ownerId,
+        owner,
+        creator,
+        role: providedRole,
+        _id,
+        ...safeDto
+      } = dto as CreateAssetDto & {
         ownerId: string
         owner?: unknown
         creator?: unknown
