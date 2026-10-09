@@ -517,13 +517,19 @@ export class StripeService {
     if (typeof metaData.userId !== 'string' || !metaData.userId) {
       throw new BadRequestException('Stripe subscription webhook is missing user metadata')
     }
+    const subscriptionCanGrantPremium =
+      ['active', 'trialing'].includes(subscription.status) &&
+      !subscription.pause_collection
+
     switch (rowBody.type) {
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_CREATED:
+        // A created event can represent an incomplete subscription before payment.
+        // Keep its ID for lifecycle operations, but don't grant access until eligible.
         await this.userModel.findByIdAndUpdate(metaData.userId, {
-          $addToSet: {
-            premiumAccess: PREMIUM_ACCESS.PREMIUM_1
-          },
-          stripeSubscriptionId: subscription.id
+          stripeSubscriptionId: subscription.id,
+          ...(subscriptionCanGrantPremium
+            ? { $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } }
+            : {})
         })
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_DELETED:
@@ -540,46 +546,25 @@ export class StripeService {
         })
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_RESUMED:
-        await this.userModel.findByIdAndUpdate(metaData.userId, {
-          $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
-        })
+        if (subscriptionCanGrantPremium) {
+          await this.userModel.findByIdAndUpdate(metaData.userId, {
+            $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
+          })
+        }
         break
-      // Handle the case when a subscription is updated in a Stripe webhook event
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_UPDATED:
-        // Check if the subscription is being canceled via the customer portal
-        if (subscription.cancel_at) {
-          // If cancellation was requested from the customer portal, remove premium access from the user
+        if (subscription.pause_collection || subscription.status === 'canceled' ||
+            subscription.status === 'unpaid' || subscription.status === 'incomplete_expired') {
           await this.userModel.findByIdAndUpdate(metaData.userId, {
             $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
           })
-        }
-        // Check if the subscription is being renewed from the customer portal
-        else if (
-          subscription.cancel_at === null &&
-          !subscription.pause_collection
-        ) {
-          // If the subscription is renewed, add premium access to the user
+        } else if (subscriptionCanGrantPremium) {
+          // A scheduled future cancellation does not end paid access immediately.
           await this.userModel.findByIdAndUpdate(metaData.userId, {
             $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
           })
         }
-        // Check if the subscription is being paused with 'void' behavior
-        else if (
-          subscription.pause_collection &&
-          subscription.pause_collection.behavior === 'void'
-        ) {
-          // If paused with 'void' behavior, remove premium access from the user
-          await this.userModel.findByIdAndUpdate(metaData.userId, {
-            $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
-          })
-        }
-        // Check if the subscription is being resumed
-        else if (!subscription.pause_collection) {
-          // If resumed, add premium access to the user
-          await this.userModel.findByIdAndUpdate(metaData.userId, {
-            $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
-          })
-        }
+        // Leave existing access unchanged for intermediate states such as past_due.
         break
     }
   }
