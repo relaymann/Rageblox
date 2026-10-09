@@ -1,5 +1,6 @@
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ROLE } from '../roles/models/role.enum'
 import { ScriptEntityService } from './script-entity.service'
 
 const scriptId = '64b000000000000000000001'
@@ -26,6 +27,24 @@ describe('ScriptEntityService legacy script authorization', () => {
       {} as any,
       roleService
     )
+  })
+
+  it('rejects OWNER as a default role', async () => {
+    await expect(
+      service.create(creatorId, {
+        blocks: [],
+        defaultRole: ROLE.OWNER
+      })
+    ).rejects.toBeInstanceOf(BadRequestException)
+  })
+
+  it('rejects invalid role values when called outside HTTP validation', async () => {
+    await expect(
+      service.create(creatorId, {
+        blocks: [],
+        defaultRole: 9999 as ROLE
+      })
+    ).rejects.toBeInstanceOf(BadRequestException)
   })
 
   it('allows the creator to read a legacy script with no role metadata', async () => {
