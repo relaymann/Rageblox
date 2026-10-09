@@ -68,10 +68,16 @@ describe('WsAuthHelperService', () => {
     const client = socket()
     const spaceId = '507f1f77bcf86cd799439011'
     let resolveAuthorization: (value: unknown) => void
-    spaceService.findOneWithRolesCheck.mockReturnValue(
-      new Promise((resolve) => {
-        resolveAuthorization = resolve
-      })
+    let markAuthorizationStarted: () => void
+    const authorizationStarted = new Promise<void>((resolve) => {
+      markAuthorizationStarted = resolve
+    })
+    spaceService.findOneWithRolesCheck.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveAuthorization = resolve
+          markAuthorizationStarted()
+        })
     )
 
     const initialization = (helper as any).initialize(client, [
@@ -83,9 +89,7 @@ describe('WsAuthHelperService', () => {
       }
     ])
 
-    await vi.waitFor(() =>
-      expect(spaceService.findOneWithRolesCheck).toHaveBeenCalled()
-    )
+    await authorizationStarted
     helper.removeSubscriber(client)
     resolveAuthorization!({})
     await initialization
