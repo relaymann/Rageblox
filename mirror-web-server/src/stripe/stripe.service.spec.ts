@@ -32,9 +32,51 @@ describe('StripeService subscription webhook entitlements', () => {
       },
       subscriptions: {
         create: vi.fn()
+      },
+      accounts: {
+        del: vi.fn().mockResolvedValue({ id: 'acct-test' })
       }
     }
     service = new StripeService(userModel, stripe)
+  })
+
+  it('deletes only the Connect account and preserves customer billing and premium access', async () => {
+    userModel.findById.mockResolvedValue({
+      id: userId,
+      stripeAccountId: 'acct-test',
+      stripeCustomerId: 'cus-test'
+    })
+    userModel.findByIdAndUpdate.mockResolvedValue({ id: userId })
+
+    await service.deleteConnectAccount(userId)
+
+    expect(stripe.accounts.del).toHaveBeenCalledWith('acct-test')
+    expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      userId,
+      { $unset: { stripeAccountId: 1 } },
+      { new: true }
+    )
+    expect(userModel.findByIdAndUpdate).not.toHaveBeenCalledWith(
+      userId,
+      expect.objectContaining({
+        $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
+      }),
+      expect.anything()
+    )
+  })
+
+  it('rejects Connect deletion when the user has no Connect account', async () => {
+    userModel.findById.mockResolvedValue({
+      id: userId,
+      stripeCustomerId: 'cus-test'
+    })
+
+    await expect(service.deleteConnectAccount(userId)).rejects.toThrow(
+      'Stripe Connect account not found'
+    )
+
+    expect(stripe.accounts.del).not.toHaveBeenCalled()
+    expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled()
   })
 
   it('rejects client-directed subscription transfers before contacting Stripe', async () => {

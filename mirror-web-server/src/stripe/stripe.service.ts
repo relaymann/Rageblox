@@ -97,19 +97,17 @@ export class StripeService {
 
   public async deleteConnectAccount(userId: string) {
     const user = await this.userModel.findById(userId)
+    if (!user?.stripeAccountId) {
+      throw new BadRequestException('Stripe Connect account not found')
+    }
 
     await this.stripe.accounts.del(user.stripeAccountId)
-    // Revoke premium access if a user's Stripe Connect account is deleted
 
+    // Connect is the user's seller/payout account, not their customer billing
+    // account. Removing it must not erase customer IDs or subscription entitlements.
     return await this.userModel.findByIdAndUpdate(
       user.id,
-      {
-        $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
-        $unset: {
-          stripeAccountId: 1,
-          stripeCustomerId: 1
-        }
-      },
+      { $unset: { stripeAccountId: 1 } },
       { new: true }
     )
   }
