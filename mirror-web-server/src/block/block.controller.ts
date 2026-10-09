@@ -58,7 +58,11 @@ export class BlockController {
     @UserToken('user_id') userId: string,
     @Body() updateAssetDto: UpdateBlockDto
   ) {
-    return await this.blockService.updateWithRolesCheck(id, userId, updateAssetDto)
+    return await this.blockService.updateWithRolesCheck(
+      id,
+      userId,
+      updateAssetDto
+    )
   }
 
   @Delete(':id')

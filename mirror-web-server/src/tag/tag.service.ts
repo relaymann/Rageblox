@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { TAG_TYPE } from '../option-sets/tag-type'
@@ -152,6 +156,8 @@ export class TagService {
     const tag = await this.findOne(id)
     if (!tag) throw new NotFoundException()
     if (tag.creator?.toString() !== userId) throw new ForbiddenException()
-    return this.tagModel.findOneAndDelete({ _id: id }).exec() as any as Promise<TagDocument>
+    return this.tagModel.findOneAndDelete(
+        { _id: id }
+      ).exec() as any as Promise<TagDocument>
   }
 }

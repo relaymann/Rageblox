@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common'
 import { Types } from 'mongoose'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
@@ -11,7 +15,10 @@ export class BlockService {
   constructor(
     @InjectModel(Block.name) private blockModel: Model<BlockDocument>
   ) {}
-  createWithOwner(userId: string, createBlockDto: CreateBlockDto): Promise<BlockDocument> {
+  createWithOwner(
+    userId: string,
+    createBlockDto: CreateBlockDto
+  ): Promise<BlockDocument> {
     const created = new this.blockModel({
       ...createBlockDto,
       creator: new Types.ObjectId(userId)
@@ -37,15 +44,27 @@ export class BlockService {
     if (block.creator?.toString() !== userId) {
       throw new ForbiddenException('Insufficient block permissions')
     }
-    const { _id, creator, mirrorPublicLibrary, ...safeUpdate } = updateBlockDto as any
-    return this.blockModel.findByIdAndUpdate(id, safeUpdate, { new: true }).exec()
+    const {
+      _id,
+      creator,
+      mirrorPublicLibrary,
+      ...safeUpdate
+    } = updateBlockDto as any
+    return this.blockModel
+      .findByIdAndUpdate(id, safeUpdate, { new: true })
+      .exec()
   }
 
-  async removeWithRolesCheck(id: string, userId: string): Promise<BlockDocument> {
+  async removeWithRolesCheck(
+    id: string,
+    userId: string
+  ): Promise<BlockDocument> {
     const block = await this.findOne(id)
     if (block.creator?.toString() !== userId) {
       throw new ForbiddenException('Insufficient block permissions')
     }
-    return this.blockModel.findOneAndDelete({ _id: id }).exec() as any as Promise<BlockDocument>
+    return this.blockModel
+      .findOneAndDelete({ _id: id })
+      .exec() as any as Promise<BlockDocument>
   }
 }

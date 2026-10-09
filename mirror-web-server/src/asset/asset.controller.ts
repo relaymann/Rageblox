@@ -81,7 +81,13 @@ export class AssetFullDataPaginatedResponse
   @ApiProperty({ type: [Asset] })
   data: Asset[]
 }
-@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }))
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true
+  })
+)
 @Controller('asset')
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}

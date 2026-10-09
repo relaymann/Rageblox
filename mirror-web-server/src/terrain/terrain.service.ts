@@ -72,7 +72,7 @@ export class TerrainService {
 
     // get space with populate fields for roles check
     const spaceWithPopuleFiels = await this.spaceService.getSpace(
-      space._id.toString()
+      \n      space._id.toString()
     )
 
     // check if user has permission to find terrain
@@ -214,7 +214,9 @@ export class TerrainService {
 
     const populatedSpace = await this.spaceService.getSpace(space._id.toString())
     if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
-      throw new ForbiddenException("You don't have permission to delete terrain")
+      throw new ForbiddenException(
+        "You don't have permission to delete terrain"
+      )
     }
 
     return this.remove(id)

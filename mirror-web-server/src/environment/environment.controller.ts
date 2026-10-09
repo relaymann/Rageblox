@@ -36,10 +36,7 @@ export class EnvironmentController {
   @Get(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
   @ApiOkResponse({ type: EnvironmentApiResponse })
-  public findOne(
-    @Param('id') id: string,
-    @UserToken('user_id') userId: UserId
-  ) {
+  public findOne(@Param('id') id: string, @UserToken('user_id') userId: UserId) {
     return this.environmentService.findOneWithRolesCheck(id, userId)
   }
 

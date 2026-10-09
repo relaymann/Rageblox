@@ -76,7 +76,8 @@ async function bootstrapRageBloxWebServer() {
     .map((origin) => origin.trim())
     .filter(Boolean)
 
-  if (process.env.NODE_ENV === NODE_ENV.PRODUCTION && allowedOrigins.length === 0) {
+  if (process.env.NODE_ENV === NODE_ENV.PRODUCTION &&
+    allowedOrigins.length === 0) {
     throw new Error('ALLOWED_DOMAINS must be configured in production')
   }
 

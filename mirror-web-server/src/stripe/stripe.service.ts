@@ -487,7 +487,9 @@ export class StripeService {
   public async handleStripeWebhook(rawBody: string, signature: string) {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
     if (!webhookSecret) {
-      throw new BadRequestException('Stripe webhook verification is not configured')
+      throw new BadRequestException(
+        'Stripe webhook verification is not configured'
+      )
     }
 
     let rowBody: Stripe.Event
@@ -508,12 +510,15 @@ export class StripeService {
       STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_RESUMED,
       STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_UPDATED
     ]
-    if (!subscriptionEventTypes.includes(rowBody.type as STRIPE_WEBHOOK_TYPES)) {
+    if (
+      !subscriptionEventTypes.includes(rowBody.type as STRIPE_WEBHOOK_TYPES)
+    ) {
       return
     }
 
     const subscription = rowBody.data.object as Stripe.Subscription
-    const metaData = (subscription.metadata || {}) as unknown as StripeSubscriptionMetadataDto
+    const metaData = (subscription.metadata || {}) as unknown as
+      StripeSubscriptionMetadataDto
     if (typeof metaData.userId !== 'string' || !metaData.userId) {
       throw new BadRequestException(
         'Stripe subscription webhook is missing user metadata'
@@ -525,7 +530,9 @@ export class StripeService {
     const premiumPriceId = process.env.STRIPE_PREMIUM_PRICE_ID
     const subscriptionIsPremium =
       !!premiumPriceId &&
-      subscription.items?.data?.some((item) => item.price.id === premiumPriceId)
+      subscription.items?.data?.some(
+        (item) => item.price.id === premiumPriceId
+      )
     const subscriptionCanGrantPremium =
       subscriptionIsPremium &&
       ['active', 'trialing'].includes(subscription.status) &&

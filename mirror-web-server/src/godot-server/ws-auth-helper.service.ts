@@ -55,7 +55,10 @@ export class WsAuthHelperService {
     // WebSocket libraries may supply malformed or missing handshake arguments.
     // Reject them cleanly rather than throwing during connection initialization.
     const handshake =
-      Array.isArray(args) && args.length > 0 && args[0] && typeof args[0] === 'object'
+      Array.isArray(args) &&
+      args.length > 0 &&
+      args[0] &&
+      typeof args[0] === 'object'
         ? args[0]
         : null
     const headers =
@@ -63,7 +66,10 @@ export class WsAuthHelperService {
         ? handshake.headers
         : null
     if (!headers) {
-      this.logger.warn('Rejected WebSocket connection with invalid handshake headers', WsAuthHelperService.name)
+      this.logger.warn(
+        'Rejected WebSocket connection with invalid handshake headers',
+        WsAuthHelperService.name
+      )
       client.close(1008, 'Invalid handshake')
       return
     }
@@ -138,15 +144,24 @@ export class WsAuthHelperService {
       WsAuthHelperService.name
     )
     if (!spaceId || !isMongoId(spaceId)) {
-      this.logger.log('Invalid or missing spaceId for authenticated WebSocket connection', WsAuthHelperService.name)
+      this.logger.log(
+        'Invalid or missing spaceId for authenticated WebSocket connection',
+        WsAuthHelperService.name
+      )
       return client.close(1008, 'Invalid space')
     }
 
     if (token !== process.env.WSS_SECRET) {
       try {
-        await this.spaceService.findOneWithRolesCheck(client['user'].uid, spaceId)
+        await this.spaceService.findOneWithRolesCheck(
+          client['user'].uid,
+          spaceId
+        )
       } catch (error) {
-        this.logger.log('Authenticated user is not authorized for requested space', WsAuthHelperService.name)
+        this.logger.log(
+            'Authenticated user is not authorized for requested space',
+            WsAuthHelperService.name
+          )
         return client.close(1008, 'Not authorized for space')
       }
     }
@@ -231,7 +246,9 @@ export class WsAuthHelperService {
     const subchannel = client['subscriberChannel']
     if (!subchannel || !this.channelSubs[subchannel]) {
       this.logger.log(
-        `setupSubscriber: attempted but subchannel was falsey: ${JSON.stringify({ subchannel })}`,
+        `setupSubscriber: attempted but subchannel was falsey: ${JSON.stringify(
+            { subchannel }
+          )}`,
         WsAuthHelperService.name
       )
       return

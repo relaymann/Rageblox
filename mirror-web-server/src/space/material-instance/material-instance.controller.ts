@@ -17,7 +17,11 @@ import { UserToken } from '../../auth/get-user.decorator'
 import { ApiCreatedResponse, ApiParam } from '@nestjs/swagger'
 import { ApiResponseProperty } from '@nestjs/swagger/dist/decorators/api-property.decorator'
 import { MaterialInstance } from './material-instance.schema'
-import { MaterialInstanceId, SpaceId, UserId } from '../../util/mongo-object-id-helpers'
+import {
+  MaterialInstanceId,
+  SpaceId,
+  UserId
+} from '../../util/mongo-object-id-helpers'
 
 class MaterialInstanceResponse extends MaterialInstance {
   @ApiResponseProperty()
@@ -40,7 +44,10 @@ export class MaterialInstanceController {
     @Body() createMaterialInstanceDto: CreateMaterialInstanceDto,
     @UserToken('user_id') userId: UserId
   ) {
-    return await this.materialInstanceService.create(createMaterialInstanceDto, userId)
+    return await this.materialInstanceService.create(
+      createMaterialInstanceDto,
+      userId
+    )
   }
 
   @Get(':spaceId/:materialInstanceId')

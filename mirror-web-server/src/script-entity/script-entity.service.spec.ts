@@ -22,11 +22,7 @@ describe('ScriptEntityService legacy script authorization', () => {
     roleService = {
       getRoleCheckAggregationPipeline: vi.fn().mockReturnValue([])
     }
-    service = new ScriptEntityService(
-      scriptEntityModel,
-      {} as any,
-      roleService
-    )
+    service = new ScriptEntityService(scriptEntityModel, {} as any, roleService)
   })
 
   it('rejects OWNER as a default role', async () => {

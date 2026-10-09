@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { CreateFavoriteDto } from './dto/create-favorite.dto'
@@ -42,7 +46,9 @@ export class FavoriteService {
   ): Promise<FavoriteDocument> {
     const favorite = await this.findOneForUser(id, userId)
     const { _id, user, creator, ...safeUpdate } = dto as any
-    return this.favoriteModel.findByIdAndUpdate(favorite._id, safeUpdate, { new: true }).exec()
+    return this.favoriteModel
+      .findByIdAndUpdate(favorite._id, safeUpdate, { new: true })
+      .exec()
   }
 
   async removeForUser(id: string, userId: string): Promise<FavoriteDocument> {

@@ -130,7 +130,11 @@ export class TagController {
     @Body() updateAssetDto: UpdateTagDto,
     @UserToken('user_id') userId: string
   ) {
-    return await this.tagService.updateWithRolesCheck(id, userId, updateAssetDto)
+    return await this.tagService.updateWithRolesCheck(
+      id,
+      userId,
+      updateAssetDto
+    )
   }
 
   @Delete(':id')

@@ -17,9 +17,7 @@ export class WsAuthGuard implements CanActivate {
 
     // wait until client data initialization will be finished
     const check =
-      (await this.wsAuthHelperService.finishInitialization(
-        client
-      )) ||
+      (await this.wsAuthHelperService.finishInitialization(client)) ||
       this.wsAuthHelperService.initializationSuccess[client['id'] as string]
     return check
   }

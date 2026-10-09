@@ -12,7 +12,6 @@ import {
   UserMarketing,
   UserMarketingSchema
 } from './models/user-marketing.schema'
-
 export type UserDocument = User & Document
 
 export const USER_VIRTUAL_PROPERTY_PUBLIC_ASSETS = 'publicAssets'
