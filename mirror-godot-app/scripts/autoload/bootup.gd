@@ -5,16 +5,7 @@ extends Node
 
 static var popups = []
 
-func _set_rageblox_window_icon() -> void:
-	var icon_texture := load("res://art/icons/rageblox_icon.png") as Texture2D
-	if icon_texture:
-		var icon_image := icon_texture.get_image()
-		if icon_image:
-			DisplayServer.window_set_icon(icon_image)
-
-
 func _start_client():
-	_set_rageblox_window_icon()
 	DisplayServer.window_set_title(ProjectSettings.get_setting("application/config/window_name", "RageBlox"))
 	Cursors.setup()
 	if ProjectSettings.get_setting("feature_flags/disable_login", false):
@@ -127,8 +118,14 @@ func _wait_for_space_scene_ready() -> bool:
 
 func _ready() -> void:
 	if "--rageblox-studio" in OS.get_cmdline_args() or bool(ProjectSettings.get_setting("rageblox_studio/studio_launcher", false)):
-		var studio_scene := load("res://scenes/studio_start.tscn")
-		var studio_ui := studio_scene.instantiate()
+		var studio_scene: PackedScene = load("res://scenes/studio_start.tscn") as PackedScene
+		if studio_scene == null:
+			push_error("RageBlox Studio startup was requested, but scenes/studio_start.tscn could not be loaded.")
+			return
+		var studio_ui: Node = studio_scene.instantiate()
+		if studio_ui == null:
+			push_error("RageBlox Studio startup scene could not be instantiated.")
+			return
 		get_tree().root.add_child(studio_ui)
 		return
 	GameUI._root_node = get_node("/root/")

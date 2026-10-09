@@ -273,14 +273,20 @@ func get_experiences(section: StringName, category: String = "", query: String =
 			continue
 		if not category.is_empty() and genre.to_lower() != category.to_lower():
 			continue
-		var include := match section:
-			&"featured": bool(item.get("featured", false))
-			&"rising": bool(item.get("rising", false))
-			&"new": bool(item.get("new", false))
-			&"trending": int(item.get("playerCount", 0)) > 0
-			&"recent": RageBloxServices.recent_experiences.has(StringName(str(item.get("id", ""))))
-			&"favorites": RageBloxServices.favorite_experiences.has(StringName(str(item.get("id", ""))))
-			_: true
+		var include := true
+		match section:
+			&"featured":
+				include = bool(item.get("featured", false))
+			&"rising":
+				include = bool(item.get("rising", false))
+			&"new":
+				include = bool(item.get("new", false))
+			&"trending":
+				include = int(item.get("playerCount", 0)) > 0
+			&"recent":
+				include = RageBloxServices.recent_experiences.has(StringName(str(item.get("id", ""))))
+			&"favorites":
+				include = RageBloxServices.favorite_experiences.has(StringName(str(item.get("id", ""))))
 		if include:
 			filtered.append(item.duplicate(true))
 	if section == &"trending":

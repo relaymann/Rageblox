@@ -220,11 +220,54 @@ jobs:
         run: |
           unzip -o ${{ inputs.editor-binary-download }}
 
-      - name: Set up template in system-wide editor data
+      - name: Set up matching template in system-wide editor data
+        shell: bash
         run: |
-          chmod +x ./${{ inputs.template-binary-name }}
-          mkdir -p ${{ inputs.editor-template-directory }}
-          mv ./${{ inputs.template-binary-name }} ${{ inputs.editor-template-directory }}/${{ inputs.export-template-file }}
+          chmod +x "./${{ inputs.editor-binary-name }}"
+          chmod +x "./${{ inputs.template-binary-name }}"
+          editor_version="$(./${{ inputs.editor-binary-name }} --version 2>&1 | head -n 1 | tr -d '\r')"
+          template_version="$(printf '%s\n' "$editor_version" | sed -nE 's/^([0-9]+\.[0-9]+(\.[0-9]+)?\.[[:alpha:]]+).*/\1/p')"
+          if [ -z "$template_version" ]; then
+            echo "Could not derive the export-template version from editor output: $editor_version" >&2
+            exit 1
+          fi
+          template_config_dir=${{ inputs.editor-template-directory }}
+          template_base_dir="$(dirname "$template_config_dir")"
+          template_dir="$template_base_dir/$template_version"
+          mkdir -p "$template_dir"
+          mv "./${{ inputs.template-binary-name }}" "$template_dir/${{ inputs.export-template-file }}"
+          test -s "$template_dir/${{ inputs.export-template-file }}"
+          echo "Installed matching Godot $template_version template in $template_dir"
+
+      - name: Configure Windows resource editor
+        if: ${{ startsWith(inputs.os, 'windows-') || startsWith(inputs.os, 'windows') }}
+        shell: pwsh
+        run: |
+          $godotDataDir = Join-Path $env:APPDATA "Godot"
+          $toolsDir = Join-Path $godotDataDir "tools"
+          New-Item -ItemType Directory -Force -Path $toolsDir | Out-Null
+          $rceditPath = Join-Path $toolsDir "rcedit-x64.exe"
+          Invoke-WebRequest -Uri "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe" -OutFile $rceditPath
+          if (-not (Test-Path -LiteralPath $rceditPath -PathType Leaf) -or (Get-Item -LiteralPath $rceditPath).Length -lt 100KB) {
+            throw "Could not install a valid rcedit-x64.exe."
+          }
+          $settingsPath = Join-Path $godotDataDir "editor_settings-4.3.tres"
+          $escapedRceditPath = $rceditPath.Replace("\", "/")
+          if (Test-Path -LiteralPath $settingsPath) {
+            $settings = Get-Content -LiteralPath $settingsPath -Raw
+            if ($settings -match '(?m)^export/windows/rcedit\s*=') {
+              $settings = [regex]::Replace($settings, '(?m)^export/windows/rcedit\s*=.*$', ('export/windows/rcedit = "' + $escapedRceditPath + '"'))
+            } elseif ($settings.Contains('[resource]')) {
+              $resourceIndex = $settings.IndexOf('[resource]') + '[resource]'.Length
+              $settings = $settings.Insert($resourceIndex, [Environment]::NewLine + 'export/windows/rcedit = "' + $escapedRceditPath + '"')
+            } else {
+              throw "Existing Godot editor settings have an unexpected format: $settingsPath"
+            }
+          } else {
+            $settings = '[gd_resource type="EditorSettings" format=3]' + [Environment]::NewLine + [Environment]::NewLine + '[resource]' + [Environment]::NewLine + 'export/windows/rcedit = "' + $escapedRceditPath + '"' + [Environment]::NewLine
+          }
+          Set-Content -LiteralPath $settingsPath -Value $settings -NoNewline
+          Write-Host "Configured Windows resource editor at $rceditPath"
 
       - name: Copy environment configuration to override.cfg
         run: |
@@ -234,17 +277,35 @@ jobs:
           # must be removed before booting the app otherwise we overwrite the override.cfg
           rm -Rf addons/mirror_internal
 
-      - name: Wait for import of all assets
+      - name: Import assets and reject script parse errors
         if: ${{ !inputs.should-install-timeout-macos }}
         run: |
-          chmod +x ./${{ inputs.editor-binary-name }}
-          timeout 10m ./${{ inputs.editor-binary-name }} --headless --import --path . --verbose
+          set -o pipefail
+          log_file="rageblox-import.log"
+          if ! timeout 10m ./${{ inputs.editor-binary-name }} --headless --import --path . --verbose 2>&1 | tee "$log_file"; then
+            echo "Godot asset import failed; see the log above." >&2
+            exit 1
+          fi
+          if grep -Eiq '(SCRIPT ERROR|USER SCRIPT ERROR|Parse Error|Failed to load script|Failed to create an autoload)' "$log_file"; then
+            echo "Godot reported script compilation or autoload errors during import." >&2
+            exit 1
+          fi
+          rm -f "$log_file"
 
-      - name: Wait for import of all assets
+      - name: Import assets and reject script parse errors
         if: ${{ inputs.should-install-timeout-macos }}
         run: |
-          chmod +x ./${{ inputs.editor-binary-name }}
-          gtimeout 10m ./${{ inputs.editor-binary-name }} --headless --import --path . --verbose
+          set -o pipefail
+          log_file="rageblox-import.log"
+          if ! gtimeout 10m ./${{ inputs.editor-binary-name }} --headless --import --path . --verbose 2>&1 | tee "$log_file"; then
+            echo "Godot asset import failed; see the log above." >&2
+            exit 1
+          fi
+          if grep -Eiq '(SCRIPT ERROR|USER SCRIPT ERROR|Parse Error|Failed to load script|Failed to create an autoload)' "$log_file"; then
+            echo "Godot reported script compilation or autoload errors during import." >&2
+            exit 1
+          fi
+          rm -f "$log_file"
 
       - name: Unit Tests
         timeout-minutes: 15
