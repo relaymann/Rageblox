@@ -49,10 +49,43 @@ describe('SpaceObjectService', () => {
 
   it('does not expose creator email through standard space-object reads', () => {
     const populateFields = (service as any)._standardPopulateFields
-    const creatorField = populateFields.find((field) => field.path === 'creator')
+    const creatorField = populateFields.find(
+      (field) => field.path === 'creator'
+    )
 
     expect(creatorField.select).toEqual(['displayName'])
     expect(creatorField.select).not.toContain('email')
+  })
+
+  it('strips client-supplied ownership and role fields before creating objects', async () => {
+    vi.spyOn(service as any, 'canCreateWithRolesCheck').mockResolvedValue(true)
+    ;(service as any).assetService = {
+      isAssetSoftDeleted: vi.fn().mockResolvedValue(false),
+      addInstancedAssetToRecents: vi.fn().mockResolvedValue(undefined)
+    }
+    const createSpy = vi
+      .spyOn(service as any, 'createAndNotifyAdmin')
+      .mockResolvedValue({})
+
+    await service.createOneWithRolesCheck(
+      'user-1' as any,
+      {
+        spaceId: '507f1f77bcf86cd799439011',
+        name: 'safe-name',
+        asset: '507f1f77bcf86cd799439012',
+        role: { defaultRole: 100 },
+        creator: 'attacker',
+        space: '507f1f77bcf86cd799439013',
+        _id: '507f1f77bcf86cd799439014'
+      } as any
+    )
+
+    expect(createSpy).toHaveBeenCalledWith({
+      creatorUserId: 'user-1',
+      spaceId: '507f1f77bcf86cd799439011',
+      name: 'safe-name',
+      asset: '507f1f77bcf86cd799439012'
+    })
   })
 
   it('strips client-supplied ownership, role, and space fields from updates', async () => {
@@ -77,10 +110,9 @@ describe('SpaceObjectService', () => {
       } as any
     )
 
-    expect(updateSpy).toHaveBeenCalledWith(
-      '507f1f77bcf86cd799439012',
-      { name: 'safe-name' }
-    )
+    expect(updateSpy).toHaveBeenCalledWith('507f1f77bcf86cd799439012', {
+      name: 'safe-name'
+    })
   })
 
   it('rejects cross-space parent links on updates', async () => {
