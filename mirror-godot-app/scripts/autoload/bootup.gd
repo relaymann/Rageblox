@@ -5,8 +5,17 @@ extends Node
 
 static var popups = []
 
+func _set_rageblox_window_icon() -> void:
+	var icon_texture := load("res://art/icons/rageblox_icon.png") as Texture2D
+	if icon_texture:
+		var icon_image := icon_texture.get_image()
+		if icon_image:
+			DisplayServer.window_set_icon(icon_image)
+
+
 func _start_client():
-	DisplayServer.window_set_title(ProjectSettings.get_setting("application/config/window_name", "The Mirror"))
+	_set_rageblox_window_icon()
+	DisplayServer.window_set_title(ProjectSettings.get_setting("application/config/window_name", "RageBlox"))
 	Cursors.setup()
 	if ProjectSettings.get_setting("feature_flags/disable_login", false):
 		LoginService.setup_deeplink_login(get_tree())
@@ -104,6 +113,18 @@ func _complete_bootup():
 	Zone.completed_booting.emit()
 
 
+const _SPACE_SCENE_START_TIMEOUT_SECONDS := 10.0
+
+
+func _wait_for_space_scene_ready() -> bool:
+	var deadline := Time.get_ticks_msec() + int(_SPACE_SCENE_START_TIMEOUT_SECONDS * 1000.0)
+	while not is_instance_valid(Zone.Scene):
+		if Time.get_ticks_msec() >= deadline:
+			return false
+		await get_tree().process_frame
+	return true
+
+
 func _ready() -> void:
 	if "--rageblox-studio" in OS.get_cmdline_args() or bool(ProjectSettings.get_setting("rageblox_studio/studio_launcher", false)):
 		var studio_scene := load("res://scenes/studio_start.tscn")
@@ -112,25 +133,27 @@ func _ready() -> void:
 		return
 	GameUI._root_node = get_node("/root/")
 	_setup_gltf()
-	if await _auto_start_server():
-		_complete_bootup()
+	if Util.is_host_commandline() or Util.is_headless_server():
+		if await _start_server():
+			_complete_bootup()
+		else:
+			push_error("RageBlox server failed to start; refusing to fall through into client mode.")
+			get_tree().quit(1)
 		return
 	_start_client()
 	_complete_bootup()
 
 
-func _auto_start_server() -> bool:
-	if Util.is_host_commandline() or Util.is_headless_server():
-		return await _start_server()
-	return false
-
-
 func _start_server() -> bool:
 	await LoginService.server_login_if_required(get_tree())
+	# SpaceScene must exist before the server populates built-in spaces.
+	Zone.change_to_space_scene()
+	if not await _wait_for_space_scene_ready():
+		push_error("SpaceScene did not initialize before the server startup deadline.")
+		return false
 	if Zone.start_server():
-		DisplayServer.window_set_title("The Mirror Dedicated Server")
+		DisplayServer.window_set_title("RageBlox Dedicated Server")
 		_setup_server_window()
-		Zone.change_to_space_scene()
 		var properties = {}
 		properties.cpu_info = OS.get_processor_name()
 		properties.cpu_cores = OS.get_processor_count()

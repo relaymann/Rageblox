@@ -1,5 +1,4 @@
 extends StaticBody3D
-class_name RageBloxShowcaseInteractable
 
 signal player_interact(player: Node)
 

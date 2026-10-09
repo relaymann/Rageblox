@@ -233,28 +233,72 @@ jobs:
         with:
           name: windows_release_x86_64.exe
           path: .ci/showcase/template
-      - name: Prepare custom export template
+      - name: Configure isolated Showcase project
         shell: pwsh
         run: |
           $editor = Join-Path $env:GITHUB_WORKSPACE ".ci/showcase/editor/MirrorGodotEditorWindows.exe"
           $template = Join-Path $env:GITHUB_WORKSPACE ".ci/showcase/template/windows_release_x86_64.exe"
+          $project = Join-Path $env:GITHUB_WORKSPACE "mirror-godot-app/showcase-standalone"
+          $projectPath = Join-Path $project "project.godot"
+          $presetPath = Join-Path $project "export_presets.cfg"
           if (-not (Test-Path -LiteralPath $editor -PathType Leaf)) { throw "Windows editor artifact is missing: $editor" }
           if (-not (Test-Path -LiteralPath $template -PathType Leaf)) { throw "Windows template artifact is missing: $template" }
-          $presetPath = Join-Path $env:GITHUB_WORKSPACE "mirror-godot-app/export_presets.cfg"
+          if (-not (Test-Path -LiteralPath $projectPath -PathType Leaf)) { throw "Isolated Showcase project.godot is missing." }
+          foreach ($file in @("showcase_place.tscn", "showcase_place.gd", "rageblox_showcase.tscn", "rageblox_showcase.gd", "showcase_interactable.gd", "rageblox_icon.png", "export_presets.cfg")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $project $file) -PathType Leaf)) { throw "Required standalone Showcase file is missing: $file" }
+          }
+          $settings = Get-Content -LiteralPath $projectPath -Raw
+          if ($settings -notmatch 'run/main_scene="res://showcase_place.tscn"') { throw "Standalone Showcase main scene is not configured." }
+          if ($settings -match '(?m)^\[autoload\]') { throw "Standalone Showcase must not depend on autoloads." }
+          if ($settings -match 'boot_scene.tscn|rageblox_platform|compressed_build_exporter') { throw "Standalone Showcase references the platform startup stack." }
           $preset = Get-Content -LiteralPath $presetPath -Raw
-          $start = $preset.IndexOf("[preset.0.options]")
-          $end = $preset.IndexOf("[preset.1]", $start)
-          if ($start -lt 0 -or $end -lt 0) { throw "Windows export preset could not be located." }
-          $section = $preset.Substring($start, $end - $start)
+          if (-not $preset.Contains('[preset.0.options]')) { throw "Standalone Windows export preset is missing." }
           $templateConfigPath = $template.Replace("\", "/")
-          $section = $section.Replace('custom_template/release=""', ('custom_template/release="' + $templateConfigPath + '"'))
-          $section = $section.Replace("binary_format/embed_pck=false", "binary_format/embed_pck=true")
-          Set-Content -LiteralPath $presetPath -Value ($preset.Substring(0, $start) + $section + $preset.Substring($end)) -NoNewline
+          # The custom engine checks both template slots during export preflight, even for release-only exports.
+          foreach ($kind in @("debug", "release")) {
+            $emptyOption = 'custom_template/' + $kind + '=""'
+            $customOption = 'custom_template/' + $kind + '="' + $templateConfigPath + '"'
+            if (-not $preset.Contains($emptyOption)) { throw "Could not locate empty custom $kind template option in Showcase export preset." }
+            $preset = $preset.Replace($emptyOption, $customOption)
+          }
+          foreach ($kind in @("debug", "release")) {
+            $customOption = 'custom_template/' + $kind + '="' + $templateConfigPath + '"'
+            if (-not $preset.Contains($customOption)) { throw "Custom Windows $kind template path was not applied." }
+          }
+          if (-not $preset.Contains('binary_format/embed_pck=true')) { throw "Standalone Showcase must embed its game data." }
+          if (-not $preset.Contains('texture_format/s3tc_bptc=true') -and -not $preset.Contains('texture_format/etc2_astc=true')) {
+            throw "Standalone Showcase must enable at least one texture format."
+          }
+          Set-Content -LiteralPath $presetPath -Value $preset -NoNewline
+          $writtenPreset = Get-Content -LiteralPath $presetPath -Raw
+          foreach ($kind in @("debug", "release")) {
+            $customOption = 'custom_template/' + $kind + '="' + $templateConfigPath + '"'
+            if (-not $writtenPreset.Contains($customOption)) { throw "Configured custom Windows $kind template path was not written to disk." }
+          }
+          Write-Host "Validated isolated Showcase project, texture format, and both custom template paths."
+      - name: Validate standalone Showcase scripts before export
+        shell: pwsh
+        run: |
+          $editor = Join-Path $env:GITHUB_WORKSPACE ".ci/showcase/editor/MirrorGodotEditorWindows.exe"
+          $project = Join-Path $env:GITHUB_WORKSPACE "mirror-godot-app/showcase-standalone"
+          $log = Join-Path $env:GITHUB_WORKSPACE ".ci/showcase/showcase-import.log"
+          if (Test-Path -LiteralPath $log) { Remove-Item -LiteralPath $log -Force }
+          & $editor --headless --path $project --import --log-file $log
+          $exitCode = $LASTEXITCODE
+          if (Test-Path -LiteralPath $log) {
+            $logText = Get-Content -LiteralPath $log -Raw
+            if ($logText -match '(?im)(SCRIPT ERROR|USER SCRIPT ERROR|Parse Error|Failed to load resource|Failed to load script)') {
+              Write-Host $logText
+              throw "Standalone Showcase script/import preflight found a parse or resource error."
+            }
+          }
+          if ($exitCode -ne 0) { throw "Standalone Showcase import preflight failed with exit code $exitCode." }
+          Write-Host "Standalone Showcase import and script preflight passed."
       - name: Export RageBlox Showcase
         shell: pwsh
         run: |
           $editor = Join-Path $env:GITHUB_WORKSPACE ".ci/showcase/editor/MirrorGodotEditorWindows.exe"
-          $project = Join-Path $env:GITHUB_WORKSPACE "mirror-godot-app"
+          $project = Join-Path $env:GITHUB_WORKSPACE "mirror-godot-app/showcase-standalone"
           $outputDir = Join-Path $env:GITHUB_WORKSPACE "showcase-build"
           $output = Join-Path $outputDir "RageBlox-Showcase-Windows.exe"
           New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
@@ -263,7 +307,34 @@ jobs:
           if (-not (Test-Path -LiteralPath $output -PathType Leaf)) { throw "RageBlox Showcase executable was not produced." }
           $size = (Get-Item -LiteralPath $output).Length
           if ($size -lt 1048576) { throw "RageBlox Showcase executable is unexpectedly small ($size bytes)." }
-          Write-Host "Verified embedded Showcase build: $output ($size bytes)"
+          Write-Host "Verified isolated embedded Showcase build: $output ($size bytes)"
+      - name: Smoke-test exported Showcase startup
+        shell: pwsh
+        run: |
+          $output = Join-Path $env:GITHUB_WORKSPACE "showcase-build/RageBlox-Showcase-Windows.exe"
+          $log = Join-Path $env:GITHUB_WORKSPACE "showcase-build/showcase-smoke.log"
+          if (Test-Path -LiteralPath $log) { Remove-Item -LiteralPath $log -Force }
+          # Run the actual exported executable. This catches scene/script parse failures
+          # that the exporter's successful exit code cannot detect.
+          $process = Start-Process -FilePath $output -ArgumentList @("--headless", "--quit-after", "300", "--log-file", $log) -PassThru
+          if (-not $process.WaitForExit(30000)) {
+            try { $process.Kill() } catch {}
+            throw "Showcase startup smoke test timed out after 30 seconds."
+          }
+          if ($process.ExitCode -ne 0) {
+            if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log }
+            throw "Showcase startup smoke test exited with code $($process.ExitCode)."
+          }
+          if (Test-Path -LiteralPath $log) {
+            $logText = Get-Content -LiteralPath $log -Raw
+            if ($logText -match '(?im)(SCRIPT ERROR|USER SCRIPT ERROR|Parse Error|Failed to load resource|Failed to load script|Cannot get class|Non-existing or invalid boot splash|ERROR:.*(Showcase|showcase))') {
+              Write-Host $logText
+              throw "Showcase startup smoke test found a startup error."
+            }
+            Write-Host "Showcase startup smoke test passed."
+          } else {
+            Write-Host "Showcase startup smoke test passed without a log file."
+          }
       - name: Upload RageBlox Showcase
         uses: actions/upload-artifact@v4
         with:

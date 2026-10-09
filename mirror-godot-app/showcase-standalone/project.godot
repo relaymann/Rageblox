@@ -1,0 +1,25 @@
+; Minimal isolated project used only for the Windows Showcase test build.
+config_version=5
+
+[application]
+config/name="RageBlox Showcase"
+run/main_scene="res://showcase_place.tscn"
+config/features=PackedStringArray("4.3")
+boot_splash/bg_color=Color(0.012, 0.016, 0.025, 1)
+boot_splash/show_image=false
+boot_splash/image="res://rageblox_icon.png"
+config/icon="res://rageblox_icon.png"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/mode=0
+window/stretch/aspect="expand"
+
+[physics]
+3d/default_gravity=9.8
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.012, 0.016, 0.025, 1)

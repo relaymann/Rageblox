@@ -86,9 +86,9 @@ config/features=PackedStringArray("13b5ad64", "4.3", "mirror")
 boot_splash/bg_color=Color(0.0705882, 0.0313725, 0.0392157, 1)
 boot_splash/image="res://art/rageblox_wordmark.svg"
 boot_splash/fullsize=false
-config/icon="res://art/icons/rageblox_icon.svg"
+config/icon="res://art/icons/rageblox_icon.png"
 config/macos_native_icon="res://art/icons/mac/macos_icon.icns"
-config/windows_native_icon="res://art/icons/windows_icon.ico"
+config/windows_native_icon=""
 
 [audio]
 

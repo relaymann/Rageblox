@@ -1,11 +1,10 @@
 extends Node3D
-class_name RageBloxShowcasePlace
 
-const WORLD_SCENE_PATH := "res://experiences/rageblox_showcase/rageblox_showcase.tscn"
+const WORLD_SCENE_PATH := "res://rageblox_showcase.tscn"
 const STARTUP_TIMEOUT_SECONDS := 12.0
 
 var _world: Node3D
-var _interactable: RageBloxShowcaseInteractable
+var _interactable: Node3D
 var _player: CharacterBody3D
 var _camera: Camera3D
 var _camera_pivot: Node3D
@@ -41,7 +40,7 @@ func _initialize_showcase() -> void:
 	_world.name = "ShowcaseWorld"
 	add_child(_world)
 	await get_tree().process_frame
-	_interactable = _world.get_node_or_null("DoorSwitch") as RageBloxShowcaseInteractable
+	_interactable = _world.get_node_or_null("DoorSwitch") as Node3D
 	_world_ready = true
 	_show_loading("")
 	_capture_mouse(true)
@@ -194,7 +193,7 @@ func _physics_process(delta: float) -> void:
 	var e_down := Input.is_key_pressed(KEY_E)
 	if e_down and not _e_was_down and is_instance_valid(_interactable):
 		if _player.global_position.distance_to(_interactable.global_position) <= 5.0:
-			_interactable.click_panel()
+			_interactable.call("click_panel")
 	_e_was_down = e_down
 
 	if _player.global_position.y < -10.0:

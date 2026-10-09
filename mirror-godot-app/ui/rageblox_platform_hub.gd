@@ -176,7 +176,7 @@ func _open_experience(item: Dictionary) -> void:
 		RageBloxServices.set_presence(StringName(id), 0)
 		GameUI.instance.loading_ui.show()
 		GameUI.instance.main_menu_ui.hide()
-		Zone.client.start_join_showcase()
+		Zone.client.start_local_showcase()
 		return
 	GameUI.instance.main_menu_ui.change_page(&"Discover")
 	GameUI.instance.main_menu_ui.change_subpage(&"ViewSpace", item)

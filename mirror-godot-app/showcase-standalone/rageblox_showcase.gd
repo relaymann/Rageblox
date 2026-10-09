@@ -1,5 +1,4 @@
 extends Node3D
-class_name RageBloxShowcase
 
 const ACCENT := Color(0.9, 0.07, 0.12)
 const DARK := Color(0.025, 0.03, 0.045)
@@ -122,7 +121,7 @@ func _build_interaction_area() -> void:
 	_box(self, "InteractionFloor", Vector3(0, 0.3, 18), Vector3(20, 0.6, 12), DARK)
 	_label(self, "INTERACTION TEST", Vector3(0, 3.0, 13.0), Color.WHITE, 0.85)
 	var door := _box(self, "TestDoor", Vector3(0, 2.5, 22), Vector3(6, 5, 0.8), ACCENT)
-	var button_script := load("res://experiences/rageblox_showcase/showcase_interactable.gd")
+	var button_script := load("res://showcase_interactable.gd")
 	if button_script == null:
 		push_error("Showcase interaction script failed to load.")
 		return

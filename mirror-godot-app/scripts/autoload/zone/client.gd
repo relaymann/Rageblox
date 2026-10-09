@@ -18,6 +18,8 @@ const _SERVER_STATE_READY: String = "READY"
 const _SERVER_STATE_FAILED: String = "FAILED"
 const _FIND_SPACE_ZONE_TIMEOUT_SECONDS: float = 90.0
 const _FIND_SPACE_ZONE_RETRY_SECONDS: float = 4.0
+const _SPACE_SCENE_READY_TIMEOUT_SECONDS: float = 10.0
+const _SPACE_LOAD_TIMEOUT_SECONDS: float = 60.0
 
 var pid = null
 
@@ -33,6 +35,7 @@ var _last_status: String
 var current_zone: Dictionary = {}
 var _next_retry_time: float = 0.0
 var _is_joining_play_space: bool = false
+var _is_local_showcase_active: bool = false
 
 
 enum JOINER_ERRORS {
@@ -168,6 +171,15 @@ func _client_on_connected_to_server() -> void:
 
 	Analytics.track_event_client(AnalyticsEvent.TYPE.SPACE_JOIN_ATTEMPT_SUCCESS, {"spaceId": _queued_space_id})
 	Zone.change_to_space_scene()
+	var scene_deadline := Time.get_ticks_msec() + int(_SPACE_SCENE_READY_TIMEOUT_SECONDS * 1000.0)
+	while not is_instance_valid(Zone.Scene):
+		if Time.get_ticks_msec() >= scene_deadline:
+			push_error("SpaceScene did not initialize before client join timeout.")
+			Game.critical_error(JOINER_ERRORS.CLIENT_TIMEOUT, "The game scene failed to initialize.")
+			quit_to_main_menu()
+			return
+		await get_tree().process_frame
+
 	# TODO: Instead of true, determine if the player has creator permissions for the space.
 	GameUI.instance.on_enter_space(true)
 
@@ -188,8 +200,14 @@ func _client_on_connected_to_server() -> void:
 	# wait for the space to be in a loaded enough condition to join.
 	# play servers load all objects before finishing
 	# wait for the first spawn to complete too
+	var space_deadline := Time.get_ticks_msec() + int(_SPACE_LOAD_TIMEOUT_SECONDS * 1000.0)
 	while not is_space_loaded():
-		await get_tree().create_timer(0.5).timeout
+		if Time.get_ticks_msec() >= space_deadline:
+			push_error("Space load timed out while waiting for the server's first spawn.")
+			Game.critical_error(JOINER_ERRORS.CLIENT_TIMEOUT, "The experience took too long to finish loading.")
+			quit_to_main_menu()
+			return
+		await get_tree().create_timer(0.25).timeout
 	join_server_complete.emit()
 
 
@@ -273,7 +291,16 @@ func client_create_object(new_space_object_data: Dictionary, receipt: Dictionary
 func client_receive_space_data(in_space_data: Dictionary, in_mode) -> void:
 	# NOTE: This function is always executed on the client.
 	# Now let's start sync on the client.
-	var need_template_spawned: bool = Zone.space.is_empty() and Zone.Scene
+	if not is_instance_valid(Zone.Scene):
+		var scene_deadline := Time.get_ticks_msec() + int(_SPACE_SCENE_READY_TIMEOUT_SECONDS * 1000.0)
+		while not is_instance_valid(Zone.Scene):
+			if Time.get_ticks_msec() >= scene_deadline:
+				push_error("Space data arrived before SpaceScene initialized.")
+				Game.critical_error(JOINER_ERRORS.CLIENT_TIMEOUT, "The game scene failed to initialize.")
+				quit_to_main_menu()
+				return
+			await get_tree().process_frame
+	var need_template_spawned: bool = Zone.space.is_empty() and is_instance_valid(Zone.Scene)
 	Zone.space = in_space_data
 	if in_space_data.has("scriptIds"):
 		Net.script_client.load_script_entities_for_ids(in_space_data["scriptIds"])
@@ -301,6 +328,12 @@ func _client_on_server_disconnected() -> void:
 func quit_to_main_menu() -> void:
 	last_connection_address = ""
 	last_connection_port = -1
+	if _is_local_showcase_active:
+		_is_local_showcase_active = false
+		GameUI.instance.loading_ui.hide()
+		_quit_space()
+		GameUI.instance.main_menu_ui.show()
+		return
 	GameUI.instance.loading_ui.hide()
 	GameUI.instance.main_menu_ui.show()
 	_quit_space()
@@ -440,7 +473,26 @@ func start_join_localhost() -> void:
 	start_join_zone_by_space_id(_LOCALHOST)
 
 func start_join_showcase() -> void:
-	start_join_zone_by_space_id("rageblox-showcase")
+	start_local_showcase()
+
+
+func start_local_showcase() -> void:
+	# The built-in Showcase is bundled with the client. Keep it usable even when
+	# the backend/server discovery layer is unavailable.
+	_is_local_showcase_active = true
+	_disconnect_from_server()
+	join_server_start.emit()
+	var error := get_tree().change_scene_to_file("res://experiences/rageblox_showcase/showcase_place.tscn")
+	if error != OK:
+		_is_local_showcase_active = false
+		push_error("Could not open bundled RageBlox Showcase: " + str(error))
+		Game.critical_error(JOINER_ERRORS.CLIENT_TIMEOUT, "The bundled Showcase could not be opened.")
+		quit_to_main_menu()
+		return
+	await get_tree().process_frame
+	GameUI.instance.loading_ui.hide()
+	GameUI.instance.main_menu_ui.hide()
+	join_server_complete.emit()
 
 
 func start_join_zone_by_space_id(space_id: String) -> void:
