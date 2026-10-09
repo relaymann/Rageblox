@@ -26,7 +26,13 @@ class ScriptEntityResponse extends ScriptEntity {
 }
 
 @FirebaseTokenAuthGuard()
-@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true })) // blocks remain flexible, but unknown top-level DTO fields are stripped
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: false,
+    transform: true
+  })
+) // blocks remain flexible, but unknown top-level DTO fields are stripped
 @Controller('script-entity')
 export class ScriptEntityController {
   constructor(private readonly scriptEntityService: ScriptEntityService) {}

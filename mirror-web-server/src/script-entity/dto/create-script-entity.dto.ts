@@ -1,6 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { ArrayMaxSize, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator'
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateIf
+} from 'class-validator'
 import { ROLE } from '../../roles/models/role.enum'
+
 export class CreateScriptEntityDto {
   @ValidateIf((value) => !value.code)
   @IsNotEmpty()
