@@ -51,7 +51,7 @@ export class ScriptEntityService {
 
   // get script with role check
   public async findOneWithRolesCheck(id: string, userId: UserId) {
-    let pipeline = this.roleService.getRoleCheckAggregationPipeline(
+    const pipeline = this.roleService.getRoleCheckAggregationPipeline(
       userId,
       ROLE.OBSERVER
     )
@@ -69,7 +69,7 @@ export class ScriptEntityService {
     const legacyScript = await this.scriptEntityModel
       .findOne({
         _id: id,
-        role: { $exists: false },
+        role: null,
         creator: userId
       })
       .exec()
