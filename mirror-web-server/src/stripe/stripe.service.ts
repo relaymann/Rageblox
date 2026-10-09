@@ -556,15 +556,12 @@ export class StripeService {
     switch (rowBody.type) {
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_CREATED:
         if (subscriptionIsPremium) {
-          await this.userModel.findOneAndUpdate(
-            currentSubscriptionFilter,
-            {
-              stripeSubscriptionId: subscription.id,
-              ...(subscriptionCanGrantPremium
-                ? { $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } }
-                : { $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } })
-            }
-          )
+          await this.userModel.findOneAndUpdate(currentSubscriptionFilter, {
+            stripeSubscriptionId: subscription.id,
+            ...(subscriptionCanGrantPremium
+              ? { $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } }
+              : { $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } })
+          })
         }
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_DELETED:
@@ -600,7 +597,9 @@ export class StripeService {
             { _id: metaData.userId, stripeSubscriptionId: subscription.id },
             {
               $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
-              ...(!subscriptionIsPremium ? { $unset: { stripeSubscriptionId: 1 } } : {})
+              ...(!subscriptionIsPremium
+                ? { $unset: { stripeSubscriptionId: 1 } }
+                : {})
             }
           )
         }
