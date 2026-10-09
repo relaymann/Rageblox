@@ -212,7 +212,9 @@ export class TerrainService {
       throw new NotFoundException()
     }
 
-    const populatedSpace = await this.spaceService.getSpace(space._id.toString())
+    const populatedSpace = await this.spaceService.getSpace(
+      space._id.toString()
+    )
     if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
       throw new ForbiddenException(
         "You don't have permission to delete terrain"
