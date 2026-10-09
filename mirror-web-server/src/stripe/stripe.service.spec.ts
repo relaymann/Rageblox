@@ -172,4 +172,26 @@ describe('StripeService subscription webhook entitlements', () => {
     )
   })
 
+  it('clears a deleted subscription even if its price was changed before deletion', async () => {
+    stripe.webhooks.constructEvent.mockReturnValue({
+      type: STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_DELETED,
+      data: {
+        object: subscription({
+          status: 'canceled',
+          items: { data: [{ price: { id: 'price-unrelated' } }] }
+        })
+      }
+    })
+
+    await service.handleStripeWebhook('body', 'signature')
+
+    expect(userModel.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: userId, stripeSubscriptionId: 'sub-active' },
+      {
+        $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
+        $unset: { stripeSubscriptionId: 1 }
+      }
+    )
+  })
+
 })

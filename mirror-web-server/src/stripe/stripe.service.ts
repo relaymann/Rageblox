@@ -565,15 +565,13 @@ export class StripeService {
         }
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_DELETED:
-        if (subscriptionIsPremium) {
-          await this.userModel.findOneAndUpdate(
-            { _id: metaData.userId, stripeSubscriptionId: subscription.id },
-            {
-              $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
-              $unset: { stripeSubscriptionId: 1 }
-            }
-          )
-        }
+        await this.userModel.findOneAndUpdate(
+          { _id: metaData.userId, stripeSubscriptionId: subscription.id },
+          {
+            $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
+            $unset: { stripeSubscriptionId: 1 }
+          }
+        )
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_PAUSED:
         await this.userModel.findOneAndUpdate(
