@@ -57,7 +57,7 @@ export class SpaceObjectService implements IRoleConsumer {
   ) {}
 
   private _standardPopulateFields = [
-    { path: 'creator', select: ['displayName', 'email'] },
+    { path: 'creator', select: ['displayName'] },
     {
       path: 'space',
       select: ['name'],

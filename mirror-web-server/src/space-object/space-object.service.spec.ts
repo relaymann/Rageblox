@@ -46,6 +46,14 @@ describe('SpaceObjectService', () => {
     service = module.get<SpaceObjectService>(SpaceObjectService)
   })
 
+  it('does not expose creator email through standard space-object reads', () => {
+    const populateFields = (service as any)._standardPopulateFields
+    const creatorField = populateFields.find((field) => field.path === 'creator')
+
+    expect(creatorField.select).toEqual(['displayName'])
+    expect(creatorField.select).not.toContain('email')
+  })
+
   it('should be defined', () => {
     expect(service).toBeDefined()
   })

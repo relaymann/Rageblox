@@ -61,7 +61,7 @@ export class MaterialInstanceService {
   }
 
   async findOne(spaceId: string, materialInstanceId: string, userId: string) {
-    // TODO: update with role checks for the Space
+    // The caller's read permission is checked against the owning Space below.
     const populatedSpace = await this.spaceService.getSpace(spaceId)
     if (
       userId !== process.env.WSS_SECRET &&
