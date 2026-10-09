@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException
@@ -29,6 +30,19 @@ export class ScriptEntityService {
     userId: UserId,
     createScriptEntityDto: CreateScriptEntityDto
   ): Promise<ScriptEntityDocument> {
+    const defaultRole = createScriptEntityDto.defaultRole
+    const validRoles = Object.values(ROLE).filter(
+      (role): role is number => typeof role === 'number'
+    )
+    if (
+      defaultRole !== undefined &&
+      (!validRoles.includes(defaultRole) || defaultRole >= ROLE.OWNER)
+    ) {
+      throw new BadRequestException(
+        'The default script role must be a valid non-owner role'
+      )
+    }
+
     const created = new this.scriptEntityModel({
       ...createScriptEntityDto,
       creator: userId
