@@ -193,5 +193,4 @@ describe('StripeService subscription webhook entitlements', () => {
       }
     )
   })
-
 })
