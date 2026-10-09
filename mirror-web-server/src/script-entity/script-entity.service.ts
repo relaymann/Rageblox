@@ -106,6 +106,13 @@ export class ScriptEntityService {
           'You do not have permission to update this script'
         )
       }
+    } else if (script.creator?.toString() !== userId.toString()) {
+      // Legacy scripts may not have a role document. They must still be
+      // protected by creator ownership rather than becoming editable by any
+      // authenticated user.
+      throw new ForbiddenException(
+        'You do not have permission to update this script'
+      )
     }
 
     return await this.update(id, updateScriptEntityDto)
@@ -140,6 +147,11 @@ export class ScriptEntityService {
           'You do not have permission to delete this script'
         )
       }
+    } else if (script.creator?.toString() !== userId.toString()) {
+      // Keep legacy scripts manageable by their creator only.
+      throw new ForbiddenException(
+        'You do not have permission to delete this script'
+      )
     }
     return await this.delete(id)
   }
