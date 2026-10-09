@@ -25,7 +25,10 @@ export class MaterialInstanceService {
     userId: string
   ): Promise<MaterialInstance> {
     const populatedSpace = await this.spaceService.getSpace(createMaterialInstanceDto.spaceId)
-    if (!this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)) {
+    if (
+      userId !== process.env.WSS_SECRET &&
+      !this.spaceService.canUpdateWithRolesCheck(userId, populatedSpace)
+    ) {
       throw new ForbiddenException()
     }
     const newMaterialInstance = {
@@ -54,7 +57,10 @@ export class MaterialInstanceService {
   async findOne(spaceId: string, materialInstanceId: string, userId: string) {
     // TODO: update with role checks for the Space
     const populatedSpace = await this.spaceService.getSpace(spaceId)
-    if (!this.spaceService.canFindWithRolesCheck(userId, populatedSpace)) {
+    if (
+      userId !== process.env.WSS_SECRET &&
+      !this.spaceService.canFindWithRolesCheck(userId, populatedSpace)
+    ) {
       throw new ForbiddenException()
     }
 

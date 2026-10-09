@@ -28,7 +28,7 @@ export class UserGroupService {
     if (!Types.ObjectId.isValid(id)) throw new NotFoundException('User group not found')
     const group = await this.userGroupModel.findById(id).exec()
     if (!group) throw new NotFoundException('User group not found')
-    const isPublic = group.public === true || (group.public as any) === 'true'
+    const isPublic = String(group.public) === 'true'
     if (!isPublic) {
       const isMember =
         group.creator?.toString() === userId ||

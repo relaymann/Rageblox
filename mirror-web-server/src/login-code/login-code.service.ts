@@ -2,7 +2,8 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  TooManyRequestsException
+  HttpException,
+  HttpStatus
 } from '@nestjs/common'
 import { UserService } from '../user/user.service'
 import { UserId } from '../util/mongo-object-id-helpers'
@@ -82,7 +83,7 @@ export class LoginCodeService {
       .exec()
     const attempts = Number(rateLimitResult?.[0])
     if (attempts > 30) {
-      throw new TooManyRequestsException('Too many login-code attempts')
+      throw new HttpException('Too many login-code attempts', HttpStatus.TOO_MANY_REQUESTS)
     }
     const loginCodeRecord = await this.loginCodeModel
       .findOneAndUpdate(

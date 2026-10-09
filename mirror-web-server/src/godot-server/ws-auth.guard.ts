@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 
-import { Socket } from 'socket.io'
+import { WebSocket } from 'ws'
 import { FirebaseAuthenticationService } from '../firebase/firebase-authentication.service'
 import { WsAuthHelperService } from './ws-auth-helper.service'
 
@@ -13,12 +13,12 @@ export class WsAuthGuard implements CanActivate {
   constructor(private readonly wsAuthHelperService: WsAuthHelperService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const client = context.switchToWs().getClient<Socket>()
+    const client = context.switchToWs().getClient<WebSocket>()
 
     // wait until client data initialization will be finished
     const check =
       (await this.wsAuthHelperService.finishInitialization(
-        client['id'] as any
+        client
       )) ||
       this.wsAuthHelperService.initializationSuccess[client['id'] as string]
     return check

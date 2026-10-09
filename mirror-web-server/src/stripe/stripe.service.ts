@@ -501,15 +501,29 @@ export class StripeService {
       throw new BadRequestException('Invalid Stripe webhook signature')
     }
 
-    const metaData: StripeSubscriptionMetadataDto =
-      (rowBody.data.object as any).metadata || {}
+    const subscriptionEventTypes = [
+      STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_CREATED,
+      STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_DELETED,
+      STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_PAUSED,
+      STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_RESUMED,
+      STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_UPDATED
+    ]
+    if (!subscriptionEventTypes.includes(rowBody.type as STRIPE_WEBHOOK_TYPES)) {
+      return
+    }
+
+    const subscription = rowBody.data.object as Stripe.Subscription
+    const metaData = (subscription.metadata || {}) as unknown as StripeSubscriptionMetadataDto
+    if (typeof metaData.userId !== 'string' || !metaData.userId) {
+      throw new BadRequestException('Stripe subscription webhook is missing user metadata')
+    }
     switch (rowBody.type) {
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_CREATED:
         await this.userModel.findByIdAndUpdate(metaData.userId, {
           $addToSet: {
             premiumAccess: PREMIUM_ACCESS.PREMIUM_1
           },
-          stripeSubscriptionId: rowBody.data.object.id
+          stripeSubscriptionId: subscription.id
         })
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_DELETED:
@@ -533,7 +547,7 @@ export class StripeService {
       // Handle the case when a subscription is updated in a Stripe webhook event
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_UPDATED:
         // Check if the subscription is being canceled via the customer portal
-        if (rowBody.data.object.cancel_at) {
+        if (subscription.cancel_at) {
           // If cancellation was requested from the customer portal, remove premium access from the user
           await this.userModel.findByIdAndUpdate(metaData.userId, {
             $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
@@ -541,8 +555,8 @@ export class StripeService {
         }
         // Check if the subscription is being renewed from the customer portal
         else if (
-          rowBody.data.object.cancel_at === null &&
-          !rowBody.data.object.pause_collection
+          subscription.cancel_at === null &&
+          !subscription.pause_collection
         ) {
           // If the subscription is renewed, add premium access to the user
           await this.userModel.findByIdAndUpdate(metaData.userId, {
@@ -551,8 +565,8 @@ export class StripeService {
         }
         // Check if the subscription is being paused with 'void' behavior
         else if (
-          rowBody.data.object.pause_collection &&
-          rowBody.data.object.pause_collection.behavior === 'void'
+          subscription.pause_collection &&
+          subscription.pause_collection.behavior === 'void'
         ) {
           // If paused with 'void' behavior, remove premium access from the user
           await this.userModel.findByIdAndUpdate(metaData.userId, {
@@ -560,7 +574,7 @@ export class StripeService {
           })
         }
         // Check if the subscription is being resumed
-        else if (!rowBody.data.object.pause_collection) {
+        else if (!subscription.pause_collection) {
           // If resumed, add premium access to the user
           await this.userModel.findByIdAndUpdate(metaData.userId, {
             $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }

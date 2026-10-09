@@ -30,7 +30,18 @@ export class WsAuthHelperService {
 
   handleConnectionHelper(client: WebSocket, args: any) {
     client['id'] = uuidv4()
-    this.initializationMap.set(client['id'], this.initialize(client, args))
+    const clientId = client['id']
+    // Defer initialization one microtask so the promise is registered before it
+    // can synchronously reject a malformed handshake.
+    const initialization = Promise.resolve().then(() =>
+      this.initialize(client, args)
+    )
+    this.initializationMap.set(clientId, initialization)
+    void initialization
+      .finally(() => {
+        this.initializationMap.delete(clientId)
+      })
+      .catch(() => undefined)
   }
 
   async finishInitialization(client: WebSocket): Promise<any> {
@@ -41,11 +52,23 @@ export class WsAuthHelperService {
     // ensure max listeners is set high enough - nestjs bug (older version causes error)
     client.setMaxListeners(20)
 
-    /** Crude authentication check until further defined */ const [
-      { headers }
-    ] = args
-    let spaceId = headers?.space
-    let token = headers?.authorization
+    // WebSocket libraries may supply malformed or missing handshake arguments.
+    // Reject them cleanly rather than throwing during connection initialization.
+    const handshake =
+      Array.isArray(args) && args.length > 0 && args[0] && typeof args[0] === 'object'
+        ? args[0]
+        : null
+    const headers =
+      handshake?.headers && typeof handshake.headers === 'object'
+        ? handshake.headers
+        : null
+    if (!headers) {
+      this.logger.warn('Rejected WebSocket connection with invalid handshake headers', WsAuthHelperService.name)
+      client.close(1008, 'Invalid handshake')
+      return
+    }
+    let spaceId = headers.space
+    let token = headers.authorization
 
     // Never persist the bearer token on the socket after authentication.
 
@@ -169,24 +192,41 @@ export class WsAuthHelperService {
    * @description Called when a Redis pubsub message is received from a channel that was subscribed to
    */
   handleSubscribedChannelReceivedMessage(subChannel: string, message: string) {
-    this.logger.log(
-      `handleSubscribedChannelReceivedMessage: ${JSON.stringify(
-        {
-          subChannel,
-          message
-        },
-        null,
-        2
-      )}\n
-      Sending message to subscribers: ${this.channelSubs[subChannel].length}`,
+    const subscribers = this.channelSubs[subChannel]
+    if (!subscribers || subscribers.length === 0) {
+      return
+    }
+
+    // Do not log payloads: they may contain private user or experience data.
+    this.logger.debug(
+      `Forwarding Redis message on ${subChannel} to ${subscribers.length} subscriber(s)`,
       WsAuthHelperService.name
     )
-    this.channelSubs[subChannel].forEach((client) => {
-      client.send(message)
+    this.channelSubs[subChannel] = subscribers.filter((client) => {
+      if (client.readyState !== WebSocket.OPEN) {
+        return false
+      }
+      try {
+        client.send(message)
+        return true
+      } catch {
+        this.logger.warn(
+          'Unable to forward message to a WebSocket subscriber',
+          WsAuthHelperService.name
+        )
+        return false
+      }
     })
+    if (this.channelSubs[subChannel].length === 0) {
+      this.redisPubSubService.subscriber.unsubscribe(subChannel)
+      delete this.channelSubs[subChannel]
+    }
   }
 
   removeSubscriber(client: WebSocket) {
+    delete this.initializationSuccess[client['id']]
+    this.initializationMap.delete(client['id'])
+
     // remove the client from the channel subscriptions.
     const subchannel = client['subscriberChannel']
     if (!subchannel || !this.channelSubs[subchannel]) {
@@ -200,8 +240,9 @@ export class WsAuthHelperService {
       (c1) => c1 !== client
     )
     // unsubscribe from the subscription listener if this is the last subscriber to the channel.
-    if (this.channelSubs[subchannel].length == 0) {
+    if (this.channelSubs[subchannel].length === 0) {
       this.redisPubSubService.subscriber.unsubscribe(subchannel)
+      delete this.channelSubs[subchannel]
     }
   }
 
