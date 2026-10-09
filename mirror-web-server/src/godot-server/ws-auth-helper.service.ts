@@ -169,10 +169,7 @@ export class WsAuthHelperService {
 
     // A socket may disconnect while JWT or space authorization is pending.
     // Do not register a subscriber after that disconnect has already occurred.
-    if (
-      client['authDisconnected'] ||
-      client.readyState !== WebSocket.OPEN
-    ) {
+    if (client['authDisconnected'] || client.readyState !== WebSocket.OPEN) {
       return
     }
 

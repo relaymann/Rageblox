@@ -277,7 +277,6 @@ export class SpaceObjectGateway {
     return returnData
   }
 
-
   @SubscribeMessage(ZoneSpaceObjectWsMessage.UPDATE_BATCH)
   public async updateMany(
     @UserTokenWS('user_id') userId: UserId,
