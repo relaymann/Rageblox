@@ -109,8 +109,14 @@ export class EnvironmentService {
         spaceWithStandardPopulatedProperties
       )
     ) {
+      const {
+        _id: _ignoredId,
+        createdAt: _ignoredCreatedAt,
+        updatedAt: _ignoredUpdatedAt,
+        ...safeDto
+      } = dto as any
       return this.environmentModel
-        .findByIdAndUpdate(id, dto, { new: true })
+        .findByIdAndUpdate(id, safeDto, { new: true })
         .exec()
     } else {
       throw new ForbiddenException()

@@ -42,10 +42,7 @@ export class ScriptEntityService {
       }
       safeCreateDto.code = createScriptEntityDto.code
     }
-    if (
-      !safeCreateDto.code &&
-      !Array.isArray(safeCreateDto.blocks)
-    ) {
+    if (!safeCreateDto.code && !Array.isArray(safeCreateDto.blocks)) {
       throw new BadRequestException('Script blocks or code are required')
     }
     if (safeCreateDto.blocks && safeCreateDto.blocks.length > 4096) {
