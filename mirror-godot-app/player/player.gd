@@ -535,22 +535,29 @@ func _respawn_player_network(spawn_point_path: NodePath, spawn_transform: Transf
 	if _camera_manager:
 		_camera_manager.reset_camera_transforms(spawn_transform)
 	if not spawn_point_path.is_empty():
-		var spawn_point_node = get_node(spawn_point_path)
-		if spawn_point_node:
+		var spawn_point_node := get_node_or_null(spawn_point_path)
+		if is_instance_valid(spawn_point_node) and spawn_point_node.has_signal("player_spawned_here"):
 			spawn_point_node.emit_signal("player_spawned_here", self)
 	Zone.social_manager.player_spawned.emit(self)
 	GameUI.instance.health_display.play_respawn_sound()
 
 
 func _calculate_spawn_transform(spawn_point_path: NodePath) -> Transform3D:
-	var spawn_transform := Transform3D.IDENTITY
-	# TODO: spawn_point_path can be null if object not ready
-	var spawn_point_node: Node3D = get_node(spawn_point_path)
-	if spawn_point_node:
-		spawn_transform = spawn_point_node.global_transform
-	spawn_transform.origin = spawn_transform * _random_point_in_circle_vec3(SPAWN_RADIUS)
+	# A player can join before the world has finished registering its spawn points.
+	# In that case, use a safe origin fallback instead of resolving an empty/stale path.
+	var spawn_transform := Transform3D(Basis.IDENTITY, Vector3(0.0, 2.0, 0.0))
+	if not spawn_point_path.is_empty():
+		var spawn_node := get_node_or_null(spawn_point_path)
+		if spawn_node is Node3D:
+			spawn_transform = (spawn_node as Node3D).global_transform
+		else:
+			push_warning("Spawn point %s is unavailable; using the default spawn transform." % spawn_point_path)
+	else:
+		push_warning("No spawn points are registered yet; using the default spawn transform.")
+
+	spawn_transform.origin += spawn_transform.basis * _random_point_in_circle_vec3(SPAWN_RADIUS)
 	# Our player controller must remain upright and does not support non-uniform scaling.
-	var rot = Basis.from_euler(Vector3(0.0, spawn_transform.basis.get_euler().y, 0.0))
+	var rot := Basis.from_euler(Vector3(0.0, spawn_transform.basis.get_euler().y, 0.0))
 	spawn_transform.basis = rot * clampf(spawn_transform.basis.y.length(), 0.05, 20.0)
 	return spawn_transform
 
