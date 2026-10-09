@@ -14,8 +14,8 @@ func create_account_if_missing() -> Promise:
 func check_login_code(login_code: String) -> Promise:
 	return self.post_request(
 		POST_CHECK_LOGIN_CODE,
-		"/login-code/check-login-code?loginCode=" + login_code,
-		{}
+		"/login-code/check-login-code",
+		{"loginCode": login_code}
 	)
 
 
