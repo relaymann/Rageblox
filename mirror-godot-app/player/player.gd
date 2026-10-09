@@ -296,7 +296,11 @@ func update_interpolated_node(sync_delta):
 
 func _process(delta: float) -> void:
 	if Zone.is_host(): # server authoratative value
-		if global_transform.origin.y <= _lower_y_limit:
+		# The active space can change its fall boundary after this player is set up
+		# (for example, when the Showcase world is added), so don't rely only on
+		# the cached value captured during _setup_player().
+		var lower_y_limit := Zone.Scene.lower_y_limit if is_instance_valid(Zone.Scene) else _lower_y_limit
+		if global_transform.origin.y <= lower_y_limit:
 			damage_handler.damage(1.0, damage_handler.SERVER_ORIGIN)
 		return
 	elif not is_local_player() or damage_handler.get_health() == 0.0:
