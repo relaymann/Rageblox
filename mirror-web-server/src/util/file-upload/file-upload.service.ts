@@ -199,7 +199,9 @@ export class FileUploadService implements FileUploadInterface {
       const storage = firebaseStorage()
       const theRemoteFile = storage
         .bucket(bucketName)
-        .file(this._validateRelativeStoragePath(relativePath)) as unknown as File // conflicting types issue when typed as File (GCS ServiceObject)
+        .file(
+          this._validateRelativeStoragePath(relativePath)
+        ) as unknown as File // conflicting types issue when typed as File (GCS ServiceObject)
       const stream = theRemoteFile.createWriteStream({
         metadata: {
           contentType: mimeType

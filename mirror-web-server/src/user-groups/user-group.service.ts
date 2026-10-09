@@ -39,10 +39,10 @@ export class UserGroupService {
       const isMember =
         group.creator?.toString() === userId ||
         group.owners?.some((owner) => owner.toString() === userId) ||
-        group.moderators?.some((moderator) => moderator.toString() === userId) ||
-        group.users?.some(
-          (user) => user.toString() === userId
-        )
+        group.moderators?.some(
+          (moderator) => moderator.toString() === userId
+        ) ||
+        group.users?.some((user) => user.toString() === userId)
       if (!isMember) {
         throw new ForbiddenException('Insufficient group permissions')
       }

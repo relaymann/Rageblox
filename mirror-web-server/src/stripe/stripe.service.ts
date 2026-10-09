@@ -517,8 +517,8 @@ export class StripeService {
     }
 
     const subscription = rowBody.data.object as Stripe.Subscription
-    const metaData =
-      (subscription.metadata || {}) as unknown as StripeSubscriptionMetadataDto
+    const metaData = (subscription.metadata || {}) as unknown as
+      StripeSubscriptionMetadataDto
     if (typeof metaData.userId !== 'string' || !metaData.userId) {
       throw new BadRequestException(
         'Stripe subscription webhook is missing user metadata'

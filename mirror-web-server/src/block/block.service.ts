@@ -44,7 +44,12 @@ export class BlockService {
     if (block.creator?.toString() !== userId) {
       throw new ForbiddenException('Insufficient block permissions')
     }
-    const { _id, creator, mirrorPublicLibrary, ...safeUpdate } = updateBlockDto as any
+    const {
+      _id,
+      creator,
+      mirrorPublicLibrary,
+      ...safeUpdate
+    } = updateBlockDto as any
     return this.blockModel
       .findByIdAndUpdate(id, safeUpdate, { new: true })
       .exec()
