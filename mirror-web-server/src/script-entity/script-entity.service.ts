@@ -56,18 +56,29 @@ export class ScriptEntityService {
       ROLE.OBSERVER
     )
 
-    // change standart roles check pipline, because there may be scripts without the role field
-    pipeline = this.updateRoleCheckPipelineForEntityWithoutRoleField(pipeline)
-
     pipeline.unshift(aggregationMatchId(id))
 
     const [script] = await this.scriptEntityModel.aggregate(pipeline)
 
-    if (!script) {
+    if (script) {
+      return script
+    }
+
+    // Legacy scripts without role metadata must not bypass authorization.
+    // Preserve access for their creator only, matching update/delete behavior.
+    const legacyScript = await this.scriptEntityModel
+      .findOne({
+        _id: id,
+        role: { $exists: false },
+        creator: userId
+      })
+      .exec()
+
+    if (!legacyScript) {
       throw new NotFoundException('Script not found')
     }
 
-    return script
+    return legacyScript
   }
 
   async update(
@@ -354,23 +365,4 @@ export class ScriptEntityService {
   }
 
   private readonly _getDefaultRoleForScripts = ROLE.OBSERVER
-
-  // We need this because we can't set the author for all scripts and assign them roles
-  private updateRoleCheckPipelineForEntityWithoutRoleField(
-    pipeline: PipelineStage[]
-  ) {
-    const match = pipeline[0]['$match']
-
-    // return element without role field without checking for a role
-    pipeline[0]['$match'] = {
-      $or: [
-        {
-          role: { $exists: false }
-        },
-        match
-      ]
-    }
-
-    return pipeline
-  }
 }
