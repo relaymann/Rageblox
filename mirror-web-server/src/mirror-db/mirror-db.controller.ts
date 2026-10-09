@@ -33,7 +33,10 @@ export class MirrorDBController {
     @Param('spaceId') spaceId: string,
     @UserToken('user_id') userId: UserId
   ) {
-    return await this.mirrorDBService.getRecordFromMirrorDBBySpaceIdWithRolesCheck(spaceId, userId)
+    return await this.mirrorDBService.getRecordFromMirrorDBBySpaceIdWithRolesCheck(
+      spaceId,
+      userId
+    )
   }
 
   @Get('space-version/:spaceVersionId')
@@ -68,6 +71,9 @@ export class MirrorDBController {
     @Param('id') id: MirrorDBRecordId,
     @UserToken('user_id') userId: UserId
   ) {
-    return await this.mirrorDBService.deleteRecordFromMirrorDBByIdWithRolesChecks(id, userId)
+    return await this.mirrorDBService.deleteRecordFromMirrorDBByIdWithRolesChecks(
+      id,
+      userId
+    )
   }
 }

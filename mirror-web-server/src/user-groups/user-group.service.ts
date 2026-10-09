@@ -29,7 +29,9 @@ export class UserGroupService {
   }
 
   public async findOneWithAccess(id: string, userId: string): Promise<any> {
-    if (!Types.ObjectId.isValid(id)) throw new NotFoundException('User group not found')
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('User group not found')
+    }
     const group = await this.userGroupModel.findById(id).exec()
     if (!group) throw new NotFoundException('User group not found')
     const isPublic = String(group.public) === 'true'
@@ -37,10 +39,11 @@ export class UserGroupService {
       const isMember =
         group.creator?.toString() === userId ||
         group.owners?.some((owner) => owner.toString() === userId) ||
-        group.moderators?.some((moderator) =>
-            moderator.toString() === userId) ||
+        group.moderators?.some((moderator) => moderator.toString() === userId) ||
         group.users?.some((user) => user.toString() === userId)
-      if (!isMember) throw new ForbiddenException('Insufficient group permissions')
+      if (!isMember) {
+        throw new ForbiddenException('Insufficient group permissions')
+      }
     }
     return [group]
   }

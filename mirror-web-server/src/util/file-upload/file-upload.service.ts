@@ -162,7 +162,9 @@ export class FileUploadService implements FileUploadInterface {
     toPath: string
   ) {
     const storage = firebaseStorage()
-    const destination = storage.bucket(bucketName).file(this._validateRelativeStoragePath(toPath))
+    const destination = storage
+      .bucket(bucketName)
+      .file(this._validateRelativeStoragePath(toPath))
     const options = { predefinedAcl: 'publicRead' }
     return storage
       .bucket(bucketName)
@@ -197,7 +199,9 @@ export class FileUploadService implements FileUploadInterface {
       const storage = firebaseStorage()
       const theRemoteFile = storage
         .bucket(bucketName)
-        .file(this._validateRelativeStoragePath(relativePath)) as unknown as File // conflicting types issue when typed as File (GCS ServiceObject)
+        .file(
+          this._validateRelativeStoragePath(relativePath)
+        ) as unknown as File // conflicting types issue when typed as File (GCS ServiceObject)
       const stream = theRemoteFile.createWriteStream({
         metadata: {
           contentType: mimeType
@@ -242,7 +246,11 @@ export class FileUploadService implements FileUploadInterface {
     }
 
     const normalized = path.posix.normalize(relativePath)
-    if (normalized === '.' || normalized.startsWith('../') || normalized.includes('/../')) {
+    if (
+      normalized === '.' ||
+      normalized.startsWith('../') ||
+      normalized.includes('/../')
+    ) {
       throw new HttpException('Invalid storage path', 400)
     }
 

@@ -1437,7 +1437,7 @@ export class SpaceService implements IRoleConsumer {
         $match: {
           space: new ObjectId(spaceId)
         }
-      },
+      }
       {
         $unwind: '$scriptEvents'
       },

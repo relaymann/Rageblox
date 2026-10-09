@@ -32,8 +32,10 @@ async function bootstrapRageBloxWebServer() {
                 format: winston.format.combine(
                   winston.format.timestamp(),
                   winston.format.ms(),
-                  nestWinstonModuleUtilities.format.nestLike('rageblox-server', {
-                    colors: true,
+                  nestWinstonModuleUtilities.format.nestLike(
+                      'rageblox-server',
+                      {
+                        colors: true,
                     prettyPrint: true
                   })
                 ),

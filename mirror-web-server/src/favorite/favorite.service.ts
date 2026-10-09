@@ -14,7 +14,10 @@ export class FavoriteService {
   constructor(
     @InjectModel(Favorite.name) private favoriteModel: Model<FavoriteDocument>
   ) {}
-  createForUser(userId: string, dto: CreateFavoriteDto): Promise<FavoriteDocument> {
+  createForUser(
+    userId: string,
+    dto: CreateFavoriteDto
+  ): Promise<FavoriteDocument> {
     const created = new this.favoriteModel({
       ...dto,
       user: userId,

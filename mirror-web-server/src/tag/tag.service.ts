@@ -156,8 +156,6 @@ export class TagService {
     const tag = await this.findOne(id)
     if (!tag) throw new NotFoundException()
     if (tag.creator?.toString() !== userId) throw new ForbiddenException()
-    return this.tagModel.findOneAndDelete(
-        { _id: id }
-      ).exec() as any as Promise<TagDocument>
+    return this.tagModel.findOneAndDelete({ _id: id }).exec() as any as Promise<TagDocument>
   }
 }
