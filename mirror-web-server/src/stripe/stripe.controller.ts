@@ -129,7 +129,7 @@ export class StripeController {
   @Post('/transfers')
   @FirebaseTokenAuthGuard()
   @ApiParam({ name: 'destinationUserId', type: 'string', required: true })
-  public async transfersAmount() {
+  public transfersAmount() {
     throw new BadRequestException(
       'Direct platform transfers are disabled; use an authorized marketplace payout flow.'
     )

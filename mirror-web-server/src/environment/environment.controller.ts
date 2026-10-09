@@ -57,7 +57,7 @@ export class EnvironmentController {
   @Delete(':id')
   @ApiParam({ name: 'id', type: 'string', required: true })
   @ApiOkResponse({ type: EnvironmentApiResponse })
-  public async remove(
+  public remove(
     @Param('id') id: string,
     @UserToken('user_id') userId: UserId
   ) {
