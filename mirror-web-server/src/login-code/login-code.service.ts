@@ -77,7 +77,11 @@ export class LoginCodeService {
       throw new BadRequestException('Login code must be exactly 6 digits')
     }
 
-    if (typeof requesterIp !== 'string' || !requesterIp || requesterIp.length > 128) {
+    if (
+      typeof requesterIp !== 'string' ||
+      !requesterIp ||
+      requesterIp.length > 128
+    ) {
       throw new BadRequestException('Invalid requester')
     }
 
