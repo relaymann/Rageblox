@@ -37,3 +37,6 @@ export class LoginCode {
 }
 
 export const LoginCodeSchema = SchemaFactory.createForClass(LoginCode)
+
+// Expired one-time codes contain refresh tokens; remove them automatically.
+LoginCodeSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
