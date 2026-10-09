@@ -41,9 +41,20 @@ describe('StripeService subscription webhook entitlements', () => {
 
     await service.handleStripeWebhook('body', 'signature')
 
-    expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(userId, {
-      stripeSubscriptionId: 'sub-active'
-    })
+    expect(userModel.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: userId,
+        $or: [
+          { stripeSubscriptionId: { $exists: false } },
+          { stripeSubscriptionId: null },
+          { stripeSubscriptionId: 'sub-active' }
+        ]
+      },
+      {
+        stripeSubscriptionId: 'sub-active',
+        $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
+      }
+    )
   })
 
   it('grants premium only for the configured active price', async () => {
@@ -54,10 +65,20 @@ describe('StripeService subscription webhook entitlements', () => {
 
     await service.handleStripeWebhook('body', 'signature')
 
-    expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(userId, {
-      stripeSubscriptionId: 'sub-active',
-      $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
-    })
+    expect(userModel.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: userId,
+        $or: [
+          { stripeSubscriptionId: { $exists: false } },
+          { stripeSubscriptionId: null },
+          { stripeSubscriptionId: 'sub-active' }
+        ]
+      },
+      {
+        stripeSubscriptionId: 'sub-active',
+        $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
+      }
+    )
   })
 
   it('does not revoke access early for a future scheduled cancellation', async () => {
@@ -106,4 +127,49 @@ describe('StripeService subscription webhook entitlements', () => {
       }
     )
   })
+  it('revokes stale premium access when the new premium subscription is incomplete', async () => {
+    stripe.webhooks.constructEvent.mockReturnValue({
+      type: STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_CREATED,
+      data: { object: subscription({ status: 'incomplete' }) }
+    })
+
+    await service.handleStripeWebhook('body', 'signature')
+
+    expect(userModel.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: userId,
+        $or: [
+          { stripeSubscriptionId: { $exists: false } },
+          { stripeSubscriptionId: null },
+          { stripeSubscriptionId: 'sub-active' }
+        ]
+      },
+      {
+        stripeSubscriptionId: 'sub-active',
+        $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 }
+      }
+    )
+  })
+
+  it('revokes premium if a subscription no longer contains the configured premium price', async () => {
+    stripe.webhooks.constructEvent.mockReturnValue({
+      type: STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_UPDATED,
+      data: {
+        object: subscription({
+          items: { data: [{ price: { id: 'price-unrelated' } }] }
+        })
+      }
+    })
+
+    await service.handleStripeWebhook('body', 'signature')
+
+    expect(userModel.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: userId, stripeSubscriptionId: 'sub-active' },
+      {
+        $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
+        $unset: { stripeSubscriptionId: 1 }
+      }
+    )
+  })
+
 })

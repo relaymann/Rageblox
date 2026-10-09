@@ -234,6 +234,14 @@ export class StripeService {
   public async createSubscription(userId: string, data: SubscriptionDto) {
     const { destination } = data
     const user = await this.userModel.findById(userId).exec()
+    if (user?.stripeSubscriptionId) {
+      throw new BadRequestException(
+        'A platform subscription is already associated with this account'
+      )
+    }
+    if (!user?.stripeCustomerId) {
+      throw new BadRequestException('Stripe customer account not found')
+    }
 
     const destinationAccount = await this.userModel.findById(destination).exec()
 
@@ -252,8 +260,8 @@ export class StripeService {
   public async deleteSubscription(userId: string) {
     const user = await this.userModel.findById(userId).exec()
 
-    if (!user.premiumAccess.includes(PREMIUM_ACCESS.PREMIUM_1)) {
-      throw new BadRequestException(`Subscription not found`)
+    if (!user?.stripeSubscriptionId) {
+      throw new BadRequestException('Subscription not found')
     }
 
     return await this.stripe.subscriptions.cancel(user.stripeSubscriptionId)
@@ -536,15 +544,27 @@ export class StripeService {
       ['active', 'trialing'].includes(subscription.status) &&
       !subscription.pause_collection
 
+    const currentSubscriptionFilter = {
+      _id: metaData.userId,
+      $or: [
+        { stripeSubscriptionId: { $exists: false } },
+        { stripeSubscriptionId: null },
+        { stripeSubscriptionId: subscription.id }
+      ]
+    }
+
     switch (rowBody.type) {
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_CREATED:
         if (subscriptionIsPremium) {
-          await this.userModel.findByIdAndUpdate(metaData.userId, {
-            stripeSubscriptionId: subscription.id,
-            ...(subscriptionCanGrantPremium
-              ? { $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } }
-              : {})
-          })
+          await this.userModel.findOneAndUpdate(
+            currentSubscriptionFilter,
+            {
+              stripeSubscriptionId: subscription.id,
+              ...(subscriptionCanGrantPremium
+                ? { $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } }
+                : { $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } })
+            }
+          )
         }
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_DELETED:
@@ -559,23 +579,41 @@ export class StripeService {
         }
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_PAUSED:
-        if (subscriptionIsPremium) {
-          await this.userModel.findOneAndUpdate(
-            { _id: metaData.userId, stripeSubscriptionId: subscription.id },
-            { $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } }
-          )
-        }
+        await this.userModel.findOneAndUpdate(
+          { _id: metaData.userId, stripeSubscriptionId: subscription.id },
+          subscriptionIsPremium
+            ? { $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } }
+            : {
+                $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
+                $unset: { stripeSubscriptionId: 1 }
+              }
+        )
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_RESUMED:
-        if (subscriptionCanGrantPremium) {
+        if (subscriptionIsPremium && subscriptionCanGrantPremium) {
           await this.userModel.findOneAndUpdate(
             { _id: metaData.userId, stripeSubscriptionId: subscription.id },
             { $addToSet: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 } }
+          )
+        } else {
+          await this.userModel.findOneAndUpdate(
+            { _id: metaData.userId, stripeSubscriptionId: subscription.id },
+            {
+              $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
+              ...(!subscriptionIsPremium ? { $unset: { stripeSubscriptionId: 1 } } : {})
+            }
           )
         }
         break
       case STRIPE_WEBHOOK_TYPES.SUBSCRIPTION_UPDATED:
         if (!subscriptionIsPremium) {
+          await this.userModel.findOneAndUpdate(
+            { _id: metaData.userId, stripeSubscriptionId: subscription.id },
+            {
+              $pull: { premiumAccess: PREMIUM_ACCESS.PREMIUM_1 },
+              $unset: { stripeSubscriptionId: 1 }
+            }
+          )
           break
         }
         if (
